@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X, ShoppingBag, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Cart } from "./Cart";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -71,9 +72,7 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex p-0">
               <User className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="p-0">
-              <ShoppingBag className="h-6 w-6" />
-            </Button>
+            <Cart />
           </div>
         </div>
       </div>

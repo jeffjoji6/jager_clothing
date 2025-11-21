@@ -4,13 +4,23 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import productHoodie from "@/assets/product-hoodie-black.jpg";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [sizeError, setSizeError] = useState(false);
 
   const SIZES = ["S", "M", "L", "XL", "XXL"];
+
+  const product = {
+    id: id || "1",
+    name: "JÄGER OVERSIZED HOODIE - BLACK",
+    price: 1999,
+    image: productHoodie,
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -18,8 +28,18 @@ const ProductDetail = () => {
       setTimeout(() => setSizeError(false), 2000);
       return;
     }
-    // Add to cart logic
-    console.log("Added to cart:", { id, size: selectedSize });
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      size: selectedSize,
+    });
+    
+    toast.success("Added to cart!", {
+      description: `${product.name} - Size ${selectedSize}`,
+    });
   };
 
   return (
