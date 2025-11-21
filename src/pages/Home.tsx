@@ -20,6 +20,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <Ticker />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] md:h-[85vh] overflow-hidden">
@@ -33,7 +34,7 @@ const Home = () => {
           <h1 className="text-4xl md:text-7xl lg:text-8xl font-heading font-bold uppercase tracking-tighter text-background mb-8 md:mb-12">
             CHASE.<br />CONQUER.<br />CREATE.
           </h1>
-          <div className="flex flex-col md:flex-row gap-4 w-full max-w-md md:max-w-none">
+          <div className="flex flex-col md:flex-row gap-4 w-full max-w-md justify-center items-center">
             <Button asChild variant="hero" size="xl" className="w-full md:w-auto">
               <Link to="/collection">SHOP THE DROP</Link>
             </Button>
@@ -43,8 +44,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      <Ticker />
 
       {/* Collection Grid */}
       <section className="container mx-auto px-4 py-12 md:py-20">
