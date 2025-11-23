@@ -1,11 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, User, ShoppingCart, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, User, ShoppingCart, Menu, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, profile, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -32,9 +44,65 @@ export const Header = () => {
               <Button variant="ghost" size="icon" className="hidden md:flex">
                 <Search className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="hidden md:flex">
-                <User className="h-5 w-5" />
-              </Button>
+              
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="hidden md:flex">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                          {profile?.full_name
+                            ? profile.full_name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : user.email?.[0].toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">
+                          {profile?.full_name || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem onClick={() => navigate("/admin")}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:flex"
+                  asChild
+                >
+                  <Link to="/auth/login">
+                    <User className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
