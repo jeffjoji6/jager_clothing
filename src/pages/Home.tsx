@@ -3,20 +3,14 @@ import { Header } from "@/components/Header";
 import { Ticker } from "@/components/Ticker";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import { useFeaturedProducts } from "@/hooks/useProducts";
+import { Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-jager.jpg";
-import productHoodie from "@/assets/product-hoodie-black.jpg";
-import productTee from "@/assets/product-tee-white.jpg";
-import productCargo from "@/assets/product-cargo-black.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
 
-const FEATURED_PRODUCTS = [
-  { id: "1", name: "OVERSIZED HOODIE - BLACK", price: 1999, image: productHoodie, isNew: true },
-  { id: "2", name: "ESSENTIAL TEE - WHITE", price: 799, image: productTee, isNew: false },
-  { id: "3", name: "CARGO PANTS - BLACK", price: 2499, image: productCargo, isNew: true },
-  { id: "4", name: "OVERSIZED HOODIE - BLACK", price: 1999, image: productHoodie, isNew: false },
-];
-
 const Home = () => {
+  const { data: featuredProducts, isLoading } = useFeaturedProducts();
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -56,11 +50,28 @@ const Home = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-          {FEATURED_PRODUCTS.map((product) => (
-            <ProductCard key={product.id} {...product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : featuredProducts && featuredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {featuredProducts.slice(0, 4).map((product) => (
+              <ProductCard 
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={Number(product.base_price)}
+                image={product.images}
+                isNew={product.is_new}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-grey-text">No featured products available yet.</p>
+          </div>
+        )}
       </section>
 
       {/* Custom Lab Teaser */}

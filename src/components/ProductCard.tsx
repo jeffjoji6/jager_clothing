@@ -4,11 +4,14 @@ interface ProductCardProps {
   id: string;
   name: string;
   price: number;
-  image: string;
+  image: string | string[] | null;
   isNew?: boolean;
 }
 
 export const ProductCard = ({ id, name, price, image, isNew }: ProductCardProps) => {
+  // Handle image - can be string (local import) or array (Supabase) or null
+  const imageSrc = Array.isArray(image) ? (image[0] || '/placeholder.svg') : (image || '/placeholder.svg');
+
   return (
     <Link to={`/product/${id}`} className="group block">
       <div className="relative bg-grey-bg overflow-hidden product-card-hover">
@@ -18,7 +21,7 @@ export const ProductCard = ({ id, name, price, image, isNew }: ProductCardProps)
           </div>
         )}
         <img 
-          src={image} 
+          src={imageSrc} 
           alt={name} 
           className="w-full aspect-[4/5] object-cover"
         />

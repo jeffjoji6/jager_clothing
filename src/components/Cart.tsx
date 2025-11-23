@@ -1,12 +1,33 @@
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingBag, X, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const Cart = () => {
   const { items, totalItems, totalPrice, updateQuantity, removeItem } = useCart();
+  const { user, loading: authLoading } = useAuth();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    // Check if user is logged in
+    if (!authLoading && !user) {
+      setOpen(false);
+      toast.info("Please sign in to continue", {
+        description: "You need to be logged in to checkout",
+      });
+      // Navigate to login with return path to checkout
+      navigate("/login", { state: { from: { pathname: "/checkout" } } });
+      return;
+    }
+
+    setOpen(false);
+    navigate("/checkout");
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -53,7 +74,9 @@ export const Cart = () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => removeItem(item.id, item.size)}
+                        onClick={() => {
+                          removeItem(item.id, item.size).catch(console.error);
+                        }}
                         className="text-grey-text hover:text-foreground"
                       >
                         <X className="w-4 h-4" />
@@ -62,9 +85,9 @@ export const Cart = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 border border-foreground">
                         <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.size, item.quantity - 1)
-                          }
+                          onClick={() => {
+                            updateQuantity(item.id, item.size, item.quantity - 1).catch(console.error);
+                          }}
                           className="p-1 hover:bg-grey-bg"
                         >
                           <Minus className="w-3 h-3" />
@@ -73,16 +96,16 @@ export const Cart = () => {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.size, item.quantity + 1)
-                          }
+                          onClick={() => {
+                            updateQuantity(item.id, item.size, item.quantity + 1).catch(console.error);
+                          }}
                           className="p-1 hover:bg-grey-bg"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
                       <p className="font-heading font-bold">
-                        ₹{(item.price * item.quantity).toFixed(2)}
+                        ₹{(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -96,10 +119,10 @@ export const Cart = () => {
                   TOTAL
                 </span>
                 <span className="font-heading text-2xl font-bold">
-                  ₹{totalPrice.toFixed(2)}
+                  ₹{totalPrice.toLocaleString()}
                 </span>
               </div>
-              <Button variant="hero" size="lg" className="w-full">
+              <Button variant="hero" size="lg" className="w-full" onClick={handleCheckout}>
                 CHECKOUT
               </Button>
             </div>
