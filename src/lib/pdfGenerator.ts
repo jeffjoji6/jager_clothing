@@ -36,7 +36,7 @@ export interface OrderPDFData {
 }
 
 const DEFAULT_COMPANY: CompanyInfo = {
-  name: "JÄGER CLOTHING",
+  name: "Jager Clothing",
   address: "Your Company Address",
   city: "City",
   state: "State",

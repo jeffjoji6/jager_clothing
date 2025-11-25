@@ -1,4 +1,4 @@
-# Setup Guide - Jäger Clothing E-Commerce
+# Setup Guide - Jager Clothing E-Commerce
 
 ## Phase 1: Supabase Setup
 

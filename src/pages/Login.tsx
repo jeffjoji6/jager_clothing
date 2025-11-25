@@ -42,7 +42,7 @@ const Login = () => {
               SIGN IN
             </h1>
             <p className="text-sm text-grey-text font-body">
-              Welcome back to Jäger Clothing
+              Welcome back to Jager Clothing
             </p>
           </div>
 

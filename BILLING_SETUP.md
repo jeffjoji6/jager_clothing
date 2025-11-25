@@ -3,6 +3,7 @@
 ## Overview
 
 The billing system includes:
+
 - **Invoice Generation**: Create invoices with automatic GST calculation
 - **GST Breakdown**: CGST and SGST calculation (18% total, split 9% each)
 - **Payment Tracking**: Track invoice payment status
@@ -13,12 +14,13 @@ The billing system includes:
 1. **Run the Billing Schema SQL**
 
    Navigate to your Supabase SQL Editor and run:
-   
+
    ```sql
    -- Run supabase/billing-schema.sql
    ```
 
    This creates:
+
    - `invoices` table for invoice records
    - `invoice_items` table for line items
    - `company_settings` table for company/GST information
@@ -29,9 +31,9 @@ The billing system includes:
    Update your company information and GST details:
 
    ```sql
-   UPDATE company_settings 
-   SET 
-     company_name = 'JÄGER CLOTHING',
+   UPDATE company_settings
+   SET
+     company_name = 'Jager Clothing',
      address = 'Your Company Address',
      city = 'Your City',
      state = 'Your State',
@@ -47,18 +49,21 @@ The billing system includes:
 ## Features
 
 ### 1. Invoice Generation
+
 - Automatic invoice number generation (format: `INV-YYYYMM-001`)
 - GST calculation (default 18%)
 - CGST/SGST split (9% each)
 - Links to orders
 
 ### 2. PDF Generation
+
 - **Packing Slip**: Shipping label with order contents
 - **Invoice**: Tax invoice with GST breakdown
 - Professional formatting
 - Company logo and details
 
 ### 3. Payment Tracking
+
 - Track payment status (Pending, Paid, Partial, Cancelled)
 - Update payment dates
 - Filter invoices by status
@@ -79,6 +84,7 @@ The billing system includes:
 ### Downloading PDFs
 
 1. From **Order Details** page:
+
    - Click **"Generate Packing Slip"** for shipping label
    - Click **"Generate Invoice (GST)"** for tax invoice
 
@@ -106,6 +112,7 @@ Grand Total = Subtotal (already includes GST)
 ```
 
 Example:
+
 - Item Total: ₹10,000
 - Taxable Amount: ₹8,474.58
 - CGST (9%): ₹763.41
@@ -121,7 +128,7 @@ Edit `src/lib/pdfGenerator.ts`:
 
 ```typescript
 const DEFAULT_COMPANY: CompanyInfo = {
-  name: "JÄGER CLOTHING",
+  name: "Jager Clothing",
   address: "Your Company Address",
   city: "City",
   state: "State",
@@ -139,7 +146,7 @@ Or update in database `company_settings` table.
 Default is 18%. To change:
 
 ```sql
-UPDATE company_settings 
+UPDATE company_settings
 SET default_tax_rate = 5.00  -- For 5% GST
 WHERE id = '00000000-0000-0000-0000-000000000001';
 ```
@@ -153,11 +160,13 @@ To customize, modify the `generate_invoice_number()` function in `billing-schema
 ## Testing
 
 1. **Create Test Invoice**:
+
    - Go to Billing page
    - Create invoice from an existing order
    - Verify GST calculation
 
 2. **Download PDF**:
+
    - Click download on an invoice
    - Verify PDF format and GST breakdown
 
@@ -168,16 +177,19 @@ To customize, modify the `generate_invoice_number()` function in `billing-schema
 ## Troubleshooting
 
 **Invoice creation fails?**
+
 - Check if `generate_invoice_number()` function exists
 - Verify order exists and has items
 - Check company_settings table has default record
 
 **GST calculation incorrect?**
+
 - Verify tax_rate in company_settings
 - Check `calculate_gst()` function exists
 - Review GST calculation formula
 
 **PDF not generating?**
+
 - Check browser console for errors
 - Verify jspdf package is installed: `npm list jspdf`
 - Check company settings are configured
@@ -189,4 +201,3 @@ To customize, modify the `generate_invoice_number()` function in `billing-schema
 - [ ] Test invoice generation
 - [ ] Set up automated invoice creation for orders
 - [ ] Add email functionality to send invoices
-

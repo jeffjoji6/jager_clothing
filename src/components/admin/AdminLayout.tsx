@@ -114,7 +114,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         <Sidebar>
         <SidebarHeader className="border-b border-foreground">
           <div className="flex items-center gap-2 px-4 py-4">
-            <img src="/jager_logo.png" alt="Jäger Logo" className="h-8 w-auto" />
+            <img src="/jager_logo.png" alt="Jager Logo" className="h-8 w-auto" />
             <div>
               <h2 className="text-lg font-heading font-bold uppercase tracking-tight">JÄGER</h2>
               <p className="text-xs text-grey-text">Admin Panel</p>

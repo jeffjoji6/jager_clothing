@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Jäger Admin Panel provides a comprehensive dashboard for managing your e-commerce platform. It includes order management, customer CRM, product catalog, Jager Pro requests, analytics, and settings.
+The Jager Admin Panel provides a comprehensive dashboard for managing your e-commerce platform. It includes order management, customer CRM, product catalog, Jager Pro requests, analytics, and settings.
 
 ## Database Setup
 

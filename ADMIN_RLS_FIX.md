@@ -1,6 +1,7 @@
 # Fix Admin RLS 500 Error
 
 ## Problem
+
 Getting 500 error when accessing `/admin` due to circular dependency in RLS policies.
 
 ## Solution
@@ -24,6 +25,7 @@ CREATE POLICY "Users can view their own admin record" ON admin_users
 The original policy tried to check if a user is an admin by querying `admin_users`, but that query itself needed admin access - creating a circular dependency.
 
 By allowing users to view **only their own record**, the app can:
+
 1. Query `admin_users` where `id = auth.uid()` ✅
 2. Check if that record exists and what role it has ✅
 3. Grant access based on the role ✅
@@ -53,4 +55,3 @@ SELECT * FROM pg_policies WHERE tablename = 'admin_users';
 -- Test query (should work if you're logged in)
 SELECT * FROM admin_users WHERE id = auth.uid();
 ```
-

@@ -284,7 +284,7 @@ const ProductDetail = () => {
                   Description
                 </AccordionTrigger>
                 <AccordionContent className="text-sm font-body text-grey-text">
-                  {product.description || "Premium quality product from Jäger Clothing."}
+                  {product.description || "Premium quality product from Jager Clothing."}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="shipping" className="border-b border-foreground">

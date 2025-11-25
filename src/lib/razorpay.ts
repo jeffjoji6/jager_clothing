@@ -92,7 +92,7 @@ export const openRazorpayCheckout = async (
       key: razorpayKey,
       amount: amount * 100, // Convert to paise
       currency: 'INR',
-      name: 'JÄGER CLOTHING',
+      name: 'Jager Clothing',
       description: 'Order Payment',
       order_id: orderId,
       handler: onSuccess,

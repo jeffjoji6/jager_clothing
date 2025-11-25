@@ -19,7 +19,7 @@ const CustomLab = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
-          {/* JÄGER BASIC */}
+          {/* Jager Basic */}
           <div className="border-2 border-foreground bg-background p-8 md:p-12 flex flex-col">
             <div className="flex-1">
               <div className="w-16 h-16 bg-foreground text-background flex items-center justify-center mb-6">
@@ -60,7 +60,7 @@ const CustomLab = () => {
             </Button>
           </div>
 
-          {/* JÄGER PRO */}
+          {/* Jager Pro */}
           <div className="border-2 border-jager-red bg-background p-8 md:p-12 flex flex-col">
             <div className="flex-1">
               <div className="w-16 h-16 bg-jager-red text-background flex items-center justify-center mb-6">

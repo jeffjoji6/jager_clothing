@@ -97,7 +97,7 @@ const Billing = () => {
       if (error) {
         // Return default if not found
         return {
-          company_name: "JÄGER CLOTHING",
+          company_name: "Jager Clothing",
           address: "Your Address",
           city: "City",
           state: "State",

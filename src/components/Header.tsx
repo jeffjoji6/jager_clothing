@@ -94,20 +94,20 @@ export const Header = () => {
           {/* Desktop: Logo Left */}
           <div className="hidden md:block">
             <Link to="/" className="flex items-center gap-3 pl-6">
-              <img src="/jager_logo.png" alt="Jäger Logo" className="h-8 w-auto scale-150" />
+              <img src="/jager_logo.png" alt="Jager Logo" className="h-8 w-auto scale-150" />
               <span className="text-3xl font-heading font-semibold uppercase tracking-tighter">
                 JÄGER
               </span>
             </Link>
             {/* <Link to="/" className="flex items-center gap-3">
-              <img src="/test.PNG" alt="Jäger Logo" className="h-8 w-auto scale-150 pl-12" />
+              <img src="/test.PNG" alt="Jager Logo" className="h-8 w-auto scale-150 pl-12" />
               
             </Link> */}
           </div>
 
           {/* Mobile: Center Logo */}
           <Link to="/" className="text-2xl md:hidden font-heading font-bold uppercase tracking-tighter absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-            <img src="/jager_logo.png" alt="Jäger Logo" className="h-6 w-auto" />
+            <img src="/jager_logo.png" alt="Jager Logo" className="h-6 w-auto" />
             <span>JÄGER</span>
           </Link>
 

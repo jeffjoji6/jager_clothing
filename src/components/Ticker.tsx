@@ -1,5 +1,5 @@
 export const Ticker = () => {
-  const tickerText = "WORLDWIDE SHIPPING +++ PREMIUM QUALITY +++ JÄGER CLOTHING";
+  const tickerText = "WORLDWIDE SHIPPING +++ PREMIUM QUALITY +++ JAGER CLOTHING";
   
   return (
     <div className="bg-foreground text-background overflow-hidden py-2">

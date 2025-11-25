@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 -- Company settings for billing
 CREATE TABLE IF NOT EXISTS company_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  company_name TEXT NOT NULL DEFAULT 'JÄGER CLOTHING',
+  company_name TEXT NOT NULL DEFAULT 'Jager Clothing',
   address TEXT,
   city TEXT,
   state TEXT,
@@ -213,7 +213,7 @@ CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON company_setti
 INSERT INTO company_settings (id, company_name, default_tax_rate)
 VALUES (
   '00000000-0000-0000-0000-000000000001',
-  'JÄGER CLOTHING',
+  'Jager Clothing',
   18.00
 )
 ON CONFLICT (id) DO NOTHING;

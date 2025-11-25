@@ -59,7 +59,7 @@ const Signup = () => {
               CREATE ACCOUNT
             </h1>
             <p className="text-sm text-grey-text font-body">
-              Join Jäger Clothing today
+              Join Jager Clothing today
             </p>
           </div>
 

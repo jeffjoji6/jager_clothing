@@ -20,7 +20,7 @@ const Home = () => {
       <section className="relative h-[60vh] md:h-[85vh] overflow-hidden">
         <img 
           src={heroImage} 
-          alt="JÄGER Hero" 
+          alt="Jager Hero" 
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-foreground/30" />
@@ -134,7 +134,7 @@ const Home = () => {
           </div>
           <div className="border-t border-background/20 pt-8 text-center">
             <p className="text-xs font-body text-background/60">
-              © 2024 JÄGER CLOTHING. ALL RIGHTS RESERVED.
+              © 2024 Jager Clothing. ALL RIGHTS RESERVED.
             </p>
           </div>
         </div>

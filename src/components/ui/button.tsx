@@ -9,11 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // JÄGER Hero - Black on White
+        // Jager Hero - Black on White
         hero: "bg-primary text-primary-foreground hover:bg-primary/90 border-0",
-        // JÄGER Outline - White with Black Border
+        // Jager Outline - White with Black Border
         heroOutline: "bg-background text-foreground border-2 border-foreground hover:bg-foreground hover:text-background",
-        // JÄGER Red - The Accent CTA
+        // Jager Red - The Accent CTA
         jagerRed: "bg-jager-red text-primary-foreground hover:bg-jager-redHover",
         // Default variants for general use
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
