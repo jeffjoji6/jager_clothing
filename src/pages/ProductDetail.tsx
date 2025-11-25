@@ -128,7 +128,7 @@ const ProductDetail = () => {
               />
             </div>
             {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2">
                 {Array.isArray(images) && images.slice(0, 4).map((img, i) => (
                   <div 
                     key={i}
@@ -138,9 +138,9 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             )}
           </div>
 
@@ -157,11 +157,11 @@ const ProductDetail = () => {
 
             {/* Low Stock Warning */}
             {currentVariant && currentVariant.stock > 0 && currentVariant.stock <= 5 && (
-              <div className="bg-jager-red/10 border border-jager-red px-4 py-3">
-                <p className="text-sm font-body text-jager-red">
+            <div className="bg-jager-red/10 border border-jager-red px-4 py-3">
+              <p className="text-sm font-body text-jager-red">
                   🔥 Low Stock: Only {currentVariant.stock} items left
-                </p>
-              </div>
+              </p>
+            </div>
             )}
 
             {/* Color Selector */}
@@ -218,28 +218,28 @@ const ProductDetail = () => {
                   const isInStock = variantForSize && variantForSize.stock > 0;
                   
                   return (
-                    <button
-                      key={size}
-                      onClick={() => {
+                  <button
+                    key={size}
+                    onClick={() => {
                         if (!isInStock) return;
-                        setSelectedSize(size);
-                        setSizeError(false);
+                      setSelectedSize(size);
+                      setSizeError(false);
                         if (variantForSize) setSelectedVariant(variantForSize.id);
-                      }}
+                    }}
                       disabled={!isInStock}
-                      className={`
-                        h-12 border-2 font-heading font-bold uppercase text-sm transition-all
+                    className={`
+                      h-12 border-2 font-heading font-bold uppercase text-sm transition-all
                         ${!isInStock 
                           ? 'opacity-50 cursor-not-allowed'
                           : selectedSize === size
-                            ? 'bg-foreground text-background border-foreground'
-                            : 'bg-background text-foreground border-foreground hover:bg-foreground hover:text-background'
-                        }
+                        ? 'bg-foreground text-background border-foreground' 
+                        : 'bg-background text-foreground border-foreground hover:bg-foreground hover:text-background'
+                      }
                         ${sizeError && !selectedSize ? 'animate-pulse border-jager-red' : ''}
-                      `}
-                    >
-                      {size}
-                    </button>
+                    `}
+                  >
+                    {size}
+                  </button>
                   );
                 })}
               </div>

@@ -19,12 +19,36 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Check if we have the hash from Supabase
-    const hashParams = searchParams.get('hash');
-    if (!hashParams) {
-      setError("Invalid reset link. Please request a new password reset.");
+    // Check if we have hash fragments in the URL (Supabase redirect)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get("access_token");
+    const type = hashParams.get("type");
+
+    // If we have hash fragments, handle the session
+    if (accessToken && type === "recovery") {
+      const refreshToken = hashParams.get("refresh_token");
+      if (refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }).then(({ error }) => {
+          if (error) {
+            setError("Invalid reset link. Please request a new password reset.");
+          }
+          // Clear the hash from URL
+          window.history.replaceState(null, "", window.location.pathname);
+        });
+      }
+    } else {
+      // Check if we already have a session (from callback redirect)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          // No session and no hash - might be invalid link
+          // Don't show error immediately, user might be typing password
+        }
+      });
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Filter, FileText, Download } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { generatePackingSlip } from "@/lib/pdfGenerator";
 
 interface Order {
   id: string;
@@ -125,11 +127,52 @@ const Orders = () => {
     setSearchParams(searchParams);
   };
 
-  // Generate PDF function (placeholder - would need a PDF library)
+  // Generate PDF function
   const generatePDF = async (order: Order) => {
-    // TODO: Implement PDF generation
-    // This would use a library like jsPDF or pdfkit
-    alert(`PDF generation for order ${order.id} - Feature coming soon!`);
+    try {
+      // Fetch order items
+      const { data: orderItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+
+      if (itemsError) throw itemsError;
+
+      if (!orderItems || orderItems.length === 0) {
+        toast.error("No items found for this order");
+        return;
+      }
+
+      // Generate packing slip
+      generatePackingSlip({
+        orderId: order.id,
+        orderDate: format(new Date(order.created_at || new Date()), 'dd MMM yyyy'),
+        customerName: order.shipping_address?.full_name || "Customer",
+        customerAddress: {
+          street: order.shipping_address?.street || "",
+          city: order.shipping_address?.city || "",
+          state: order.shipping_address?.state || "",
+          zip: order.shipping_address?.zip || "",
+          phone: order.shipping_address?.phone || "",
+        },
+        items: orderItems.map((item: any) => ({
+          name: item.product_name,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        subtotal: Number(order.subtotal || 0),
+        shipping: Number(order.shipping || 0),
+        tax: Number(order.tax || 0),
+        total: Number(order.total || 0),
+      });
+
+      toast.success("Packing slip generated successfully!");
+    } catch (error: any) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF: " + (error.message || "Unknown error"));
+    }
   };
 
   return (

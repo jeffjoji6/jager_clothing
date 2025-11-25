@@ -119,22 +119,15 @@ ALTER TABLE order_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customer_emails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for admin_users (only admins can view)
-CREATE POLICY "Admins can view all admin users" ON admin_users
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE id = auth.uid() AND role IN ('admin', 'staff')
-    )
-  );
+-- RLS Policies for admin_users
+-- CRITICAL: Only allow users to view their own record (prevents circular dependency)
+-- This is sufficient for checking if a user is an admin
+CREATE POLICY "Users can view their own admin record" ON admin_users
+  FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Admins can manage admin users" ON admin_users
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+-- Note: "View all admin users" policy would create circular dependency
+-- To view all admins, use the get_all_admin_users() function (see admin-view-all-function.sql)
+-- or query from admin panel after confirming user is admin
 
 -- RLS Policies for orders (admins can view and update all orders)
 CREATE POLICY "Admins can view all orders" ON orders

@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarInset,
+  SidebarProvider,
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
@@ -78,6 +79,12 @@ const menuItems = [
     roles: ["admin"],
   },
   {
+    title: "Billing",
+    icon: FileText,
+    url: "/admin/billing",
+    roles: ["admin"],
+  },
+  {
     title: "Settings",
     icon: Settings,
     url: "/admin/settings",
@@ -102,8 +109,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   );
 
   return (
-    <div className="flex h-screen w-full bg-background">
-      <Sidebar>
+    <SidebarProvider>
+      <div className="flex h-screen w-full bg-background">
+        <Sidebar>
         <SidebarHeader className="border-b border-foreground">
           <div className="flex items-center gap-2 px-4 py-4">
             <img src="/jager_logo.png" alt="Jäger Logo" className="h-8 w-auto" />
@@ -173,10 +181,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
         </div>
       </Sidebar>
-      <SidebarInset className="flex-1 overflow-auto">
-        <main className="flex-1 p-6 md:p-8">{children}</main>
-      </SidebarInset>
-    </div>
+        <SidebarInset className="flex-1 overflow-auto">
+          <main className="flex-1 p-6 md:p-8">{children}</main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

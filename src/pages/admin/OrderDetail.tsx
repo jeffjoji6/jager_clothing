@@ -12,8 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, FileText, Download, Package } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-// PDF generation - requires jspdf library: npm install jspdf
-// import jsPDF from "jspdf";
+import { generatePackingSlip, generateInvoice } from "@/lib/pdfGenerator";
 
 interface Order {
   id: string;
@@ -166,12 +165,87 @@ const OrderDetail = () => {
   });
 
   // Generate PDF Packing Slip
-  // TODO: Install jspdf: npm install jspdf @types/jspdf
-  // Then uncomment and use this function
   const generatePDF = () => {
-    toast.info("PDF generation coming soon! Install jspdf package to enable.");
-    // const doc = new jsPDF();
-    // ... PDF generation code
+    if (!order || !orderItems) {
+      toast.error("Order data not available");
+      return;
+    }
+
+    try {
+      generatePackingSlip({
+        orderId: order.id,
+        orderDate: format(new Date(order.created_at), 'dd MMM yyyy'),
+        customerName: order.shipping_address?.full_name || "Customer",
+        customerAddress: {
+          street: order.shipping_address?.street || "",
+          city: order.shipping_address?.city || "",
+          state: order.shipping_address?.state || "",
+          zip: order.shipping_address?.zip || "",
+          phone: order.shipping_address?.phone || "",
+        },
+        items: orderItems.map((item) => ({
+          name: item.product_name,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        subtotal: Number(order.subtotal),
+        shipping: Number(order.shipping),
+        tax: Number(order.tax),
+        total: Number(order.total),
+      });
+      toast.success("Packing slip generated successfully!");
+    } catch (error: any) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF: " + error.message);
+    }
+  };
+
+  // Generate Invoice with GST
+  const generateInvoicePDF = () => {
+    if (!order || !orderItems) {
+      toast.error("Order data not available");
+      return;
+    }
+
+    try {
+      // Generate invoice number (can be stored in database)
+      const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}-${format(new Date(), 'yyyyMMdd')}`;
+      
+      generateInvoice(
+        {
+          orderId: order.id,
+          orderDate: format(new Date(order.created_at), 'dd MMM yyyy'),
+          customerName: order.shipping_address?.full_name || "Customer",
+          customerAddress: {
+            street: order.shipping_address?.street || "",
+            city: order.shipping_address?.city || "",
+            state: order.shipping_address?.state || "",
+            zip: order.shipping_address?.zip || "",
+            phone: order.shipping_address?.phone || "",
+          },
+          items: orderItems.map((item) => ({
+            name: item.product_name,
+            size: item.size,
+            color: item.color,
+            quantity: item.quantity,
+            price: Number(item.price),
+          })),
+          subtotal: Number(order.subtotal),
+          shipping: Number(order.shipping),
+          tax: Number(order.tax),
+          total: Number(order.total),
+        },
+        invoiceNumber,
+        undefined, // Uses default company info
+        18 // 18% GST rate (India)
+      );
+      toast.success("Invoice generated successfully!");
+    } catch (error: any) {
+      console.error("Invoice generation error:", error);
+      toast.error("Failed to generate invoice: " + error.message);
+    }
   };
 
   if (isLoading || !order) {
@@ -356,14 +430,22 @@ const OrderDetail = () => {
                 </div>
               </div>
 
-              {/* Generate PDF */}
+              {/* Generate PDFs */}
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={generatePDF}
               >
                 <FileText className="h-4 w-4 mr-2" />
-                Generate Packing Slip PDF
+                Generate Packing Slip
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={generateInvoicePDF}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Generate Invoice (GST)
               </Button>
 
               {/* Notes */}

@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Orders from "./pages/Orders";
@@ -30,6 +31,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminJagerPro from "./pages/admin/JagerPro";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
+import AdminBilling from "./pages/admin/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,7 @@ const App = () => (
               <Route path="/custom-lab/pro" element={<CustomLabPro />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route path="/checkout" element={<Checkout />} />
@@ -112,6 +115,13 @@ const App = () => (
                 <AdminProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <AdminSettings />
+                  </AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/billing" element={
+                <AdminProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <AdminBilling />
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />
