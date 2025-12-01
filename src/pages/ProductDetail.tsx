@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ const ProductDetail = () => {
   const { data: product, isLoading, error } = useProduct(id || "");
   const { addItem } = useCart();
   const { user } = useAuth();
+  const selectorsRef = useRef<HTMLDivElement>(null);
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -103,6 +104,7 @@ const ProductDetail = () => {
     if (!selectedSize || !selectedColor) {
       setSizeError(true);
       toast.error("Please select a size and color");
+      selectorsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -139,6 +141,7 @@ const ProductDetail = () => {
     if (!selectedSize || !selectedColor) {
       setSizeError(true);
       toast.error("Please select a size and color");
+      selectorsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -205,7 +208,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <Header />
 
       <div className="container mx-auto px-4 py-8 md:py-12">
@@ -258,7 +261,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Selectors */}
-            <div className="space-y-6 md:space-y-8">
+            <div className="space-y-6 md:space-y-8" ref={selectorsRef}>
 
               {/* Color */}
               {availableColors.length > 0 && (
@@ -299,10 +302,10 @@ const ProductDetail = () => {
                           }
                         }}
                         className={`w-12 h-12 flex items-center justify-center text-sm font-bold transition-all border relative ${!isInStock
-                            ? 'bg-muted text-muted-foreground border-border cursor-not-allowed opacity-50'
-                            : selectedSize === size
-                              ? 'bg-foreground text-background border-foreground'
-                              : 'bg-background text-foreground border-border hover:border-foreground'
+                          ? 'bg-muted text-muted-foreground border-border cursor-not-allowed opacity-50'
+                          : selectedSize === size
+                            ? 'bg-foreground text-background border-foreground'
+                            : 'bg-background text-foreground border-border hover:border-foreground'
                           } ${sizeError ? 'border-jager-red animate-shake' : ''}`}
                       >
                         {size}

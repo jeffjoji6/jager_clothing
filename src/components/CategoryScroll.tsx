@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 
 const categories = [
-    { name: "New Arrivals", image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=300&auto=format&fit=crop", link: "/new-arrivals" },
-    { name: "Hoodies", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=300&auto=format&fit=crop", link: "/collection?category=hoodies" },
-    { name: "Tees", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=300&auto=format&fit=crop", link: "/collection?category=tees" },
-    { name: "Bottoms", image: "https://images.unsplash.com/photo-1542272617-08f08630329f?q=80&w=300&auto=format&fit=crop", link: "/collection?category=bottoms" },
-    { name: "Custom Lab", image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=300&auto=format&fit=crop", link: "/custom-lab" },
+    { name: "New Arrivals", image: "/categories/new.png", link: "/new-arrivals" },
+    { name: "Hoodies", image: "/categories/hoodie.png", link: "/collection?category=hoodies" },
+    { name: "Tees", image: "/categories/tee.png", link: "/collection?category=tees" },
+    { name: "Bottoms", image: "/categories/pant.png", link: "/collection?category=bottoms" },
+    { name: "Custom Lab", image: "/categories/lab.png", link: "/custom-lab" },
 ];
 
 export const CategoryScroll = () => {
