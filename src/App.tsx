@@ -37,6 +37,8 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import { Analytics } from "@vercel/analytics/react";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -44,6 +46,7 @@ const App = () => (
         <CartProvider>
           <Toaster />
           <Sonner />
+          <Analytics />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -61,7 +64,7 @@ const App = () => (
               <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/profile" element={<Profile />} />
-              
+
               {/* Admin Routes */}
               <Route path="/admin" element={
                 <AdminProtectedRoute>
@@ -133,7 +136,7 @@ const App = () => (
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />
-              
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
