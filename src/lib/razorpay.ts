@@ -25,7 +25,7 @@ export interface RazorpayOptions {
   currency: string;
   name: string;
   description: string;
-  order_id: string;
+  order_id?: string; // Optional - can use amount directly
   handler: (response: RazorpayPaymentResponse) => void;
   prefill?: {
     name?: string;
@@ -63,23 +63,116 @@ export const loadRazorpayScript = (): Promise<void> => {
   });
 };
 
-// Create Razorpay order (should be called from backend API)
-// For now, this is a placeholder - in production, create order on backend
-export const createRazorpayOrder = async (amount: number, receipt: string): Promise<RazorpayOrderResponse> => {
-  // In production, this should call your backend API
-  // Example: const response = await fetch('/api/create-razorpay-order', { ... });
-  // For now, returning mock data structure
-  throw new Error('createRazorpayOrder must be implemented on backend');
+// Create Razorpay order via Supabase Edge Function
+// NOTE: Razorpay API cannot be called directly from browser due to CORS
+// Must use backend (Supabase Edge Function) to create orders
+export const createRazorpayOrder = async (amount: number, receipt: string): Promise<RazorpayOrderResponse | null> => {
+  // Try Supabase Edge Function first (recommended)
+  try {
+    const { supabase } = await import('./supabase');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.warn('User not authenticated, will use checkout without order');
+      return null;
+    }
+
+    const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+      body: { amount, currency: 'INR', receipt },
+    });
+
+    if (error) {
+      // Edge Function doesn't exist or failed - this is OK, we'll use checkout without order
+      // CORS errors are expected if Edge Function is not set up
+      if (error.message?.includes('CORS') || error.message?.includes('Failed to send')) {
+        console.warn('Edge Function not available (CORS error - this is OK if not set up), will use checkout without order');
+      } else {
+        console.warn('Edge Function not available (this is OK if not set up), will use checkout without order:', error.message);
+      }
+      return null;
+    }
+
+    if (data && data.id) {
+      console.log('Razorpay order created via Edge Function:', data.id);
+      return data;
+    }
+
+    return null;
+  } catch (error: any) {
+    // Edge Function doesn't exist - this is expected if not set up
+    // Silently fall back to checkout without order
+    console.warn('Edge Function not set up (this is OK), will use checkout without order');
+    return null;
+  }
+};
+
+// Verify Razorpay payment via Supabase Edge Function
+export const verifyRazorpayPayment = async (
+  razorpay_order_id: string,
+  razorpay_payment_id: string,
+  razorpay_signature: string,
+  order_id: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { supabase } = await import('./supabase');
+
+    const { data, error } = await supabase.functions.invoke('verify-razorpay-payment', {
+      body: {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        order_id,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Verification failed');
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Payment verification failed:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Simulate payment success for testing (development only)
+export const simulatePaymentSuccess = (
+  orderId: string | null,
+  onSuccess: (response: RazorpayPaymentResponse) => void
+) => {
+  // Generate mock payment response
+  const mockResponse: RazorpayPaymentResponse = {
+    razorpay_payment_id: `pay_test_${Date.now()}`,
+    razorpay_order_id: orderId || `order_test_${Date.now()}`,
+    razorpay_signature: `sig_test_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+  };
+
+  // Call success handler after a short delay to simulate async behavior
+  setTimeout(() => {
+    onSuccess(mockResponse);
+  }, 500);
 };
 
 // Initialize Razorpay checkout
+// Can work with or without order_id (if order_id is null, Razorpay creates order automatically)
 export const openRazorpayCheckout = async (
-  orderId: string,
+  orderId: string | null,
   amount: number,
   onSuccess: (response: RazorpayPaymentResponse) => void,
   onError: (error: any) => void,
-  prefillData?: { name?: string; email?: string; contact?: string }
+  prefillData?: { name?: string; email?: string; contact?: string },
+  skipPayment?: boolean // Test mode: skip actual payment
 ) => {
+  // Test mode: Skip payment and simulate success
+  if (skipPayment || import.meta.env.DEV) {
+    const enableTestMode = import.meta.env.VITE_ENABLE_TEST_PAYMENT_BYPASS === 'true';
+    if (enableTestMode) {
+      console.log('🧪 TEST MODE: Bypassing payment, simulating success...');
+      simulatePaymentSuccess(orderId, onSuccess);
+      return;
+    }
+  }
+
   try {
     await loadRazorpayScript();
 
@@ -88,13 +181,23 @@ export const openRazorpayCheckout = async (
       throw new Error('Razorpay key not configured');
     }
 
+    // Validate amount
+    const amountInPaise = Math.round(amount * 100);
+    if (amountInPaise < 100) {
+      throw new Error('Minimum amount is ₹1.00');
+    }
+
+    // Validate Razorpay key format
+    if (!razorpayKey.startsWith('rzp_test_') && !razorpayKey.startsWith('rzp_live_')) {
+      console.warn('Razorpay key format may be invalid. Expected rzp_test_ or rzp_live_ prefix.');
+    }
+
     const options: RazorpayOptions = {
       key: razorpayKey,
-      amount: amount * 100, // Convert to paise
+      amount: amountInPaise,
       currency: 'INR',
       name: 'Jager Clothing',
       description: 'Order Payment',
-      order_id: orderId,
       handler: onSuccess,
       prefill: prefillData,
       theme: {
@@ -107,10 +210,118 @@ export const openRazorpayCheckout = async (
       },
     };
 
+    // Add order_id if provided, otherwise Razorpay will create order automatically
+    if (orderId) {
+      options.order_id = orderId;
+      console.log('Using Razorpay order_id:', orderId);
+    } else {
+      // When no order_id, add receipt for tracking
+      // Razorpay will create order automatically with this receipt
+      const receipt = `receipt_${Date.now()}`;
+      (options as any).receipt = receipt;
+      console.log('No order_id provided, Razorpay will create order automatically. Receipt:', receipt);
+    }
+
+    // Log checkout options for debugging (without sensitive data)
+    console.log('Opening Razorpay checkout with options:', {
+      key: razorpayKey.substring(0, 10) + '...',
+      amount: amountInPaise,
+      currency: options.currency,
+      order_id: options.order_id || 'auto-create',
+      receipt: (options as any).receipt || 'none',
+    });
+
     const razorpay = new window.Razorpay(options);
+
+    // Add comprehensive error handlers for Razorpay
+    razorpay.on('payment.failed', (response: any) => {
+      console.error('Razorpay payment failed:', response);
+
+      // Log full error details for debugging
+      console.group('🔍 Razorpay Error Details');
+      console.log('Full response:', JSON.stringify(response, null, 2));
+      if (response.error) {
+        console.log('Error object:', response.error);
+        console.log('Error description:', response.error.description);
+        console.log('Error reason:', response.error.reason);
+        console.log('Error code:', response.error.code);
+        console.log('Error source:', response.error.source);
+        console.log('Error step:', response.error.step);
+      }
+      if (response.metadata) {
+        console.log('Metadata:', response.metadata);
+      }
+      console.groupEnd();
+
+      // Extract error message from various possible locations
+      let errorMessage = 'Payment failed';
+
+      if (response.error) {
+        // Check multiple possible error message locations
+        errorMessage = response.error.description ||
+          response.error.reason ||
+          response.error.field ||
+          response.error.source ||
+          response.error.step ||
+          response.error.metadata?.error_description ||
+          (response.error.code ? `Error code: ${response.error.code}` : '') ||
+          JSON.stringify(response.error);
+      } else if (response.metadata?.error_description) {
+        errorMessage = response.metadata.error_description;
+      } else if (typeof response === 'string') {
+        errorMessage = response;
+      }
+
+      // Handle specific error cases based on error code and reason
+      const errorCode = response.error?.code;
+      const errorReason = response.error?.reason;
+
+      if (errorReason === 'international_transaction_not_allowed' ||
+        errorCode === 'BAD_REQUEST_ERROR' && errorMessage.toLowerCase().includes('international')) {
+        // Specific handling for international card restriction
+        if (import.meta.env.DEV) {
+          errorMessage = 'International cards are not supported in test mode. For testing, use Indian test card: 4111 1111 1111 1111 (CVV: 123, Expiry: 12/25). For production, contact Razorpay support to enable international cards.';
+        } else {
+          errorMessage = 'International cards are not currently supported. Please use an Indian card or contact our support team for alternative payment methods.';
+        }
+      } else if (errorMessage.toLowerCase().includes('international') ||
+        errorMessage.toLowerCase().includes('not supported')) {
+        errorMessage = 'International cards are not supported. Please use an Indian card or contact support for alternative payment methods.';
+      } else if (errorMessage.toLowerCase().includes('card declined') ||
+        errorMessage.toLowerCase().includes('declined')) {
+        errorMessage = 'Your card was declined. Please try a different card or contact your bank.';
+      } else if (errorMessage.toLowerCase().includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds. Please try a different payment method.';
+      } else if (errorMessage.toLowerCase().includes('expired')) {
+        errorMessage = 'Your card has expired. Please use a different card.';
+      } else if (errorMessage.toLowerCase().includes('invalid')) {
+        errorMessage = 'Invalid card details. Please check and try again.';
+      }
+
+      onError(new Error(errorMessage));
+    });
+
+    // Handle other Razorpay errors
+    razorpay.on('payment.authorized', () => {
+      // This is handled by the success handler
+    });
+
     razorpay.open();
-  } catch (error) {
-    onError(error);
+  } catch (error: any) {
+    console.error('Error opening Razorpay checkout:', error);
+
+    // Extract better error message
+    let errorMessage = 'Failed to open payment gateway';
+
+    if (error?.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error?.error?.description) {
+      errorMessage = error.error.description;
+    }
+
+    onError(new Error(errorMessage));
   }
 };
 

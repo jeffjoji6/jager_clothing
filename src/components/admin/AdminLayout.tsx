@@ -67,6 +67,12 @@ const menuItems = [
     roles: ["admin", "staff"],
   },
   {
+    title: "Custom Products",
+    icon: Package,
+    url: "/admin/custom-products",
+    roles: ["admin", "staff", "designer"],
+  },
+  {
     title: "Customers",
     icon: Users,
     url: "/admin/customers",

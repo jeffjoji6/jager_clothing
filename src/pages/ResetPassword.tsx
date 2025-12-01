@@ -23,6 +23,12 @@ const ResetPassword = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
     const type = hashParams.get("type");
+    const errorDescription = hashParams.get("error_description");
+
+    if (errorDescription) {
+      setError(decodeURIComponent(errorDescription));
+      return;
+    }
 
     // If we have hash fragments, handle the session
     if (accessToken && type === "recovery") {
@@ -94,7 +100,7 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        
+
         <div className="container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-md mx-auto text-center">
             <CheckCircle2 className="w-16 h-16 text-jager-red mx-auto mb-4" />
@@ -116,7 +122,7 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="max-w-md mx-auto">
           <div className="mb-8">

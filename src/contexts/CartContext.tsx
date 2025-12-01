@@ -15,7 +15,7 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   loading: boolean;
-  addItem: (item: Omit<CartItem, 'quantity'>) => Promise<void>;
+  addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => Promise<void>;
   removeItem: (id: string, size: string) => Promise<void>;
   updateQuantity: (id: string, size: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -166,18 +166,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items, user]);
 
-  const addItem = async (item: Omit<CartItem, 'quantity'>) => {
+  const addItem = async (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id && i.size === item.size);
+      const quantityToAdd = item.quantity || 1;
+
       let updated;
       if (existing) {
         updated = prev.map((i) =>
           i.id === item.id && i.size === item.size
-            ? { ...i, quantity: i.quantity + 1 }
+            ? { ...i, quantity: i.quantity + quantityToAdd }
             : i
         );
       } else {
-        updated = [...prev, { ...item, quantity: 1 }];
+        updated = [...prev, { ...item, quantity: quantityToAdd }];
       }
       if (user) {
         syncToSupabase(updated);

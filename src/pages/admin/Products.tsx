@@ -271,7 +271,7 @@ const Products = () => {
     mutationFn: async () => {
       if (!editingProduct) return;
 
-      // Update product
+      // 1. Update product details
       const { error: productError } = await supabase
         .from('products')
         .update({
@@ -294,31 +294,52 @@ const Products = () => {
 
       if (productError) throw productError;
 
-      // Delete existing variants
-      const { error: deleteError } = await supabase
+      // 2. Upsert variants (Update existing, Insert new)
+      if (variants.length > 0) {
+        const variantsToUpsert = variants.map(v => {
+          const isNew = v.id.startsWith('temp-');
+          return {
+            id: isNew ? undefined : v.id, // Undefined ID triggers insert
+            product_id: editingProduct.id,
+            size: v.size,
+            color: v.color,
+            stock: v.stock,
+            price_modifier: v.price_modifier,
+            actual_price: v.actual_price,
+            discounted_price: v.discounted_price,
+          };
+        });
+
+        const { error: upsertError } = await supabase
+          .from('product_variants')
+          .upsert(variantsToUpsert);
+
+        if (upsertError) throw upsertError;
+      }
+
+      // 3. Delete removed variants
+      // Get IDs of variants currently in the form (excluding new temp ones)
+      const currentIds = variants
+        .map(v => v.id)
+        .filter(id => !id.startsWith('temp-'));
+
+      // Delete variants that are in DB but not in currentIds
+      // If currentIds is empty, it means delete all (except we might hit FK constraints)
+      let deleteQuery = supabase
         .from('product_variants')
         .delete()
         .eq('product_id', editingProduct.id);
 
-      if (deleteError) throw deleteError;
+      if (currentIds.length > 0) {
+        deleteQuery = deleteQuery.not('id', 'in', `(${currentIds.join(',')})`);
+      }
 
-      // Insert all variants (both existing and new)
-      if (variants.length > 0) {
-        const variantData = variants.map(v => ({
-          product_id: editingProduct.id,
-          size: v.size,
-          color: v.color,
-          stock: v.stock,
-          price_modifier: v.price_modifier,
-          actual_price: v.actual_price,
-          discounted_price: v.discounted_price,
-        }));
+      const { error: deleteError } = await deleteQuery;
 
-        const { error: variantsError } = await supabase
-          .from('product_variants')
-          .insert(variantData);
-
-        if (variantsError) throw variantsError;
+      if (deleteError) {
+        console.error("Error deleting removed variants (likely FK constraint):", deleteError);
+        // We don't throw here to allow the update to succeed even if cleanup fails
+        toast.error("Some variants could not be deleted as they are part of existing orders.");
       }
     },
     onSuccess: () => {
@@ -535,7 +556,7 @@ const Products = () => {
                           </Button>
                         </Label>
                       </div>
-                      
+
                       {/* Image Preview */}
                       {productForm.images.length > 0 && (
                         <div className="grid grid-cols-4 gap-4 mt-4">

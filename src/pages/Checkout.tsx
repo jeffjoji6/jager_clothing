@@ -8,12 +8,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { 
-  useAddresses, 
-  useCreateAddress, 
-  useUpdateAddress, 
+import {
+  useAddresses,
+  useCreateAddress,
+  useUpdateAddress,
   useDeleteAddress,
-  Address 
+  Address
 } from "@/hooks/useAddresses";
 import { supabase } from "@/lib/supabase";
 import { openRazorpayCheckout } from "@/lib/razorpay";
@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,7 +52,7 @@ const Checkout = () => {
     is_default: false,
   });
 
-  const shippingCharge = totalPrice >= 2499 ? 0 : 99;
+  const shippingCharge = 0;
   const tax = Math.round(totalPrice * 0.18); // 18% GST
   const finalTotal = totalPrice + shippingCharge + tax;
 
@@ -195,59 +196,106 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      // TODO: Create Razorpay order on backend
-      // For now, we'll simulate the payment flow
-      // In production, you need to:
-      // 1. Create a backend API endpoint to create Razorpay orders
-      // 2. Call that endpoint here to get the order_id
-      // 3. Then call openRazorpayCheckout with that order_id
+      // Try to create Razorpay order via backend (optional)
+      // If backend is not set up, checkout will work without order_id
+      const { createRazorpayOrder } = await import('@/lib/razorpay');
+      let razorpayOrderId: string | null = null;
 
-      // Mock Razorpay order ID (replace with actual backend call)
-      const mockRazorpayOrderId = `order_${order.id}`;
+      try {
+        const razorpayOrder = await createRazorpayOrder(
+          finalTotal,
+          `order_${order.id}`
+        );
+        razorpayOrderId = razorpayOrder?.id || null;
+      } catch (error) {
+        console.warn('Could not create Razorpay order via backend, using checkout without order:', error);
+        // Continue without order_id - Razorpay will create order automatically
+      }
 
-      // Open Razorpay checkout
+      // Check if test mode is enabled (for development/testing)
+      const testModeEnabled = import.meta.env.VITE_ENABLE_TEST_PAYMENT_BYPASS === 'true';
+
+      // Open Razorpay checkout (works with or without order_id)
       await openRazorpayCheckout(
-        mockRazorpayOrderId,
+        razorpayOrderId,
         finalTotal,
         async (paymentResponse) => {
-          // Update order with payment details
-          const { error: updateError } = await supabase
-            .from('orders')
-            .update({
-              status: 'confirmed',
-              payment_status: 'paid',
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_signature: paymentResponse.razorpay_signature,
-            })
-            .eq('id', order.id);
+          try {
+            console.log('Payment successful! Verifying...', paymentResponse);
 
-          if (updateError) {
-            console.error('Failed to update order:', updateError);
+            // Verify payment via backend
+            const { verifyRazorpayPayment } = await import('@/lib/razorpay');
+            const verification = await verifyRazorpayPayment(
+              paymentResponse.razorpay_order_id,
+              paymentResponse.razorpay_payment_id,
+              paymentResponse.razorpay_signature,
+              order.id
+            );
+
+            if (!verification.success) {
+              throw new Error(verification.error || 'Payment verification failed');
+            }
+
+            // Clear cart
+            await clearCart();
+
+            // Show success message
+            toast.success("Payment successful!", {
+              description: "Your order has been confirmed."
+            });
+
+            // Redirect to order confirmation
+            navigate(`/order-confirmation/${order.id}`);
+          } catch (error: any) {
+            console.error('Error processing payment success:', error);
+            setProcessingPayment(false);
+            toast.error("Payment verification failed", {
+              description: error.message || "Please contact support if payment was deducted."
+            });
           }
-
-          // Clear cart
-          await clearCart();
-
-          // Redirect to order confirmation
-          navigate(`/order-confirmation/${order.id}`);
         },
         (error) => {
           // Payment failed or cancelled
+          console.error('Payment error:', error);
           setProcessingPayment(false);
-          toast.error("Payment failed", { description: error.message });
-          
+
+          // Extract error message
+          const errorMessage = error?.message || error?.toString() || "Payment could not be processed.";
+
+          // Show appropriate error message
+          if (errorMessage.includes('cancelled')) {
+            toast.error("Payment cancelled", { description: "You cancelled the payment. Your order has been saved." });
+          } else if (errorMessage.includes('International') || errorMessage.includes('international')) {
+            // For international card errors, show longer message with test card info in dev
+            const isDev = import.meta.env.DEV;
+            toast.error("Payment method not supported", {
+              description: errorMessage,
+              duration: isDev ? 10000 : 6000 // Longer duration in dev to read test card info
+            });
+          } else {
+            toast.error("Payment failed", {
+              description: errorMessage,
+              duration: 5000
+            });
+          }
+
           // Update order status to cancelled
           supabase
             .from('orders')
             .update({ status: 'cancelled', payment_status: 'failed' })
-            .eq('id', order.id);
+            .eq('id', order.id)
+            .then(({ error: updateError }) => {
+              if (updateError) {
+                console.error('Failed to update order status:', updateError);
+              }
+            });
         },
         {
           name: address.full_name,
           email: user?.email || '',
           contact: address.phone,
-        }
+        },
+        testModeEnabled // Pass test mode flag
       );
     } catch (error: any) {
       setProcessingPayment(false);
@@ -270,7 +318,7 @@ const Checkout = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
         <Header />
-        
+
         <div className="container mx-auto px-4 py-8 md:py-12">
           <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight mb-8">
             CHECKOUT
@@ -285,8 +333,8 @@ const Checkout = () => {
                   <h2 className="text-xl font-heading font-bold uppercase">SHIPPING ADDRESS</h2>
                   <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setEditingAddress(null);
@@ -308,6 +356,9 @@ const Checkout = () => {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>{editingAddress ? "Edit Address" : "Add New Address"}</DialogTitle>
+                        <DialogDescription>
+                          {editingAddress ? "Update your shipping address details." : "Add a new shipping address for your orders."}
+                        </DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleAddressSubmit} className="space-y-4 mt-4">
                         <div>
@@ -372,7 +423,7 @@ const Checkout = () => {
                           <Checkbox
                             id="is_default"
                             checked={newAddress.is_default}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setNewAddress({ ...newAddress, is_default: checked as boolean })
                             }
                           />
@@ -388,9 +439,9 @@ const Checkout = () => {
                               editingAddress ? "Update" : "Add"
                             )}
                           </Button>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                               setAddressDialogOpen(false);
                               setEditingAddress(null);
@@ -440,8 +491,8 @@ const Checkout = () => {
                     ) : (
                       <div className="border border-foreground p-6 text-center">
                         <p className="text-grey-text text-sm mb-4">No addresses saved. Please add an address to continue.</p>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => setAddressDialogOpen(true)}
                         >
@@ -519,16 +570,9 @@ const Checkout = () => {
                     "PLACE ORDER"
                   )}
                 </Button>
-                {shippingCharge === 0 && totalPrice < 2499 && (
-                  <p className="text-xs text-grey-text text-center">
-                    Add ₹{(2499 - totalPrice).toLocaleString()} more for free shipping!
-                  </p>
-                )}
-                {totalPrice >= 2499 && (
-                  <p className="text-xs text-jager-red text-center font-bold">
-                    ✓ Free shipping applied
-                  </p>
-                )}
+                <p className="text-xs text-jager-red text-center font-bold">
+                  ✓ Free shipping applied
+                </p>
               </div>
             </div>
           </div>

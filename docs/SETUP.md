@@ -1,285 +1,136 @@
-# Setup Guide - Jager Clothing E-Commerce
+# Setup & Deployment Guide - Jager Clothing
 
-## Phase 1: Supabase Setup
+## Overview
 
-### Step 1: Create Supabase Account
+This guide covers the complete setup process for the Jager Clothing e-commerce platform, from local development to production deployment.
 
-1. Go to https://supabase.com
-2. Click "Start your project" and sign up (free tier is available)
-3. Create a new project
-   - Choose an organization
-   - Name: `jager-clothing` (or your preferred name)
-   - Database Password: **Save this password!** You'll need it later
-   - Region: Choose closest to you (for India, use `ap-south-1`)
-   - Click "Create new project"
-   - Wait 2-3 minutes for project to be ready
+## Prerequisites
 
-### Step 2: Run Database Schema
+*   Node.js (v18+)
+*   npm
+*   Git
+*   Supabase Account
+*   Razorpay Account (for payments)
+*   Render Account (for deployment)
 
-1. In Supabase dashboard, go to **SQL Editor** (left sidebar)
-2. Click "New query"
-3. Open the file `supabase/schema.sql` from this project
-4. Copy ALL the SQL code from that file
-5. Paste it into the Supabase SQL Editor
-6. Click "Run" (or press Cmd/Ctrl + Enter)
-7. You should see "Success. No rows returned" - this means it worked!
+---
 
-### Step 3: Get API Keys
+## Phase 1: Local Development Setup
 
-1. In Supabase dashboard, go to **Settings** → **API** (left sidebar)
-2. Copy these values:
-   - **Project URL** (looks like: `https://xxxxx.supabase.co`)
-   - **anon public** key (long string starting with `eyJ...`)
+### 1. Clone & Install
 
-### Step 4: Create Environment Variables File
+```bash
+git clone <repository-url>
+cd jager_clothing
+npm install
+```
 
-1. In your project root, create a file named `.env.local`
-2. Add these lines (replace with YOUR values from Step 3):
+### 2. Supabase Setup
+
+1.  **Create Project**: Go to [Supabase](https://supabase.com), create a new project (e.g., `jager-clothing`).
+2.  **Database Schema**:
+    *   Go to **SQL Editor**.
+    *   Run the contents of `supabase/schema.sql`.
+    *   (Optional) Run `supabase/custom-products-schema.sql` if you need custom product features.
+3.  **Get Credentials**:
+    *   Go to **Settings** → **API**.
+    *   Copy **Project URL** and **anon public** key.
+
+### 3. Environment Variables
+
+Create `.env.local` in the project root:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
-VITE_RAZORPAY_KEY_ID=your-razorpay-key-id (optional for now)
+VITE_RAZORPAY_KEY_ID=rzp_test_xxxxx
+VITE_ENABLE_TEST_PAYMENT_BYPASS=false
 ```
 
-**Important:**
+### 4. Run Locally
 
-- Never commit `.env.local` to git (it's already in `.gitignore`)
-- Use the actual values from your Supabase dashboard
-
-### Step 5: Test Locally
-
-1. Run `npm install` (if you haven't already)
-2. Run `npm run dev`
-3. Open http://localhost:8080
-4. Try to sign up for an account
-5. Check Supabase dashboard → **Authentication** → **Users** to see if your account was created
+```bash
+npm run dev
+```
+Open [http://localhost:8080](http://localhost:8080).
 
 ---
 
-## Phase 2: Add Products (Optional - For Testing)
+## Phase 2: Payment Integration (Razorpay)
 
-### Option A: Via Supabase Dashboard
+For secure payments, you must set up Supabase Edge Functions.
 
-1. Go to **Table Editor** in Supabase
-2. Click on `products` table
-3. Click "Insert" → "Insert row"
-4. Add a product:
-   - name: "OVERSIZED HOODIE - BLACK"
-   - base_price: 1999
-   - category: "HOODIES"
-   - images: `["/product-hoodie-black.jpg"]` (or use Supabase Storage URLs)
-   - featured: true
-   - is_new: true
-5. Click "Save"
+### 1. Install Supabase CLI
 
-6. Then add variants in `product_variants` table:
-   - product_id: (the ID from the product you just created)
-   - size: "M"
-   - color: "BLACK"
-   - stock: 10
-   - price_modifier: 0
-
-### Option B: Via SQL (Faster)
-
-You can run this in SQL Editor to add sample products:
-
-```sql
--- Insert sample product
-INSERT INTO products (name, description, base_price, category, images, featured, is_new)
-VALUES (
-  'OVERSIZED HOODIE - BLACK',
-  'Premium 400 GSM heavyweight cotton blend. Oversized fit with dropped shoulders.',
-  1999,
-  'HOODIES',
-  ARRAY['/product-hoodie-black.jpg'],
-  true,
-  true
-) RETURNING id;
-
--- Then use the returned ID to insert variants
--- (Replace PRODUCT_ID with the ID returned above)
-INSERT INTO product_variants (product_id, size, color, stock, price_modifier)
-VALUES
-  ('PRODUCT_ID', 'S', 'BLACK', 10, 0),
-  ('PRODUCT_ID', 'M', 'BLACK', 10, 0),
-  ('PRODUCT_ID', 'L', 'BLACK', 10, 0),
-  ('PRODUCT_ID', 'XL', 'BLACK', 10, 0),
-  ('PRODUCT_ID', 'XXL', 'BLACK', 10, 0);
+```bash
+brew install supabase/tap/supabase  # macOS
+# OR see https://supabase.com/docs/guides/cli for other OS
 ```
 
----
+### 2. Login & Link
 
-## Phase 3: Razorpay Setup (For Payments)
-
-### Step 1: Create Razorpay Account
-
-1. Go to https://razorpay.com
-2. Sign up for an account
-3. Complete KYC verification (required for live payments)
-4. Get your API keys from Dashboard → Settings → API Keys
-
-### Step 2: Add Razorpay Key to .env.local
-
-```env
-VITE_RAZORPAY_KEY_ID=rzp_test_xxxxx (use test key for development)
+```bash
+supabase login
+supabase link --project-ref your-project-ref-id
 ```
 
-### Step 3: Backend API for Razorpay (REQUIRED)
+### 3. Deploy Edge Functions
 
-**Important:** Razorpay order creation MUST be done on backend for security.
-
-You need to create a backend API endpoint that:
-
-1. Creates Razorpay orders
-2. Verifies payment signatures
-3. Updates order status
-
-**Option A: Use Supabase Edge Functions** (Recommended - simpler)
-
-- Create a Supabase Edge Function to handle Razorpay order creation
-- Deploy it to Supabase
-
-**Option B: Create Node.js Backend on Render** (More control)
-
-- Create Express.js API
-- Deploy to Render
-- Update `src/lib/razorpay.ts` to call your backend API
-
-**For now:** The checkout will work but payment will fail until backend is set up. You can test the rest of the flow.
-
----
-
-## Phase 4: Image Storage (Optional but Recommended)
-
-### Upload Product Images to Supabase Storage
-
-1. In Supabase, go to **Storage**
-2. Create a bucket named `product-images`
-3. Make it public
-4. Upload your product images
-5. Get the public URLs and use them in product `images` array
-
-Example:
-
-```sql
-UPDATE products
-SET images = ARRAY['https://xxxxx.supabase.co/storage/v1/object/public/product-images/hoodie.jpg']
-WHERE id = 'your-product-id';
+```bash
+supabase functions deploy create-razorpay-order --no-verify-jwt
+supabase functions deploy verify-razorpay-payment --no-verify-jwt
 ```
 
----
+### 4. Set Secrets
 
-## Current Status Check
+```bash
+supabase secrets set RAZORPAY_KEY_ID=your_key_id
+supabase secrets set RAZORPAY_KEY_SECRET=your_key_secret
+```
 
-### ✅ Ready to Run (Local Testing)
-
-- ✅ Frontend code complete
-- ✅ Supabase integration ready
-- ✅ Database schema ready
-- ✅ Supabase setup + environment variables (COMPLETED)
-- ✅ Sample products to test (COMPLETED)
-
-### ⚠️ Needs Backend Work
-
-- ❌ Razorpay order creation (must be on backend)
-- ❌ Payment verification webhook
-- ❌ Order status updates
-
-### 🚀 Ready for Deployment
-
-- ✅ Build configuration ready
-- ✅ Environment variables configured
-- ⚠️ Needs: Supabase production setup
-- ⚠️ Needs: Razorpay production keys
-- ⚠️ Needs: Backend API deployment (for payments)
+See `docs/PAYMENTS.md` for detailed payment troubleshooting and verification logic.
 
 ---
 
-## Quick Start Checklist
+## Phase 3: Deployment (Render)
 
-- [x] Create Supabase account
-- [x ] Create Supabase project
-- [ x] Run `supabase/schema.sql` in SQL Editor
-- [x ] Copy Supabase URL and anon key
-- [x ] Create `.env.local` file with keys
-- [x ] Run `npm run dev` and test signup/login
-- [x ] Add at least 1 product + variants
-- [x ] Test adding items to cart
-  - [ ] Set up Razorpay backend API → See `RAZORPAY_BACKEND.md`
-  - [ ] Deploy to Render → See `DEPLOY_RENDER.md`
+### 1. Push to GitHub
 
----
+Ensure your code is pushed to a GitHub repository.
 
-## Next Phase After Setup
+### 2. Create Static Site on Render
 
-1. **Product Management**
+1.  Go to [Render Dashboard](https://dashboard.render.com).
+2.  Click **New +** → **Static Site**.
+3.  Connect your GitHub repository.
 
-   - Add all your products
-   - Upload product images
-   - Set inventory levels
+### 3. Configure Build
 
-2. **Payment Integration**
+*   **Build Command**: `npm run build`
+*   **Publish Directory**: `dist`
 
-   - Build backend API for Razorpay
-   - Test payment flow
-   - Set up webhooks
+### 4. Environment Variables
 
-3. **Testing**
+Add these in Render **Environment** settings:
 
-   - Test complete order flow
-   - Test cart persistence
-   - Test user authentication
+*   `VITE_SUPABASE_URL`
+*   `VITE_SUPABASE_ANON_KEY`
+*   `VITE_RAZORPAY_KEY_ID`
 
-4. **Deployment**
+### 5. Deploy
 
-   - Deploy frontend to Render
-   - Deploy backend to Render (if needed)
-   - Configure custom domain
-   - Set up production environment variables
-
-5. **Admin Features** (Future)
-   - Admin dashboard for orders
-   - Product management UI
-   - Inventory management
+Click **Create Static Site**. Render will build and deploy your app.
 
 ---
 
 ## Troubleshooting
 
-### "Missing Supabase environment variables" error
+*   **Missing Env Vars**: Ensure `.env.local` exists locally and vars are set in Render for production.
+*   **Database Errors**: Check if `schema.sql` was run successfully.
+*   **Payment Failures**: Check `docs/PAYMENTS.md` and ensure Edge Functions are deployed.
 
-- Check `.env.local` file exists
-- Verify variable names start with `VITE_`
-- Restart dev server after adding env vars
+## Quick Reference
 
-### Database errors
-
-- Verify schema.sql ran successfully
-- Check table names match exactly
-- Ensure RLS policies are enabled
-
-### Authentication not working
-
-- Check Supabase project is active
-- Verify API keys are correct
-- Check Supabase dashboard → Authentication → Settings
-
-### Cart not persisting
-
-- Check if user is logged in
-- Verify cart table exists
-- Check browser console for errors
-
----
-
-## Implementation Guides
-
-- **Razorpay Backend Setup**: See `RAZORPAY_BACKEND.md` for detailed instructions
-- **Render Deployment**: See `DEPLOY_RENDER.md` for step-by-step deployment guide
-
-## Need Help?
-
-- Supabase Docs: https://supabase.com/docs
-- Razorpay Docs: https://razorpay.com/docs
-- Render Docs: https://render.com/docs
+*   **Local Dev**: `npm run dev`
+*   **Build**: `npm run build`
+*   **Supabase Dashboard**: [supabase.com/dashboard](https://supabase.com/dashboard)

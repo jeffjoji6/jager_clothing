@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search, User, LogOut } from "lucide-react";
+import { Menu, X, ShoppingBag, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -124,9 +124,6 @@ export const Header = () => {
 
           {/* Right: Icons */}
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex p-0">
-              <Search className="h-5 w-5" />
-            </Button>
             {loading ? (
               <div className="w-5 h-5 hidden md:block" />
             ) : user ? (
@@ -136,25 +133,27 @@ export const Header = () => {
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-2 py-1.5 border-b">
-                    <p className="text-xs text-grey-text">Signed in as</p>
-                    <p className="text-sm font-medium truncate">{user.email}</p>
+                <DropdownMenuContent align="end" className="w-64 p-2">
+                  <div className="px-3 py-2.5 border-b mb-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Signed in as</p>
+                    <p className="text-sm font-bold truncate text-foreground">{user.email}</p>
                   </div>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer">
-                      Profile
+                  <DropdownMenuItem asChild className="p-3 cursor-pointer focus:bg-muted">
+                    <Link to="/profile" className="flex items-center gap-3">
+                      <User className="h-4 w-4" />
+                      <span className="font-heading font-bold uppercase text-sm">Profile</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/orders" className="cursor-pointer">
-                      My Orders
+                  <DropdownMenuItem asChild className="p-3 cursor-pointer focus:bg-muted">
+                    <Link to="/orders" className="flex items-center gap-3">
+                      <ShoppingBag className="h-4 w-4" />
+                      <span className="font-heading font-bold uppercase text-sm">My Orders</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <DropdownMenuSeparator className="my-1" />
+                  <DropdownMenuItem onClick={handleSignOut} className="p-3 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    <span className="font-heading font-bold uppercase text-sm">Sign Out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

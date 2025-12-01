@@ -28,6 +28,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminOrderDetail from "./pages/admin/OrderDetail";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminProducts from "./pages/admin/Products";
+import AdminCustomProducts from "./pages/admin/CustomProducts";
 import AdminJagerPro from "./pages/admin/JagerPro";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
@@ -94,6 +95,13 @@ const App = () => (
                 <AdminProtectedRoute>
                   <AdminLayout>
                     <AdminProducts />
+                  </AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/custom-products" element={
+                <AdminProtectedRoute>
+                  <AdminLayout>
+                    <AdminCustomProducts />
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />
