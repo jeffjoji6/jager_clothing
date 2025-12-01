@@ -71,7 +71,7 @@ const CustomLabBasic = () => {
   // Get color availability for selected size
   const colorAvailability = useMemo(() => {
     if (!variants || !selectedSize) return new Map<string, number>();
-    
+
     const colorMap = new Map<string, number>();
     variants.forEach(variant => {
       if (variant.size === selectedSize) {
@@ -97,7 +97,7 @@ const CustomLabBasic = () => {
   // Get size availability (check if ANY color has stock for that size)
   const sizeAvailability = useMemo(() => {
     if (!variants) return new Map<string, boolean>();
-    
+
     const sizeMap = new Map<string, boolean>();
     allSizes.forEach(size => {
       const hasStock = variants.some(v => v.size === size && v.stock > 0);
@@ -391,7 +391,7 @@ const CustomLabBasic = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!frontImageUrl && !backImageUrl) {
       toast.error("Please upload at least one design (front or back)");
       return;
@@ -406,7 +406,7 @@ const CustomLabBasic = () => {
       toast.error("Please login to place an order");
       return;
     }
-    
+
     createOrderMutation.mutate();
   };
 
@@ -421,7 +421,7 @@ const CustomLabBasic = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 md:mb-12">
@@ -437,17 +437,17 @@ const CustomLabBasic = () => {
             {/* Left Column - Upload & Mockup */}
             <div className="space-y-6">
               {/* Front Design Upload */}
-            <div>
-              <Label className="text-lg font-heading uppercase mb-4 block">
+              <div>
+                <Label className="text-lg font-heading uppercase mb-4 block">
                   Front Design (Optional)
-              </Label>
+                </Label>
                 <div className="border-2 border-dashed border-foreground p-6 text-center">
                   {frontPreviewUrl ? (
                     <div className="space-y-3">
                       <div className="relative">
-                        <img 
-                          src={frontPreviewUrl} 
-                          alt="Front Design" 
+                        <img
+                          src={frontPreviewUrl}
+                          alt="Front Design"
                           className="max-h-40 mx-auto rounded"
                         />
                         {uploadingFront && (
@@ -456,11 +456,11 @@ const CustomLabBasic = () => {
                           </div>
                         )}
                       </div>
-                    <Button
-                      type="button"
-                      variant="outline"
+                      <Button
+                        type="button"
+                        variant="outline"
                         size="sm"
-                      onClick={() => {
+                        onClick={() => {
                           setFrontFile(null);
                           setFrontPreviewUrl("");
                           setFrontImageUrl("");
@@ -468,15 +468,15 @@ const CustomLabBasic = () => {
                         }}
                       >
                         Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer block">
-                    <input
-                      type="file"
-                      accept="image/*"
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block">
+                      <input
+                        type="file"
+                        accept="image/*"
                         onChange={handleFrontUpload}
-                      className="hidden"
+                        className="hidden"
                         disabled={uploadingFront}
                       />
                       <Upload className="w-8 h-8 mx-auto mb-2 text-grey-text" />
@@ -485,11 +485,11 @@ const CustomLabBasic = () => {
                       </p>
                       <p className="text-xs font-body text-grey-text">
                         PNG, JPG, SVG (Max 10MB)
-                    </p>
-                  </label>
-                )}
+                      </p>
+                    </label>
+                  )}
+                </div>
               </div>
-            </div>
 
               {/* Back Design Upload */}
               <div>
@@ -500,9 +500,9 @@ const CustomLabBasic = () => {
                   {backPreviewUrl ? (
                     <div className="space-y-3">
                       <div className="relative">
-                        <img 
-                          src={backPreviewUrl} 
-                          alt="Back Design" 
+                        <img
+                          src={backPreviewUrl}
+                          alt="Back Design"
                           className="max-h-40 mx-auto rounded"
                         />
                         {uploadingBack && (
@@ -558,8 +558,8 @@ const CustomLabBasic = () => {
                     </p>
                   </div>
 
-                  <Tabs 
-                    value={activeMockupTab} 
+                  <Tabs
+                    value={activeMockupTab}
                     onValueChange={(value) => setActiveMockupTab(value as "front" | "back")}
                     className="w-full"
                   >
@@ -631,11 +631,11 @@ const CustomLabBasic = () => {
             {/* Right Column - Product Selection */}
             <div className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Product Selection */}
-            <div>
-              <Label className="text-lg font-heading uppercase mb-4 block">
-                Choose Product
-              </Label>
+                {/* Product Selection */}
+                <div>
+                  <Label className="text-lg font-heading uppercase mb-4 block">
+                    Choose Product
+                  </Label>
                   {productsLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin" />
@@ -646,39 +646,39 @@ const CustomLabBasic = () => {
                       setSelectedSize("");
                       setSelectedColor("");
                     }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a product" />
+                      </SelectTrigger>
+                      <SelectContent>
                         {products?.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
+                          <SelectItem key={product.id} value={product.id}>
                             {product.name} - ₹{product.discounted_price || product.base_price}
-                    </SelectItem>
-                  ))}
+                          </SelectItem>
+                        ))}
                         {(!products || products.length === 0) && (
                           <div className="p-4 text-sm text-grey-text">
                             No products available for customization
                           </div>
                         )}
-                </SelectContent>
-              </Select>
+                      </SelectContent>
+                    </Select>
                   )}
-            </div>
+                </div>
 
                 {/* Size Selection - Show all sizes, cross out unavailable */}
                 {selectedProduct && (
-              <div>
-                <Label className="text-lg font-heading uppercase mb-4 block">
-                  Size
-                </Label>
+                  <div>
+                    <Label className="text-lg font-heading uppercase mb-4 block">
+                      Size
+                    </Label>
                     <div className="flex gap-2 flex-wrap">
                       {allSizes.map((size) => {
                         const isAvailable = sizeAvailability.get(size) || false;
                         const isSelected = selectedSize === size;
                         return (
-                    <button
-                      key={size}
-                      type="button"
+                          <button
+                            key={size}
+                            type="button"
                             disabled={!isAvailable}
                             onClick={() => {
                               if (isAvailable) {
@@ -686,17 +686,16 @@ const CustomLabBasic = () => {
                                 setSelectedColor(""); // Reset color when size changes
                               }
                             }}
-                            className={`w-12 h-12 border-2 font-heading font-bold uppercase transition-colors relative ${
-                              !isAvailable
-                                ? "border-grey-text text-grey-text opacity-50 cursor-not-allowed line-through"
-                                : isSelected
+                            className={`w-12 h-12 border-2 font-heading font-bold uppercase transition-colors relative ${!isAvailable
+                              ? "border-grey-text text-grey-text opacity-50 cursor-not-allowed line-through"
+                              : isSelected
                                 ? "bg-foreground text-background border-foreground"
                                 : "bg-background text-foreground border-foreground hover:bg-grey-bg"
-                            }`}
+                              }`}
                             title={!isAvailable ? "Out of stock" : size}
-                    >
-                      {size}
-                    </button>
+                          >
+                            {size}
+                          </button>
                         );
                       })}
                       {allSizes.length === 0 && (
@@ -727,13 +726,12 @@ const CustomLabBasic = () => {
                                 setSelectedColor(color);
                               }
                             }}
-                            className={`p-4 border-2 font-heading font-bold uppercase transition-all relative ${
-                              !isAvailable
-                                ? "border-grey-text text-grey-text opacity-50 cursor-not-allowed"
-                                : isSelected
+                            className={`p-4 border-2 font-heading font-bold uppercase transition-all relative ${!isAvailable
+                              ? "border-grey-text text-grey-text opacity-50 cursor-not-allowed"
+                              : isSelected
                                 ? "border-jager-red bg-jager-red/10"
                                 : "border-foreground hover:border-jager-red/50"
-                            }`}
+                              }`}
                             title={!isAvailable ? "Out of stock" : `${color} - ${stock} in stock`}
                           >
                             <div className={`text-sm ${!isAvailable ? "line-through" : ""}`}>
@@ -757,68 +755,93 @@ const CustomLabBasic = () => {
                           No colors available for size {selectedSize}
                         </p>
                       )}
-                </div>
-              </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Quantity */}
                 {selectedProduct && selectedSize && selectedColor && (
-              <div>
-                <Label className="text-lg font-heading uppercase mb-4 block">
+                  <div>
+                    <Label className="text-lg font-heading uppercase mb-4 block">
                       Quantity (Max: {selectedVariant?.stock || 0})
-                </Label>
-                <Input
-                  type="number"
-                  min="1"
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
                       max={selectedVariant?.stock || 1}
-                  value={quantity}
+                      value={quantity}
                       onChange={(e) => {
                         const val = parseInt(e.target.value) || 1;
                         const max = selectedVariant?.stock || 1;
                         setQuantity(Math.min(Math.max(1, val), max));
                       }}
-                  className="text-lg font-heading"
-                />
-              </div>
+                      className="text-lg font-heading"
+                    />
+                  </div>
                 )}
 
-            {/* Price Summary */}
+                {/* Price Summary */}
                 {selectedProductData && selectedVariant && (
-              <div className="bg-grey-bg p-6 space-y-2">
-                <div className="flex justify-between font-body">
-                      <span>Product:</span>
-                      <span>{selectedProductData.name} - {selectedSize} - {selectedColor}</span>
+                  <div className="bg-grey-bg p-6 space-y-4 rounded-lg">
+                    <div className="space-y-2 border-b border-gray-200 pb-4">
+                      <div className="flex justify-between font-body">
+                        <span>Product:</span>
+                        <span className="font-medium">{selectedProductData.name}</span>
+                      </div>
+                      <div className="flex justify-between font-body text-sm text-grey-text">
+                        <span>Details:</span>
+                        <span>{selectedSize} / {selectedColor}</span>
+                      </div>
+                      <div className="flex justify-between font-body">
+                        <span>Unit Price:</span>
+                        <div className="text-right">
+                          {selectedVariant.discounted_price || selectedProductData.discounted_price ? (
+                            <>
+                              <span className="line-through text-grey-text text-sm mr-2">
+                                ₹{(selectedVariant.actual_price || selectedProductData.base_price).toLocaleString()}
+                              </span>
+                              <span className="text-jager-red font-bold">
+                                ₹{(selectedVariant.discounted_price || selectedProductData.discounted_price).toLocaleString()}
+                              </span>
+                            </>
+                          ) : (
+                            <span>₹{(selectedVariant.actual_price || selectedProductData.base_price).toLocaleString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between font-body">
+                        <span>Quantity:</span>
+                        <span>{quantity}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between font-body">
-                      <span>Unit Price:</span>
-                      <span>₹{finalPrice.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between font-body">
-                  <span>Quantity:</span>
-                  <span>{quantity}</span>
-                </div>
+
+                    <div className="flex justify-between font-heading font-bold text-xl pt-2">
+                      <span>Total:</span>
+                      <span>₹{totalPrice.toLocaleString()}</span>
+                    </div>
+
                     {selectedVariant.stock < 10 && (
                       <div className="text-sm text-jager-red font-body">
                         ⚠️ Only {selectedVariant.stock} left in stock
                       </div>
                     )}
-                <div className="flex justify-between font-heading text-xl font-bold pt-2 border-t border-foreground/20">
-                  <span>TOTAL:</span>
+                    <div className="flex justify-between font-heading text-xl font-bold pt-2 border-t border-foreground/20">
+                      <span>TOTAL:</span>
                       <span>₹{totalPrice.toLocaleString()}</span>
-                </div>
-              </div>
-            )}
+                    </div>
+                  </div>
+                )}
 
-            {/* Submit */}
-                <Button 
-                  type="submit" 
-                  variant="hero" 
-                  size="lg" 
+                {/* Submit */}
+                <Button
+                  type="submit"
+                  variant="hero"
+                  size="lg"
                   className="w-full"
                   disabled={
-                    (!frontImageUrl && !backImageUrl) || 
-                    !selectedProduct || 
-                    !selectedSize || 
+                    (!frontImageUrl && !backImageUrl) ||
+                    !selectedProduct ||
+                    !selectedSize ||
                     !selectedColor ||
                     createOrderMutation.isPending ||
                     quantity > (selectedVariant?.stock || 0)
@@ -832,8 +855,35 @@ const CustomLabBasic = () => {
                   ) : (
                     "PROCEED TO ORDER"
                   )}
-            </Button>
-          </form>
+                </Button>
+
+                {/* Product Details Section */}
+                {selectedProductData && (
+                  <div className="mt-8 space-y-6 border-t pt-6">
+                    {selectedProductData.description && (
+                      <div>
+                        <h3 className="font-heading font-bold uppercase text-sm mb-2">Description</h3>
+                        <p className="text-sm text-grey-text leading-relaxed">{selectedProductData.description}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedProductData.material && (
+                        <div>
+                          <h3 className="font-heading font-bold uppercase text-sm mb-2">Material</h3>
+                          <p className="text-sm text-grey-text">{selectedProductData.material}</p>
+                        </div>
+                      )}
+                      {selectedProductData.care_instructions && (
+                        <div>
+                          <h3 className="font-heading font-bold uppercase text-sm mb-2">Care</h3>
+                          <p className="text-sm text-grey-text">{selectedProductData.care_instructions}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </div>

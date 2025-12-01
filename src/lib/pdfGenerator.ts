@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export interface CompanyInfo {
   name: string;
@@ -8,6 +9,7 @@ export interface CompanyInfo {
   zip: string;
   phone: string;
   email: string;
+  website: string;
   gstin?: string;
 }
 
@@ -33,17 +35,92 @@ export interface OrderPDFData {
   shipping: number;
   tax: number;
   total: number;
+  paymentMethod?: string;
 }
 
 const DEFAULT_COMPANY: CompanyInfo = {
-  name: "Jager Clothing",
-  address: "Your Company Address",
-  city: "City",
-  state: "State",
-  zip: "ZIP Code",
-  phone: "+91 XXXXX XXXXX",
-  email: "info@jagerclothing.com",
-  gstin: "GSTIN123456789",
+  name: "JAGER CLOTHING",
+  address: "123 Fashion Street, Sector 4",
+  city: "New Delhi",
+  state: "Delhi",
+  zip: "110001",
+  phone: "+91 98765 43210",
+  email: "support@jagerclothing.com",
+  website: "www.jagerclothing.com",
+  gstin: "07AABCU9603R1ZN",
+};
+
+const COLORS = {
+  primary: [220, 38, 38] as [number, number, number], // Jager Red
+  secondary: [60, 60, 60] as [number, number, number], // Dark Grey
+  text: [30, 30, 30] as [number, number, number], // Black
+  lightText: [100, 100, 100] as [number, number, number], // Grey
+  tableHeader: [245, 245, 245] as [number, number, number], // Light Grey
+};
+
+const addHeader = (doc: jsPDF, company: CompanyInfo, title: string) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Top Bar
+  doc.setFillColor(...COLORS.primary);
+  doc.rect(0, 0, pageWidth, 5, 'F');
+
+  // Company Name
+  doc.setFontSize(24);
+  doc.setTextColor(...COLORS.primary);
+  doc.setFont("helvetica", "bold");
+  doc.text(company.name, 20, 25);
+
+  // Document Title
+  doc.setFontSize(24);
+  doc.setTextColor(...COLORS.secondary);
+  doc.text(title, pageWidth - 20, 25, { align: "right" });
+
+  // Company Details
+  doc.setFontSize(9);
+  doc.setTextColor(...COLORS.lightText);
+  doc.setFont("helvetica", "normal");
+  let yPos = 35;
+  doc.text(company.address, 20, yPos);
+  yPos += 5;
+  doc.text(`${company.city}, ${company.state} ${company.zip}`, 20, yPos);
+  yPos += 5;
+  doc.text(`Phone: ${company.phone}`, 20, yPos);
+  yPos += 5;
+  doc.text(`Email: ${company.email}`, 20, yPos);
+  if (company.gstin) {
+    yPos += 5;
+    doc.text(`GSTIN: ${company.gstin}`, 20, yPos);
+  }
+
+  // Separator
+  doc.setDrawColor(230, 230, 230);
+  doc.line(20, 65, pageWidth - 20, 65);
+
+  return 75; // Return Y position for next section
+};
+
+const addFooter = (doc: jsPDF, company: CompanyInfo) => {
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFillColor(250, 250, 250);
+  doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
+
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(
+    `Thank you for choosing ${company.name}! Visit us at ${company.website}`,
+    pageWidth / 2,
+    pageHeight - 12,
+    { align: "center" }
+  );
+  doc.text(
+    "This is a computer-generated document and does not require a signature.",
+    pageWidth / 2,
+    pageHeight - 7,
+    { align: "center" }
+  );
 };
 
 export const generatePackingSlip = (
@@ -51,271 +128,190 @@ export const generatePackingSlip = (
   companyInfo: CompanyInfo = DEFAULT_COMPANY
 ) => {
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  let yPos = margin;
+  let yPos = addHeader(doc, companyInfo, "PACKING SLIP");
 
-  // Helper function to add new page if needed
-  const checkPageBreak = (requiredSpace: number) => {
-    if (yPos + requiredSpace > doc.internal.pageSize.getHeight() - margin) {
-      doc.addPage();
-      yPos = margin;
-      return true;
-    }
-    return false;
-  };
-
-  // Company Logo and Header
-  doc.setFontSize(24);
-  doc.setTextColor(220, 38, 38); // Jager red color
-  doc.text(companyInfo.name, pageWidth / 2, yPos, { align: "center" });
-  yPos += 10;
-
+  // Order & Shipping Info Grid
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.text("RETURN ADDRESS:", margin, yPos);
-  yPos += 6;
 
-  doc.setFontSize(9);
-  doc.text(companyInfo.address, margin, yPos);
-  yPos += 5;
-  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Phone: ${companyInfo.phone}`, margin, yPos);
-  yPos += 5;
-  if (companyInfo.email) {
-    doc.text(`Email: ${companyInfo.email}`, margin, yPos);
-    yPos += 5;
-  }
-  if (companyInfo.gstin) {
-    doc.text(`GSTIN: ${companyInfo.gstin}`, margin, yPos);
-    yPos += 5;
-  }
-
-  // Line separator
-  yPos += 5;
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
-
-  // Order ID
-  doc.setFontSize(16);
+  // Left Column: Order Details
   doc.setFont("helvetica", "bold");
-  doc.text(`ORDER #${orderData.orderId.slice(0, 8).toUpperCase()}`, margin, yPos);
-  yPos += 8;
+  doc.setTextColor(...COLORS.text);
+  doc.text("ORDER DETAILS", 20, yPos);
 
-  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Date: ${orderData.orderDate}`, margin, yPos);
-  yPos += 10;
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(`Order ID: #${orderData.orderId.slice(0, 8).toUpperCase()}`, 20, yPos + 7);
+  doc.text(`Date: ${new Date(orderData.orderDate).toLocaleDateString()}`, 20, yPos + 12);
 
-  // TO: Section
-  doc.setFontSize(12);
+  // Right Column: Ship To
   doc.setFont("helvetica", "bold");
-  doc.text("SHIP TO:", margin, yPos);
-  yPos += 7;
+  doc.setTextColor(...COLORS.text);
+  doc.text("SHIP TO", 120, yPos);
 
-  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(orderData.customerName, margin, yPos);
-  yPos += 5;
-  doc.text(orderData.customerAddress.street, margin, yPos);
-  yPos += 5;
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(orderData.customerName, 120, yPos + 7);
+  doc.text(orderData.customerAddress.street, 120, yPos + 12);
   doc.text(
     `${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`,
-    margin,
-    yPos
+    120,
+    yPos + 17
   );
-  yPos += 5;
-  doc.text(`Phone: ${orderData.customerAddress.phone}`, margin, yPos);
-  yPos += 10;
+  doc.text(`Phone: ${orderData.customerAddress.phone}`, 120, yPos + 22);
 
-  // Line separator
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
+  yPos += 40;
 
-  // Order Contents Header
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("ORDER CONTENTS:", margin, yPos);
-  yPos += 8;
-
-  // Order Items
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  orderData.items.forEach((item) => {
-    checkPageBreak(15);
-    const itemText = `${item.quantity}x ${item.name} - ${item.size} - ${item.color}`;
-    doc.text(itemText, margin, yPos);
-    yPos += 6;
+  // Items Table
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Item', 'Size', 'Color', 'Qty']],
+    body: orderData.items.map(item => [
+      item.name,
+      item.size,
+      item.color,
+      item.quantity
+    ]),
+    theme: 'plain',
+    headStyles: {
+      fillColor: COLORS.tableHeader,
+      textColor: COLORS.text,
+      fontStyle: 'bold',
+      cellPadding: 4,
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+      textColor: COLORS.text,
+    },
+    columnStyles: {
+      0: { cellWidth: 'auto' }, // Item
+      1: { cellWidth: 30 }, // Size
+      2: { cellWidth: 40 }, // Color
+      3: { cellWidth: 20, halign: 'center' }, // Qty
+    },
   });
 
-  yPos += 5;
-  checkPageBreak(20);
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
-
-  // Order Summary (if space allows)
-  doc.setFontSize(9);
-  doc.text("Order Summary:", margin, yPos);
-  yPos += 6;
-  doc.text(`Subtotal: ₹${orderData.subtotal.toLocaleString()}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Shipping: ₹${orderData.shipping.toLocaleString()}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Tax: ₹${orderData.tax.toLocaleString()}`, margin, yPos);
-  yPos += 5;
-  doc.setFont("helvetica", "bold");
-  doc.text(`Total: ₹${orderData.total.toLocaleString()}`, margin, yPos);
-
-  // Save PDF
-  doc.save(`order-${orderData.orderId.slice(0, 8)}-packing-slip.pdf`);
+  addFooter(doc, companyInfo);
+  doc.save(`packing-slip-${orderData.orderId.slice(0, 8)}.pdf`);
 };
 
 export const generateInvoice = (
   orderData: OrderPDFData,
   invoiceNumber: string,
-  companyInfo?: CompanyInfo,
+  companyInfo: CompanyInfo = DEFAULT_COMPANY,
   gstRate: number = 18
 ) => {
-  const company = companyInfo || DEFAULT_COMPANY;
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  let yPos = margin;
+  let yPos = addHeader(doc, companyInfo, "TAX INVOICE");
 
-  // Company Header
-  doc.setFontSize(24);
-  doc.setTextColor(220, 38, 38);
-  doc.setFont("helvetica", "bold");
-  doc.text(company.name, margin, yPos);
-  yPos += 10;
-
+  // Order & Billing Info Grid
   doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
+
+  // Left Column: Invoice Details
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.text);
+  doc.text("INVOICE DETAILS", 20, yPos);
+
   doc.setFont("helvetica", "normal");
-  doc.text(company.address, margin, yPos);
-  yPos += 5;
-  doc.text(`${company.city}, ${company.state} ${company.zip}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Phone: ${company.phone} | Email: ${company.email}`, margin, yPos);
-  yPos += 5;
-  if (company.gstin) {
-    doc.text(`GSTIN: ${company.gstin}`, margin, yPos);
-    yPos += 10;
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(`Invoice No: ${invoiceNumber}`, 20, yPos + 7);
+  doc.text(`Order ID: #${orderData.orderId.slice(0, 8).toUpperCase()}`, 20, yPos + 12);
+  doc.text(`Date: ${new Date(orderData.orderDate).toLocaleDateString()}`, 20, yPos + 17);
+  if (orderData.paymentMethod) {
+    doc.text(`Payment: ${orderData.paymentMethod}`, 20, yPos + 22);
   }
 
-  // Invoice Title
-  doc.setFontSize(20);
+  // Right Column: Bill To
   doc.setFont("helvetica", "bold");
-  doc.text("TAX INVOICE", pageWidth - margin, yPos, { align: "right" });
-  yPos += 15;
+  doc.setTextColor(...COLORS.text);
+  doc.text("BILL TO", 120, yPos);
 
-  // Invoice Details
-  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Invoice No: ${invoiceNumber}`, margin, yPos);
-  doc.text(`Date: ${orderData.orderDate}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 6;
-  doc.text(`Order ID: ${orderData.orderId.slice(0, 8).toUpperCase()}`, margin, yPos);
-  yPos += 15;
-
-  // Bill To Section
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("BILL TO:", margin, yPos);
-  yPos += 7;
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(orderData.customerName, margin, yPos);
-  yPos += 5;
-  doc.text(orderData.customerAddress.street, margin, yPos);
-  yPos += 5;
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(orderData.customerName, 120, yPos + 7);
+  doc.text(orderData.customerAddress.street, 120, yPos + 12);
   doc.text(
     `${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`,
-    margin,
-    yPos
+    120,
+    yPos + 17
   );
-  yPos += 5;
-  doc.text(`Phone: ${orderData.customerAddress.phone}`, margin, yPos);
-  yPos += 15;
+  doc.text(`Phone: ${orderData.customerAddress.phone}`, 120, yPos + 22);
 
-  // Table Header
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  const tableY = yPos;
-  doc.text("Item", margin, yPos);
-  doc.text("Size/Color", margin + 50, yPos);
-  doc.text("Qty", margin + 90, yPos);
-  doc.text("Rate", margin + 110, yPos, { align: "right" });
-  doc.text("Amount", pageWidth - margin, yPos, { align: "right" });
-  yPos += 5;
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 5;
+  yPos += 40;
 
-  // Table Rows
-  doc.setFont("helvetica", "normal");
-  let totalAmount = 0;
-  orderData.items.forEach((item) => {
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
-    }
-    const itemTotal = item.price * item.quantity;
-    totalAmount += itemTotal;
-
-    doc.text(item.name.substring(0, 25), margin, yPos);
-    doc.text(`${item.size}/${item.color.substring(0, 10)}`, margin + 50, yPos);
-    doc.text(item.quantity.toString(), margin + 90, yPos);
-    doc.text(`₹${item.price.toLocaleString()}`, margin + 110, yPos, { align: "right" });
-    doc.text(`₹${itemTotal.toLocaleString()}`, pageWidth - margin, yPos, { align: "right" });
-    yPos += 6;
+  // Items Table
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Item', 'Details', 'Qty', 'Rate', 'Amount']],
+    body: orderData.items.map(item => [
+      item.name,
+      `${item.size} / ${item.color}`,
+      item.quantity,
+      `₹${item.price.toLocaleString()}`,
+      `₹${(item.price * item.quantity).toLocaleString()}`
+    ]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: COLORS.primary,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      cellPadding: 4,
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 4,
+      textColor: COLORS.text,
+      lineColor: [230, 230, 230],
+    },
+    columnStyles: {
+      0: { cellWidth: 'auto' }, // Item
+      1: { cellWidth: 40 }, // Details
+      2: { cellWidth: 20, halign: 'center' }, // Qty
+      3: { cellWidth: 30, halign: 'right' }, // Rate
+      4: { cellWidth: 30, halign: 'right' }, // Amount
+    },
+    foot: [[
+      { content: 'Total', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: `₹${orderData.subtotal.toLocaleString()}`, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]],
   });
 
-  yPos += 5;
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
+  // Tax Summary
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-  // Calculate GST
-  const subtotalBeforeTax = totalAmount + orderData.shipping;
-  const cgst = (subtotalBeforeTax * gstRate) / (100 + gstRate) / 2;
-  const sgst = cgst;
-  const totalGST = cgst + sgst;
-  const taxableAmount = subtotalBeforeTax - totalGST;
+  // Calculate Tax Breakdown
+  const subtotalBeforeTax = orderData.total - orderData.tax; // Simplified for display
+  const cgst = orderData.tax / 2;
+  const sgst = orderData.tax / 2;
 
-  // Summary
+  // Summary Box
+  const summaryX = 120;
   doc.setFontSize(9);
-  const summaryX = pageWidth - margin - 60;
-  doc.text("Subtotal (Before Tax):", summaryX, yPos);
-  doc.text(`₹${subtotalBeforeTax.toFixed(2)}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 6;
+  doc.setTextColor(...COLORS.lightText);
 
-  doc.text(`CGST (${gstRate / 2}%):`, summaryX, yPos);
-  doc.text(`₹${cgst.toFixed(2)}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 6;
+  doc.text("Subtotal:", summaryX, finalY);
+  doc.text(`₹${orderData.subtotal.toLocaleString()}`, 190, finalY, { align: "right" });
 
-  doc.text(`SGST (${gstRate / 2}%):`, summaryX, yPos);
-  doc.text(`₹${sgst.toFixed(2)}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 6;
+  doc.text("Shipping:", summaryX, finalY + 6);
+  doc.text(`₹${orderData.shipping.toLocaleString()}`, 190, finalY + 6, { align: "right" });
 
+  doc.text(`CGST (${gstRate / 2}%):`, summaryX, finalY + 12);
+  doc.text(`₹${cgst.toFixed(2)}`, 190, finalY + 12, { align: "right" });
+
+  doc.text(`SGST (${gstRate / 2}%):`, summaryX, finalY + 18);
+  doc.text(`₹${sgst.toFixed(2)}`, 190, finalY + 18, { align: "right" });
+
+  // Divider
+  doc.setDrawColor(200, 200, 200);
+  doc.line(summaryX, finalY + 24, 190, finalY + 24);
+
+  // Grand Total
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("TOTAL:", summaryX, yPos);
-  doc.text(`₹${orderData.total.toLocaleString()}`, pageWidth - margin, yPos, { align: "right" });
-  yPos += 10;
+  doc.setTextColor(...COLORS.primary);
+  doc.text("GRAND TOTAL:", summaryX, finalY + 32);
+  doc.text(`₹${orderData.total.toLocaleString()}`, 190, finalY + 32, { align: "right" });
 
-  // Footer
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    "This is a computer-generated invoice and is valid without signature.",
-    pageWidth / 2,
-    doc.internal.pageSize.getHeight() - 10,
-    { align: "center" }
-  );
-
-  // Save PDF
+  addFooter(doc, companyInfo);
   doc.save(`invoice-${invoiceNumber}-${orderData.orderId.slice(0, 8)}.pdf`);
 };
-
