@@ -7,6 +7,7 @@ import { useFeaturedProducts } from "@/hooks/useProducts";
 import { Loader2, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-jager.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
+import { Footer } from "@/components/Footer";
 
 const Home = () => {
   const { data: featuredProducts, isLoading } = useFeaturedProducts();
@@ -131,57 +132,7 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-background border-t border-foreground pt-12 md:pt-20 pb-8 md:pb-10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
-            <div>
-              <h3 className="text-xs md:text-sm font-heading font-bold uppercase tracking-widest mb-4 md:mb-6">SHOP</h3>
-              <ul className="space-y-3 md:space-y-4 text-sm font-body text-muted-foreground">
-                <li><Link to="/collection" className="hover:text-foreground transition-colors">Collection</Link></li>
-                <li><Link to="/custom-lab" className="hover:text-foreground transition-colors">Custom Lab</Link></li>
-                <li><Link to="/new-arrivals" className="hover:text-foreground transition-colors">New Arrivals</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs md:text-sm font-heading font-bold uppercase tracking-widest mb-4 md:mb-6">SUPPORT</h3>
-              <ul className="space-y-3 md:space-y-4 text-sm font-body text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Shipping Info</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Returns & Exchange</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Size Guide</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">FAQ</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs md:text-sm font-heading font-bold uppercase tracking-widest mb-4 md:mb-6">COMPANY</h3>
-              <ul className="space-y-3 md:space-y-4 text-sm font-body text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a></li>
-              </ul>
-            </div>
-            <div className="col-span-2 md:col-span-1">
-              <h3 className="text-xs md:text-sm font-heading font-bold uppercase tracking-widest mb-4 md:mb-6">STAY CONNECTED</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Join the movement. Follow us on social media for the latest drops.
-              </p>
-              <div className="flex gap-4">
-                <a href="#" className="text-foreground hover:text-jager-red transition-colors font-bold uppercase text-sm">Instagram</a>
-                <a href="#" className="text-foreground hover:text-jager-red transition-colors font-bold uppercase text-sm">Facebook</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-border">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider">
-              © 2024 Jager Clothing. All rights reserved.
-            </p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <img src="/jager_logo.png" alt="Jager" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
