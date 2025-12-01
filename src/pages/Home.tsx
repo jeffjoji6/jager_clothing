@@ -52,8 +52,10 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Category Scroll (Mobile/Desktop) */}
-      <CategoryScroll />
+      {/* Category Scroll (Mobile Only) */}
+      <div className="md:hidden">
+        <CategoryScroll />
+      </div>
 
       {/* Collection Grid */}
       <section className="container mx-auto px-4 py-16 md:py-32">
