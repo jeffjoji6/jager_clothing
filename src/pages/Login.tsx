@@ -184,7 +184,7 @@ const Login = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full"
+                      className="w-full h-12 text-base"
                     />
                   </div>
                   <div className="space-y-2">
@@ -207,7 +207,7 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={loading}
-                        className="w-full pr-10"
+                        className="w-full pr-10 h-12 text-base"
                       />
                       <button
                         type="button"
@@ -259,7 +259,7 @@ const Login = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         disabled={loading}
-                        className="w-full"
+                        className="w-full h-12 text-base"
                       />
                     </div>
                     <Button
@@ -293,7 +293,7 @@ const Login = () => {
                         placeholder="000000"
                         required
                         disabled={loading}
-                        className="w-full text-center tracking-widest text-lg"
+                        className="w-full text-center tracking-widest text-lg h-12"
                         maxLength={6}
                       />
                       <p className="text-xs text-muted-foreground text-center">
@@ -324,8 +324,8 @@ const Login = () => {
                           type="button"
                           onClick={handleResendOtp}
                           className={`text-sm font-heading font-bold uppercase underline transition-colors ${canResend
-                              ? "text-foreground hover:text-jager-red cursor-pointer"
-                              : "text-muted-foreground cursor-not-allowed opacity-50"
+                            ? "text-foreground hover:text-jager-red cursor-pointer"
+                            : "text-muted-foreground cursor-not-allowed opacity-50"
                             }`}
                           disabled={!canResend || loading}
                         >

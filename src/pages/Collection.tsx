@@ -23,7 +23,7 @@ const Collection = () => {
 
     // Filter by category
     if (selectedCategory !== "ALL") {
-      filtered = filtered.filter((p) => p.category?.toUpperCase() === selectedCategory);
+      filtered = filtered.filter((p) => p.category?.trim().toUpperCase() === selectedCategory);
     }
 
     // Filter by sizes (if variants have selected sizes)
@@ -65,13 +65,13 @@ const Collection = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
             COLLECTION
           </h1>
-          
+
           {/* Mobile: Filter Button */}
           <div className="md:hidden">
             <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
@@ -81,10 +81,10 @@ const Collection = () => {
                   FILTER
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[70vh]">
+              <SheetContent side="left" className="w-[85vw] sm:w-[400px] overflow-y-auto">
                 <div className="py-6">
-                  <h3 className="text-lg font-heading font-bold uppercase mb-6">FILTERS</h3>
-                  <FilterContent 
+                  <h3 className="text-xl font-heading font-bold uppercase mb-8">FILTERS</h3>
+                  <FilterContent
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
                     selectedSizes={selectedSizes}
@@ -92,6 +92,11 @@ const Collection = () => {
                     selectedColors={selectedColors}
                     setSelectedColors={setSelectedColors}
                   />
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <Button className="w-full" onClick={() => setFilterOpen(false)}>
+                      SHOW RESULTS
+                    </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -102,7 +107,7 @@ const Collection = () => {
           {/* Desktop: Sidebar Filters */}
           <aside className="hidden md:block">
             <div className="sticky top-24 space-y-8">
-              <FilterContent 
+              <FilterContent
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
                 selectedSizes={selectedSizes}
@@ -119,7 +124,7 @@ const Collection = () => {
               <p className="text-sm text-grey-text font-body">
                 {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
               </p>
-              <select 
+              <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="text-sm font-heading uppercase border-b border-foreground bg-transparent py-1 focus:outline-none"
@@ -146,8 +151,8 @@ const Collection = () => {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {filteredProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
+                  <ProductCard
+                    key={product.id}
                     id={product.id}
                     name={product.name}
                     price={Number(product.base_price)}
@@ -158,9 +163,9 @@ const Collection = () => {
               </div>
             )}
           </div>
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -180,7 +185,7 @@ const FilterContent = ({
   setSelectedColors: (colors: string[] | ((prev: string[]) => string[])) => void;
 }) => {
   const hasActiveFilters = selectedCategory !== "ALL" || selectedSizes.length > 0 || selectedColors.length > 0;
-  
+
   const clearFilters = () => {
     setSelectedCategory("ALL");
     setSelectedSizes([]);
@@ -188,84 +193,83 @@ const FilterContent = ({
   };
 
   return (
-  <div className="space-y-8">
-    {hasActiveFilters && (
+    <div className="space-y-8">
+      {hasActiveFilters && (
+        <div>
+          <button
+            onClick={clearFilters}
+            className="text-sm font-heading font-bold uppercase text-jager-red hover:underline"
+          >
+            CLEAR ALL FILTERS
+          </button>
+        </div>
+      )}
       <div>
-        <button
-          onClick={clearFilters}
-          className="text-sm font-heading font-bold uppercase text-jager-red hover:underline"
-        >
-          CLEAR ALL FILTERS
-        </button>
+        <h4 className="text-sm font-heading font-bold uppercase mb-4">CATEGORY</h4>
+        <div className="space-y-2">
+          {["ALL", "HOODIES", "TEES", "BOTTOMS"].map((cat) => (
+            <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="category"
+                checked={selectedCategory === cat}
+                onChange={() => setSelectedCategory(cat)}
+                className="w-4 h-4 border-2 border-foreground"
+              />
+              <span className="text-sm font-body group-hover:text-jager-red transition-colors">{cat}</span>
+            </label>
+          ))}
+        </div>
       </div>
-    )}
-    <div>
-      <h4 className="text-sm font-heading font-bold uppercase mb-4">CATEGORY</h4>
-      <div className="space-y-2">
-        {["ALL", "HOODIES", "TEES", "BOTTOMS"].map((cat) => (
-          <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-            <input 
-              type="radio" 
-              name="category"
-              checked={selectedCategory === cat}
-              onChange={() => setSelectedCategory(cat)}
-              className="w-4 h-4 border-2 border-foreground" 
-            />
-            <span className="text-sm font-body group-hover:text-jager-red transition-colors">{cat}</span>
-          </label>
-        ))}
-      </div>
-    </div>
 
-    <div>
-      <h4 className="text-sm font-heading font-bold uppercase mb-4">SIZE</h4>
-      <div className="space-y-2">
-        {["S", "M", "L", "XL", "XXL"].map((size) => (
-          <label key={size} className="flex items-center gap-3 cursor-pointer group">
-            <input 
-              type="checkbox" 
-              checked={selectedSizes.includes(size)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedSizes([...selectedSizes, size]);
+      <div>
+        <h4 className="text-sm font-heading font-bold uppercase mb-4">SIZE</h4>
+        <div className="space-y-2">
+          {["S", "M", "L", "XL", "XXL"].map((size) => (
+            <label key={size} className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={selectedSizes.includes(size)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedSizes([...selectedSizes, size]);
+                  } else {
+                    setSelectedSizes(selectedSizes.filter(s => s !== size));
+                  }
+                }}
+                className="w-4 h-4 border-2 border-foreground"
+              />
+              <span className="text-sm font-body group-hover:text-jager-red transition-colors">{size}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-heading font-bold uppercase mb-4">COLOR</h4>
+        <div className="flex flex-wrap gap-3">
+          {[
+            { name: "BLACK", bg: "bg-foreground" },
+            { name: "WHITE", bg: "bg-background border-2 border-foreground" },
+            { name: "GREY", bg: "bg-grey-bg" },
+          ].map((color) => (
+            <button
+              key={color.name}
+              onClick={() => {
+                if (selectedColors.includes(color.name)) {
+                  setSelectedColors(selectedColors.filter(c => c !== color.name));
                 } else {
-                  setSelectedSizes(selectedSizes.filter(s => s !== size));
+                  setSelectedColors([...selectedColors, color.name]);
                 }
               }}
-              className="w-4 h-4 border-2 border-foreground" 
+              className={`w-8 h-8 ${color.bg} hover:ring-2 hover:ring-jager-red transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-jager-red' : ''
+                }`}
+              title={color.name}
             />
-            <span className="text-sm font-body group-hover:text-jager-red transition-colors">{size}</span>
-          </label>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-
-    <div>
-      <h4 className="text-sm font-heading font-bold uppercase mb-4">COLOR</h4>
-      <div className="flex flex-wrap gap-3">
-        {[
-          { name: "BLACK", bg: "bg-foreground" },
-          { name: "WHITE", bg: "bg-background border-2 border-foreground" },
-          { name: "GREY", bg: "bg-grey-bg" },
-        ].map((color) => (
-          <button
-            key={color.name}
-            onClick={() => {
-              if (selectedColors.includes(color.name)) {
-                setSelectedColors(selectedColors.filter(c => c !== color.name));
-              } else {
-                setSelectedColors([...selectedColors, color.name]);
-              }
-            }}
-            className={`w-8 h-8 ${color.bg} hover:ring-2 hover:ring-jager-red transition-all ${
-              selectedColors.includes(color.name) ? 'ring-2 ring-jager-red' : ''
-            }`}
-            title={color.name}
-          />
-        ))}
-      </div>
-    </div>
-  </div>
   );
 };
 

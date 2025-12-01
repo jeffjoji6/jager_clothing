@@ -41,7 +41,7 @@ export const Cart = () => {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-[90vw] sm:max-w-lg flex flex-col h-full">
         <SheetHeader>
           <SheetTitle className="font-heading text-2xl uppercase tracking-tight">
             CART ({totalItems})
@@ -61,7 +61,7 @@ export const Cart = () => {
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-24 h-24 object-cover bg-grey-bg"
+                    className="w-20 h-24 sm:w-24 sm:h-24 object-cover bg-grey-bg"
                   />
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">
@@ -88,7 +88,7 @@ export const Cart = () => {
                           onClick={() => {
                             updateQuantity(item.id, item.size, item.quantity - 1).catch(console.error);
                           }}
-                          className="p-1 hover:bg-grey-bg"
+                          className="p-2 hover:bg-grey-bg"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
@@ -99,7 +99,7 @@ export const Cart = () => {
                           onClick={() => {
                             updateQuantity(item.id, item.size, item.quantity + 1).catch(console.error);
                           }}
-                          className="p-1 hover:bg-grey-bg"
+                          className="p-2 hover:bg-grey-bg"
                         >
                           <Plus className="w-3 h-3" />
                         </button>

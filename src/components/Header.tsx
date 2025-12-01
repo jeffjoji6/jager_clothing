@@ -31,8 +31,8 @@ export const Header = () => {
           <div className="md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="p-0">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="p-0 -ml-2 hover:bg-transparent">
+                  <Menu className="h-7 w-7" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-full bg-background p-0">
@@ -107,8 +107,8 @@ export const Header = () => {
 
           {/* Mobile: Center Logo */}
           <Link to="/" className="text-2xl md:hidden font-heading font-bold uppercase tracking-tighter absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-            <img src="/jager_logo.png" alt="Jager Logo" className="h-6 w-auto" />
-            <span>JÄGER</span>
+            <img src="/jager_logo.png" alt="Jager Logo" className="h-7 w-auto" />
+            <span className="text-2xl">JÄGER</span>
           </Link>
 
           {/* Desktop: Center Navigation */}
