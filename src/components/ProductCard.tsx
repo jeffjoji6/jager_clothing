@@ -18,8 +18,8 @@ export const ProductCard = ({ id, name, price, image, isNew }: ProductCardProps)
     <Link to={`/product/${id}`} className="group block">
       <div className="relative bg-grey-bg overflow-hidden product-card-hover aspect-[4/5]">
         {isNew && (
-          <div className="absolute top-4 left-4 bg-jager-red text-background px-3 py-1 z-10">
-            <span className="text-xs font-heading font-bold uppercase tracking-wide">NEW</span>
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-jager-red text-background px-2 py-0.5 md:px-3 md:py-1 z-10">
+            <span className="text-[10px] md:text-xs font-heading font-bold uppercase tracking-wide">NEW</span>
           </div>
         )}
         {/* Main Image */}
@@ -37,11 +37,11 @@ export const ProductCard = ({ id, name, price, image, isNew }: ProductCardProps)
           />
         )}
       </div>
-      <div className="mt-4 space-y-1">
-        <h3 className="text-sm font-heading font-bold uppercase tracking-wide group-hover:text-jager-red transition-colors">
+      <div className="mt-2 md:mt-4 space-y-1">
+        <h3 className="text-xs md:text-sm font-heading font-bold uppercase tracking-wide group-hover:text-jager-red transition-colors line-clamp-2">
           {name}
         </h3>
-        <p className="text-base font-body font-bold">₹{price.toLocaleString()}</p>
+        <p className="text-sm md:text-base font-body font-bold">₹{price.toLocaleString()}</p>
       </div>
     </Link>
   );

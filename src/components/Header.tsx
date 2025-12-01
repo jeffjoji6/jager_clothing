@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingBag, User, LogOut } from "lucide-react";
+import { Menu, X, ShoppingBag, User, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -129,7 +129,7 @@ export const Header = () => {
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hidden md:flex p-0 hover:bg-grey-bg">
+                  <Button variant="ghost" size="icon" className="p-0 hover:bg-grey-bg">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -162,6 +162,11 @@ export const Header = () => {
                 <span className="text-sm font-heading font-bold uppercase tracking-wide hover:text-jager-red transition-colors cursor-pointer">
                   LOGIN/SIGNUP
                 </span>
+              </Link>
+            )}
+            {!user && (
+              <Link to="/login" className="md:hidden">
+                <User className="h-5 w-5" />
               </Link>
             )}
             <Cart />

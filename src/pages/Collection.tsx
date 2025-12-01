@@ -68,7 +68,7 @@ const Collection = () => {
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+          <h1 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
             COLLECTION
           </h1>
 

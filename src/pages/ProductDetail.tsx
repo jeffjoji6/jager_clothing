@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useProduct } from "@/hooks/useProducts";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Loader2, Minus, Plus, Heart, Truck, ShieldCheck, Zap, Eye, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { data: product, isLoading, error } = useProduct(id || "");
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -21,6 +23,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sizeError, setSizeError] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
 
   // Mock data for social proof
   const viewersCount = Math.floor(Math.random() * (50 - 20 + 1)) + 20;
@@ -62,6 +65,27 @@ const ProductDetail = () => {
     }
   }, [availableVariants, selectedVariant]);
 
+  // Intersection Observer for Sticky Bar
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyBar(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    const element = document.getElementById("main-add-to-cart-btn");
+    if (element) {
+      observer.observe(element);
+    }
+
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, [product]);
+
   const currentVariant = product?.variants.find(v => v.id === selectedVariant);
   const finalPrice = currentVariant
     ? Number(product?.base_price) + Number(currentVariant.price_modifier)
@@ -83,6 +107,13 @@ const ProductDetail = () => {
     }
 
     if (!currentVariant || currentVariant.stock <= 0) {
+      if (!user) {
+        toast.info("Please sign in to check availability", {
+          description: "You need to be logged in to add items to cart",
+        });
+        navigate("/login", { state: { from: { pathname: `/product/${id}` } } });
+        return;
+      }
       toast.error("This variant is out of stock");
       return;
     }
@@ -112,6 +143,13 @@ const ProductDetail = () => {
     }
 
     if (!currentVariant || currentVariant.stock <= 0) {
+      if (!user) {
+        toast.info("Please sign in to check availability", {
+          description: "You need to be logged in to purchase",
+        });
+        navigate("/login", { state: { from: { pathname: `/product/${id}` } } });
+        return;
+      }
       toast.error("This variant is out of stock");
       return;
     }
@@ -129,6 +167,19 @@ const ProductDetail = () => {
     });
 
     navigate("/checkout");
+  };
+
+  const checkStock = (size: string) => {
+    if (!product?.variants) return false;
+
+    // If color is selected, check specific variant
+    if (selectedColor) {
+      const variant = product.variants.find(v => v.size === size && v.color === selectedColor);
+      return variant ? variant.stock > 0 : false;
+    }
+
+    // If no color selected, check if ANY variant with this size has stock
+    return product.variants.some(v => v.size === size && v.stock > 0);
   };
 
   if (isLoading) {
@@ -206,18 +257,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Urgency & Social Proof - Refined */}
-            {/* <div className="space-y-4">
-              <div className="flex items-center gap-2 text-jager-red font-bold uppercase text-xs tracking-widest animate-pulse">
-                <Zap className="w-4 h-4 fill-current" />
-                Selling Fast • Only {stockLeft} left
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                <Eye className="w-4 h-4" />
-                <span>{viewersCount} people viewing</span>
-              </div>
-            </div> */}
-
             {/* Selectors */}
             <div className="space-y-6 md:space-y-8">
 
@@ -247,21 +286,34 @@ const ProductDetail = () => {
                   <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => {
-                        setSelectedSize(size);
-                        setSizeError(false);
-                      }}
-                      className={`w-12 h-12 flex items-center justify-center text-sm font-bold transition-all border ${selectedSize === size
-                        ? 'bg-foreground text-background border-foreground'
-                        : 'bg-background text-foreground border-border hover:border-foreground'
-                        } ${sizeError ? 'border-jager-red animate-shake' : ''}`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {availableSizes.map((size) => {
+                    const isInStock = checkStock(size);
+                    return (
+                      <button
+                        key={size}
+                        disabled={!isInStock}
+                        onClick={() => {
+                          if (isInStock) {
+                            setSelectedSize(size);
+                            setSizeError(false);
+                          }
+                        }}
+                        className={`w-12 h-12 flex items-center justify-center text-sm font-bold transition-all border relative ${!isInStock
+                            ? 'bg-muted text-muted-foreground border-border cursor-not-allowed opacity-50'
+                            : selectedSize === size
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'bg-background text-foreground border-border hover:border-foreground'
+                          } ${sizeError ? 'border-jager-red animate-shake' : ''}`}
+                      >
+                        {size}
+                        {!isInStock && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-full h-px bg-current rotate-45 transform scale-125" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -288,6 +340,7 @@ const ProductDetail = () => {
               {/* Buttons */}
               <div className="flex flex-row gap-3 pt-4 border-t border-foreground/10">
                 <Button
+                  id="main-add-to-cart-btn"
                   variant="hero"
                   size="lg"
                   className="flex-1 h-12 md:h-14 text-xs md:text-base tracking-widest px-2"
@@ -363,6 +416,22 @@ const ProductDetail = () => {
             </Accordion>
 
           </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Bar */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-40 transition-transform duration-300 md:hidden ${showStickyBar ? "translate-y-0" : "translate-y-full"
+          }`}
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <p className="font-heading font-bold uppercase text-sm truncate">{product.name}</p>
+            <p className="font-body text-sm">₹{finalPrice.toLocaleString()}</p>
+          </div>
+          <Button variant="hero" onClick={handleBuyNow} className="w-1/2">
+            BUY NOW
+          </Button>
         </div>
       </div>
     </div>

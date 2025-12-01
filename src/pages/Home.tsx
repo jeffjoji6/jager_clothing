@@ -8,6 +8,7 @@ import { Loader2, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-jager.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
 import { Footer } from "@/components/Footer";
+import { CategoryScroll } from "@/components/CategoryScroll";
 
 const Home = () => {
   const { data: featuredProducts, isLoading } = useFeaturedProducts();
@@ -51,12 +52,14 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Category Scroll (Mobile/Desktop) */}
+      <CategoryScroll />
+
       {/* Collection Grid */}
       <section className="container mx-auto px-4 py-16 md:py-32">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 view-transition-name:section-title text-center md:text-left">
-          <div>
-            <span className="text-xs md:text-sm font-bold text-jager-red uppercase tracking-widest mb-2 block">Fresh Arrivals</span>
-            <h2 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+          <div className="w-full text-center md:text-left">
+            <h2 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
               LATEST DROP
             </h2>
           </div>
