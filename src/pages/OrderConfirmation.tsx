@@ -63,20 +63,20 @@ const OrderTracker = ({ status }: { status: string }) => {
           const isCurrent = index === currentStepIndex;
 
           return (
-            <div key={step.id} className="relative z-10 flex flex-col items-center bg-background px-2">
+            <div key={step.id} className="relative z-10 flex flex-col items-center bg-background px-1 md:px-2">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                  "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                   isActive
                     ? "bg-jager-red border-jager-red text-white shadow-lg scale-110"
                     : "bg-background border-gray-300 text-gray-300"
                 )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
               <span
                 className={cn(
-                  "mt-2 text-xs font-bold uppercase tracking-wider transition-colors duration-300",
+                  "mt-1 md:mt-2 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors duration-300 text-center",
                   isActive ? "text-foreground" : "text-muted-foreground",
                   isCurrent && "text-jager-red"
                 )}
@@ -171,7 +171,7 @@ const OrderConfirmation = () => {
             </div>
 
             {/* Order Tracker */}
-            <div className="bg-grey-bg/50 p-8 border border-foreground/10 rounded-lg">
+            <div className="bg-grey-bg/50 p-4 md:p-8 border border-foreground/10 rounded-lg">
               <OrderTracker status={order.status} />
             </div>
 

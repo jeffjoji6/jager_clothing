@@ -115,23 +115,94 @@ export const verifyRazorpayPayment = async (
   try {
     const { supabase } = await import('./supabase');
 
+    // Validate parameters before sending
+    console.log('Payment verification parameters received:', {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      order_id,
+    });
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order_id) {
+      const missing = [];
+      if (!razorpay_order_id) missing.push('razorpay_order_id');
+      if (!razorpay_payment_id) missing.push('razorpay_payment_id');
+      if (!razorpay_signature) missing.push('razorpay_signature');
+      if (!order_id) missing.push('order_id');
+
+      throw new Error(`Missing required parameters: ${missing.join(', ')}`);
+    }
+
+    // Log what we're about to send
+    const requestBody = {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      order_id,
+    };
+
+    console.log('Calling verify-razorpay-payment Edge Function');
+
     const { data, error } = await supabase.functions.invoke('verify-razorpay-payment', {
-      body: {
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        order_id,
-      },
+      body: requestBody,
     });
 
     if (error) {
-      throw new Error(error.message || 'Verification failed');
+      // Log the full error object to see what's available
+      console.error('Edge Function Error:', error);
+      console.error('Error context:', JSON.stringify(error.context || {}));
+
+      // Try to extract error details
+      let errorMessage = error.message || 'Verification failed';
+
+      // Check if we have additional error details in the context
+      if (error.context && typeof error.context === 'object') {
+        const body = error.context.body;
+        if (body && typeof body === 'object' && body.error) {
+          errorMessage = body.error;
+          console.error('Extracted error from body:', errorMessage);
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error: any) {
     console.error('Payment verification failed:', error);
-    return { success: false, error: error.message };
+
+    // Enhanced error extraction
+    let errorMessage = error.message || "Payment verification failed";
+    let errorDetails = null;
+
+    // Try to extract error from FunctionsHttpError
+    if (error.context) {
+      console.log('Error has context:', error.context);
+
+      // Try to get error from response body
+      if (error.context.body) {
+        try {
+          const body = typeof error.context.body === 'string'
+            ? JSON.parse(error.context.body)
+            : error.context.body;
+
+          if (body.error) {
+            errorMessage = body.error;
+            errorDetails = body.details;
+            console.log('Extracted error from body:', { errorMessage, errorDetails });
+          }
+        } catch (parseError) {
+          console.error('Could not parse error body:', parseError);
+        }
+      }
+    }
+
+    // If we have details, log them
+    if (errorDetails) {
+      console.error('Error details:', errorDetails);
+    }
+
+    return { success: false, error: errorMessage };
   }
 };
 

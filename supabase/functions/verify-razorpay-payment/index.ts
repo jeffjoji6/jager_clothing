@@ -18,27 +18,83 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
         const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+        console.log("=== Payment Verification Request Started ===");
+
         if (!razorpayKeySecret) {
-            throw new Error("Razorpay secret not configured");
+            const errorMsg = "Razorpay secret not configured on server";
+            console.error(errorMsg);
+            throw new Error(errorMsg);
         }
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Parse request body with error handling
+        let body;
+
+        // Check if there's actually a body to parse
+        const contentLength = req.headers.get('content-length');
+        const contentType = req.headers.get('content-type');
+
+        console.log("Request headers:", {
+            method: req.method,
+            contentLength,
+            contentType,
+            hasBody: contentLength && parseInt(contentLength) > 0,
+        });
+
+        if (!contentLength || parseInt(contentLength) === 0) {
+            const errorMsg = "Request body is empty - no payment data received";
+            console.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        try {
+            const bodyText = await req.text();
+            console.log("Raw request body:", bodyText.substring(0, 200)); // Log first 200 chars
+
+            if (!bodyText || bodyText.trim() === '') {
+                throw new Error("Request body is empty");
+            }
+
+            body = JSON.parse(bodyText);
+            console.log("Request body parsed successfully");
+        } catch (parseError: any) {
+            const errorMsg = `Failed to parse request body: ${parseError.message}`;
+            console.error(errorMsg);
+            console.error("Parse error details:", parseError);
+            throw new Error(errorMsg);
+        }
 
         const {
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
             order_id, // Our internal order ID
-        } = await req.json();
+        } = body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order_id) {
-            throw new Error("Missing required parameters");
+        console.log("Received payment verification request:", {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature_present: !!razorpay_signature,
+            order_id,
+            body_keys: Object.keys(body),
+        });
+
+        // Detailed validation with specific error messages
+        const missingParams = [];
+        if (!razorpay_order_id) missingParams.push("razorpay_order_id");
+        if (!razorpay_payment_id) missingParams.push("razorpay_payment_id");
+        if (!razorpay_signature) missingParams.push("razorpay_signature");
+        if (!order_id) missingParams.push("order_id");
+
+        if (missingParams.length > 0) {
+            const errorMsg = `Missing required parameters: ${missingParams.join(", ")}. Received: ${JSON.stringify(body)}`;
+            console.error(errorMsg);
+            throw new Error(errorMsg);
         }
 
         // Verify signature
-        // generated_signature = hmac_sha256(order_id + "|" + payment_id, secret);
-
-        console.log("Verifying payment:", { razorpay_order_id, razorpay_payment_id, razorpay_signature });
+        console.log("Starting signature verification...");
 
         // Skip signature verification for test payments if in development/test mode
         // This allows the "Bypass Payment" feature to work
@@ -70,13 +126,20 @@ serve(async (req) => {
                 .map((b) => b.toString(16).padStart(2, "0"))
                 .join("");
 
-            console.log("Signature verification:", { generatedSignature, receivedSignature: razorpay_signature });
+            console.log("Signature verification result:", {
+                generatedSignature,
+                receivedSignature: razorpay_signature,
+                match: generatedSignature === razorpay_signature
+            });
 
             if (generatedSignature !== razorpay_signature) {
-                console.error("Signature mismatch");
-                throw new Error("Invalid signature");
+                const errorMsg = "Payment signature verification failed - possible tampering detected";
+                console.error(errorMsg);
+                throw new Error(errorMsg);
             }
         }
+
+        console.log("Signature verified successfully, updating order...");
 
         // Update order status in database
         const { error: updateError } = await supabase
@@ -91,8 +154,12 @@ serve(async (req) => {
             .eq("id", order_id);
 
         if (updateError) {
-            throw updateError;
+            const errorMsg = `Database update failed: ${updateError.message}`;
+            console.error(errorMsg, updateError);
+            throw new Error(errorMsg);
         }
+
+        console.log("=== Payment Verification Successful ===");
 
         return new Response(
             JSON.stringify({ success: true, message: "Payment verified and order updated" }),
@@ -103,11 +170,16 @@ serve(async (req) => {
         );
 
     } catch (error: any) {
-        console.error("Payment verification error:", error);
+        const errorMessage = error.message || "Payment verification failed";
+        console.error("=== Payment Verification Failed ===");
+        console.error("Error:", errorMessage);
+        console.error("Full error:", error);
+
         return new Response(
             JSON.stringify({
                 success: false,
-                error: error.message || "Payment verification failed",
+                error: errorMessage,
+                details: error.stack || error.toString(),
             }),
             {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },

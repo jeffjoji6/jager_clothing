@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, ShoppingBag, User, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"; // Import SheetDescription
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,10 @@ export const Header = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-full bg-background p-0">
+                <SheetHeader className="hidden">
+                  <SheetTitle>Mobile Menu</SheetTitle>
+                  <SheetDescription>Navigation menu</SheetDescription>
+                </SheetHeader>
                 <div className="flex flex-col items-center justify-center min-h-screen space-y-8">
                   <Link
                     to="/collection"

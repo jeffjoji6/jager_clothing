@@ -1,7 +1,7 @@
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet"; // Import SheetDescription
 import { ShoppingBag, X, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +46,9 @@ export const Cart = () => {
           <SheetTitle className="font-heading text-2xl uppercase tracking-tight">
             CART ({totalItems})
           </SheetTitle>
+          <SheetDescription className="hidden">
+            Review and manage items in your shopping cart
+          </SheetDescription>
         </SheetHeader>
 
         {items.length === 0 ? (

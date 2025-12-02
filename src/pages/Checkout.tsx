@@ -222,18 +222,45 @@ const Checkout = () => {
         async (paymentResponse) => {
           try {
             console.log('Payment successful! Verifying...', paymentResponse);
+            console.log('Payment response keys:', Object.keys(paymentResponse));
+            console.log('Payment response values:', {
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_signature: paymentResponse.razorpay_signature,
+            });
 
-            // Verify payment via backend
-            const { verifyRazorpayPayment } = await import('@/lib/razorpay');
-            const verification = await verifyRazorpayPayment(
-              paymentResponse.razorpay_order_id,
-              paymentResponse.razorpay_payment_id,
-              paymentResponse.razorpay_signature,
-              order.id
-            );
+            // Check if we have signature (pre-created order) or not (auto-created order)
+            const hasSignature = !!paymentResponse.razorpay_signature;
 
-            if (!verification.success) {
-              throw new Error(verification.error || 'Payment verification failed');
+            if (hasSignature) {
+              // Full verification flow for pre-created orders
+              const { verifyRazorpayPayment } = await import('@/lib/razorpay');
+              const verification = await verifyRazorpayPayment(
+                paymentResponse.razorpay_order_id,
+                paymentResponse.razorpay_payment_id,
+                paymentResponse.razorpay_signature,
+                order.id
+              );
+
+              if (!verification.success) {
+                throw new Error(verification.error || 'Payment verification failed');
+              }
+            } else {
+              // Automatic order creation - just update with payment ID
+              console.log('Payment made without pre-created order, updating status directly');
+
+              const { error: updateError } = await supabase
+                .from('orders')
+                .update({
+                  status: 'confirmed',
+                  payment_status: 'paid',
+                  razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                })
+                .eq('id', order.id);
+
+              if (updateError) {
+                throw new Error(`Failed to update order: ${updateError.message}`);
+              }
             }
 
             // Clear cart
