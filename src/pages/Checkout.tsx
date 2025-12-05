@@ -252,7 +252,7 @@ const Checkout = () => {
               const { error: updateError } = await supabase
                 .from('orders')
                 .update({
-                  status: 'confirmed',
+                  status: 'new',
                   payment_status: 'paid',
                   razorpay_payment_id: paymentResponse.razorpay_payment_id,
                 })
@@ -261,6 +261,38 @@ const Checkout = () => {
               if (updateError) {
                 throw new Error(`Failed to update order: ${updateError.message}`);
               }
+            }
+
+            // Deduct stock after successful payment
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session) {
+                const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-stock`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    action: 'deduct',
+                    order_id: order.id,
+                    items: items.map(item => ({
+                      product_variant_id: item.variant_id,
+                      quantity: item.quantity,
+                    })),
+                  }),
+                });
+
+                if (!response.ok) {
+                  const error = await response.json();
+                  console.error('Stock deduction failed:', error);
+                  // Don't fail the order, but log the error
+                  toast.warning('Order placed but stock update failed. Admin will be notified.');
+                }
+              }
+            } catch (stockError) {
+              console.error('Error deducting stock:', stockError);
+              // Don't fail the order, just log
             }
 
             // Clear cart

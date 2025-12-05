@@ -52,7 +52,12 @@ interface ProductVariant {
 }
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Grey', 'Navy', 'Olive', 'Brown'];
+const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Grey', 'Navy', 'Olive', 'Brown', 'Beige', 'Cream', 'Charcoal'];
+const CATEGORIES = ['T-Shirts', 'Hoodies', 'Sweatshirts', 'Pants', 'Shorts', 'Accessories', 'Jackets'];
+
+interface ProductWithStock extends Product {
+  product_variants: { stock: number }[];
+}
 
 const Products = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,13 +96,19 @@ const Products = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*, product_variants(stock)')
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Product[];
+      return data as ProductWithStock[];
     },
   });
+
+  // Calculate total stock for a product
+  const getTotalStock = (product: ProductWithStock) => {
+    return product.product_variants?.reduce((sum, variant) => sum + (variant.stock || 0), 0) || 0;
+  };
 
   // Fetch variants when editing
   const { data: productVariants } = useQuery({
@@ -124,7 +135,8 @@ const Products = () => {
   }, [productVariants]);
 
   // Handle image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isPrimary: boolean = false) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -132,17 +144,47 @@ const Products = () => {
     try {
       const uploadPromises = Array.from(files).map(file => uploadImage(file));
       const uploadedUrls = await Promise.all(uploadPromises);
+
+      let newImages = [...productForm.images];
+
+      if (isPrimary) {
+        // If uploading primary, put it at index 0 (replace if exists or unshift)
+        // Actually, user might want to replace just the primary. 
+        // Let's say if isPrimary, we take the first uploaded image and set it as index 0
+        if (uploadedUrls.length > 0) {
+          if (newImages.length === 0) {
+            newImages = [uploadedUrls[0]];
+          } else {
+            newImages[0] = uploadedUrls[0];
+          }
+          // If multiple were uploaded for primary (unlikely via UI but possible), append others? 
+          // For now, assume single file upload for primary replacement
+        }
+      } else {
+        // Append to end
+        newImages = [...newImages, ...uploadedUrls];
+      }
+
       setProductForm({
         ...productForm,
-        images: [...productForm.images, ...uploadedUrls],
+        images: newImages,
       });
-      toast.success(`${uploadedUrls.length} image(s) uploaded successfully!`);
+      toast.success("Image uploaded successfully!");
     } catch (error: any) {
       toast.error(`Failed to upload images: ${error.message}`);
     } finally {
       setUploadingImages(false);
       e.target.value = ''; // Reset input
     }
+  };
+
+  // Set image as primary
+  const setAsPrimary = (index: number) => {
+    if (index === 0) return;
+    const newImages = [...productForm.images];
+    const [imageToMove] = newImages.splice(index, 1);
+    newImages.unshift(imageToMove);
+    setProductForm({ ...productForm, images: newImages });
   };
 
   // Remove image
@@ -183,8 +225,13 @@ const Products = () => {
       color: newVariant.color,
       stock: Number(newVariant.stock) || 0,
       price_modifier: Number(newVariant.price_modifier) || 0,
-      actual_price: newVariant.actual_price ? Number(newVariant.actual_price) : null,
-      discounted_price: newVariant.discounted_price ? Number(newVariant.discounted_price) : null,
+      // Inherit from main product if not specified
+      actual_price: newVariant.actual_price
+        ? Number(newVariant.actual_price)
+        : Number(productForm.base_price),
+      discounted_price: newVariant.discounted_price
+        ? Number(newVariant.discounted_price)
+        : (productForm.discounted_price ? Number(productForm.discounted_price) : null),
       barcode: null,
     };
 
@@ -258,13 +305,16 @@ const Products = () => {
         if (variantsError) throw variantsError;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
       toast.success("Product created successfully");
       setDialogOpen(false);
       resetForm();
     },
+    onError: (error) => {
+      toast.error(`Failed to create product: ${error.message}`);
+    }
   });
 
   const updateProduct = useMutation({
@@ -318,16 +368,12 @@ const Products = () => {
       }
 
       // 3. Delete removed variants
-      // Get IDs of variants currently in the form (excluding new temp ones)
-      const currentIds = variants
-        .map(v => v.id)
-        .filter(id => !id.startsWith('temp-'));
+      // 3. Soft delete removed variants
+      const currentIds = variants.filter(v => !v.id.startsWith('temp-')).map(v => v.id);
 
-      // Delete variants that are in DB but not in currentIds
-      // If currentIds is empty, it means delete all (except we might hit FK constraints)
       let deleteQuery = supabase
         .from('product_variants')
-        .delete()
+        .update({ is_archived: true })
         .eq('product_id', editingProduct.id);
 
       if (currentIds.length > 0) {
@@ -337,15 +383,14 @@ const Products = () => {
       const { error: deleteError } = await deleteQuery;
 
       if (deleteError) {
-        console.error("Error deleting removed variants (likely FK constraint):", deleteError);
-        // We don't throw here to allow the update to succeed even if cleanup fails
-        toast.error("Some variants could not be deleted as they are part of existing orders.");
+        console.error("Error archiving removed variants:", deleteError);
+        toast.error("Failed to archive some variants.");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'product', editingProduct?.id, 'variants'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'product', editingProduct?.id, 'variants'] });
       toast.success("Product updated successfully");
       setDialogOpen(false);
       resetForm();
@@ -355,24 +400,22 @@ const Products = () => {
 
   const deleteProduct = useMutation({
     mutationFn: async (productId: string) => {
-      // Delete images from storage
-      const product = products?.find(p => p.id === productId);
-      if (product?.images) {
-        await Promise.all(product.images.map(img => deleteImage(img)));
-      }
-
+      // Soft delete: Just set is_archived to true
       const { error } = await supabase
         .from('products')
-        .delete()
+        .update({ is_archived: true })
         .eq('id', productId);
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success("Product deleted successfully");
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success("Product archived successfully");
     },
+    onError: (error) => {
+      toast.error(`Failed to archive product: ${error.message}`);
+    }
   });
 
   const resetForm = () => {
@@ -428,6 +471,29 @@ const Products = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Strict Validation
+    if (!productForm.name.trim()) {
+      toast.error("Product Name is required");
+      return;
+    }
+    if (!productForm.base_price || Number(productForm.base_price) <= 0) {
+      toast.error("Valid Base Price is required");
+      return;
+    }
+    if (!productForm.category) {
+      toast.error("Category is required");
+      return;
+    }
+    if (productForm.images.length === 0) {
+      toast.error("At least one product image is required");
+      return;
+    }
+    if (variants.length === 0) {
+      toast.error("At least one product variant (Size/Color) is required");
+      return;
+    }
+
     if (editingProduct) {
       updateProduct.mutate();
     } else {
@@ -499,12 +565,19 @@ const Products = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-heading font-bold uppercase">Category</Label>
-                      <Input
+                      <Select
                         value={productForm.category}
-                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                        placeholder="e.g., HOODIES, TEES"
-                        className="mt-1"
-                      />
+                        onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label className="text-sm font-heading font-bold uppercase">SKU</Label>
@@ -527,59 +600,119 @@ const Products = () => {
                   </div>
 
                   {/* Image Upload */}
+                  {/* Image Upload */}
                   <div>
                     <Label className="text-sm font-heading font-bold uppercase mb-2 block">Product Images</Label>
-                    <div className="border-2 border-dashed border-foreground rounded-lg p-4">
-                      <div className="flex items-center justify-center gap-4">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageUpload}
-                          disabled={uploadingImages}
-                          className="hidden"
-                          id="image-upload"
-                        />
-                        <Label htmlFor="image-upload" className="cursor-pointer">
-                          <Button type="button" variant="outline" disabled={uploadingImages}>
-                            {uploadingImages ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Upload Images
-                              </>
-                            )}
-                          </Button>
-                        </Label>
-                      </div>
-
-                      {/* Image Preview */}
-                      {productForm.images.length > 0 && (
-                        <div className="grid grid-cols-4 gap-4 mt-4">
-                          {productForm.images.map((url, index) => (
-                            <div key={index} className="relative group">
+                    <div className="space-y-4">
+                      {/* Primary Image */}
+                      <div className="border border-foreground/20 rounded-lg p-4 bg-grey-bg/10">
+                        <Label className="text-xs font-bold uppercase mb-2 block text-jager-red">Primary Image (Required)</Label>
+                        <div className="flex items-start gap-4">
+                          {productForm.images[0] ? (
+                            <div className="relative group w-32 h-40">
                               <img
-                                src={url}
-                                alt={`Product ${index + 1}`}
-                                className="w-full h-24 object-cover rounded border"
+                                src={productForm.images[0]}
+                                alt="Primary"
+                                className="w-full h-full object-cover rounded border border-jager-red"
                               />
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleRemoveImage(index, url)}
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                                onClick={() => handleRemoveImage(0, productForm.images[0])}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
+                              <Badge className="absolute bottom-1 left-1 bg-jager-red text-[10px]">MAIN</Badge>
                             </div>
-                          ))}
+                          ) : (
+                            <div className="w-32 h-40 border-2 border-dashed border-foreground/30 rounded flex items-center justify-center bg-background">
+                              <span className="text-xs text-grey-text text-center px-2">No Main Image</span>
+                            </div>
+                          )}
+
+                          <div className="flex-1">
+                            <p className="text-xs text-grey-text mb-2">
+                              This image will be shown on the collection page and as the main product image.
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, true)}
+                                disabled={uploadingImages}
+                                className="hidden"
+                                id="primary-upload"
+                              />
+                              <Label htmlFor="primary-upload" className="cursor-pointer">
+                                <Button type="button" variant="outline" size="sm" disabled={uploadingImages}>
+                                  {uploadingImages ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Upload className="h-3 w-3 mr-2" />}
+                                  {productForm.images[0] ? "Change Primary" : "Upload Primary"}
+                                </Button>
+                              </Label>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Gallery Images */}
+                      <div className="border border-foreground/20 rounded-lg p-4">
+                        <Label className="text-xs font-bold uppercase mb-2 block">Gallery Images</Label>
+
+                        <div className="grid grid-cols-4 md:grid-cols-6 gap-4 mb-4">
+                          {productForm.images.slice(1).map((url, idx) => {
+                            const realIndex = idx + 1;
+                            return (
+                              <div key={realIndex} className="relative group aspect-[3/4]">
+                                <img
+                                  src={url}
+                                  alt={`Gallery ${idx + 1}`}
+                                  className="w-full h-full object-cover rounded border"
+                                />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-6 text-[10px] px-2"
+                                    onClick={() => setAsPrimary(realIndex)}
+                                  >
+                                    Make Main
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => handleRemoveImage(realIndex, url)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          <div className="aspect-[3/4] flex items-center justify-center">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={(e) => handleImageUpload(e, false)}
+                              disabled={uploadingImages}
+                              className="hidden"
+                              id="gallery-upload"
+                            />
+                            <Label htmlFor="gallery-upload" className="cursor-pointer w-full h-full">
+                              <div className="w-full h-full border-2 border-dashed border-foreground/30 rounded flex flex-col items-center justify-center hover:bg-grey-bg/10 transition-colors">
+                                <Plus className="h-6 w-6 text-grey-text mb-1" />
+                                <span className="text-[10px] uppercase font-bold text-grey-text">Add More</span>
+                              </div>
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -898,6 +1031,11 @@ const Products = () => {
                             View on Amazon
                           </a>
                         )}
+                        <div className="mt-2 flex items-center gap-2">
+                          <Badge variant="outline" className={getTotalStock(product) === 0 ? "text-red-500 border-red-500" : getTotalStock(product) < 10 ? "text-yellow-500 border-yellow-500" : "text-green-500 border-green-500"}>
+                            Stock: {getTotalStock(product)}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -933,8 +1071,9 @@ const Products = () => {
             <p className="text-grey-text">No products yet. Add your first product!</p>
           </CardContent>
         </Card>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

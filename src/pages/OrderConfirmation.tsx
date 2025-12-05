@@ -39,7 +39,7 @@ const OrderTracker = ({ status }: { status: string }) => {
   // Map status to step index
   const getStatusIndex = (status: string) => {
     const normalizedStatus = status.toLowerCase();
-    if (normalizedStatus === 'pending') return 0; // Treat pending as confirmed for now
+    if (normalizedStatus === 'pending' || normalizedStatus === 'new') return 0; // Treat pending/new as confirmed
     return steps.findIndex(s => s.id === normalizedStatus);
   };
 

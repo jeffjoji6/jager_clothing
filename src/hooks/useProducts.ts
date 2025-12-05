@@ -12,6 +12,7 @@ export const useProducts = () => {
       const { data: products, error } = await supabase
         .from('products')
         .select('*')
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -46,6 +47,7 @@ export const useProduct = (id: string) => {
         .from('products')
         .select('*')
         .eq('id', id)
+        .eq('is_archived', false)
         .single();
 
       if (error) throw error;
@@ -70,7 +72,7 @@ export const useProductsByCategory = (category: string | null) => {
   return useQuery({
     queryKey: ['products', 'category', category],
     queryFn: async () => {
-      let query = supabase.from('products').select('*');
+      let query = supabase.from('products').select('*').eq('is_archived', false);
 
       if (category && category !== 'ALL') {
         query = query.eq('category', category);
@@ -108,6 +110,7 @@ export const useFeaturedProducts = () => {
         .from('products')
         .select('*')
         .eq('featured', true)
+        .eq('is_archived', false)
         .order('created_at', { ascending: false })
         .limit(4);
 

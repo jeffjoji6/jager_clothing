@@ -145,7 +145,7 @@ serve(async (req) => {
         const { error: updateError } = await supabase
             .from("orders")
             .update({
-                status: "confirmed",
+                status: "new",
                 payment_status: "paid",
                 razorpay_order_id,
                 razorpay_payment_id,

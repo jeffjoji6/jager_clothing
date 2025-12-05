@@ -32,11 +32,11 @@ const Dashboard = () => {
       const { data: orders } = await supabase
         .from('orders')
         .select('total, order_type, status, created_at')
-        .in('status', ['confirmed', 'processing', 'shipped', 'delivered']);
+        .in('status', ['new', 'confirmed', 'processing', 'shipped', 'delivered']);
 
       const totalRevenue = orders?.reduce((sum, o) => sum + Number(o.total || 0), 0) || 0;
       const totalOrders = orders?.length || 0;
-      
+
       // Get new orders (status = 'new')
       const { count: newOrdersCount } = await supabase
         .from('orders')
@@ -46,7 +46,7 @@ const Dashboard = () => {
       // Get overdue orders (new or pending_print for > 2 days)
       const twoDaysAgo = new Date();
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      
+
       const { data: overdueOrders } = await supabase
         .from('orders')
         .select('id, status, created_at')
@@ -86,7 +86,7 @@ const Dashboard = () => {
     queryFn: async () => {
       const twoDaysAgo = new Date();
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      
+
       const { data } = await supabase
         .from('orders')
         .select('id, status, created_at, total')
@@ -106,11 +106,11 @@ const Dashboard = () => {
       const { data: orderItems } = await supabase
         .from('order_items')
         .select('product_name, quantity, price, order:orders!inner(status)')
-        .in('order.status', ['confirmed', 'processing', 'shipped', 'delivered']);
+        .in('order.status', ['new', 'confirmed', 'processing', 'shipped', 'delivered']);
 
       // Aggregate by product name
       const productMap = new Map<string, { quantity: number; revenue: number }>();
-      
+
       orderItems?.forEach((item) => {
         const existing = productMap.get(item.product_name) || { quantity: 0, revenue: 0 };
         productMap.set(item.product_name, {
@@ -128,6 +128,23 @@ const Dashboard = () => {
         }))
         .sort((a, b) => b.total_sold - a.total_sold)
         .slice(0, 5) as TopProduct[];
+    },
+  });
+
+  // Fetch low stock items
+  const { data: lowStockItems } = useQuery({
+    queryKey: ['admin', 'dashboard', 'low-stock'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('*, product:products!inner(name, images)')
+        .eq('product.is_archived', false)
+        .lt('stock', 10)
+        .order('stock', { ascending: true })
+        .limit(10);
+
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -274,6 +291,38 @@ const Dashboard = () => {
             </Link>
           </CardContent>
         </Card>
+      )}
+
+      {/* Low Stock Alert */}
+      {lowStockItems && lowStockItems.length > 0 && (
+        <Alert className="border-yellow-500 bg-yellow-500/10">
+          <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <AlertTitle className="font-heading font-bold uppercase">Low Stock Alert</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p className="mb-2">
+              You have <strong>{lowStockItems.length}</strong> product variants with low stock (less than 10 units).
+            </p>
+            <div className="space-y-2 mt-3">
+              {lowStockItems.slice(0, 5).map((item: any) => (
+                <div key={item.id} className="flex items-center justify-between text-sm bg-background p-2 rounded">
+                  <div className="flex items-center gap-2">
+                    {item.product?.images?.[0] && (
+                      <img src={item.product.images[0]} alt={item.product.name} className="w-8 h-8 object-cover rounded" />
+                    )}
+                    <span>{item.product?.name} - {item.size}/{item.color}</span>
+                  </div>
+                  <span className={`font-bold ${item.stock === 0 ? 'text-red-500' : 'text-yellow-500'}`}>
+                    {item.stock} left
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Link to="/admin/inventory" className="text-yellow-500 underline font-heading uppercase text-sm mt-3 inline-flex items-center gap-1">
+              Manage Inventory
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Top Products */}
