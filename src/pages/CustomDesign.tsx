@@ -164,31 +164,33 @@ export default function CustomDesign() {
 
             <Header />
 
-            {/* Hero Section - Simplified for Collection Vibe */}
+            {/* Hero Section - Matching Reference Image */}
             <motion.section
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="relative py-12 md:py-24 px-4 overflow-hidden"
+                className="relative py-16 md:py-24 px-4 overflow-hidden"
             >
-                {/* Clean background - No gradients */}
-                <div className="container mx-auto max-w-6xl text-center relative z-10">
+                <div className="container mx-auto max-w-4xl text-center relative z-10">
 
-                    {/* Badge Removed per simplification request */}
+                    {/* Badge - Re-added per reference image */}
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-50 text-red-600 mb-8 border border-red-100">
+                        <Sparkles className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-widest">Premium Custom Lab</span>
+                    </motion.div>
 
-                    {/* Simplified Header Typography */}
-                    <motion.h1 variants={itemVariants} className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight mb-4 md:mb-6 leading-tight">
-                        Create Your Masterpiece
+                    {/* Heading - Split Colors per reference image */}
+                    <motion.h1 variants={itemVariants} className="text-5xl xs:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 leading-[0.9]">
+                        <span className="text-foreground">Create Your</span> <span className="text-[#C41E3A]">Masterpiece</span>
                     </motion.h1>
 
-                    <motion.p variants={itemVariants} className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 font-light leading-relaxed px-2">
-                        From bulk orders to unique one-offs. <br className="hidden md:block" />
-                        Bring your vision to life with our premium custom clothing service.
+                    <motion.p variants={itemVariants} className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-normal leading-relaxed px-2">
+                        From bulk orders to unique one-offs. Bring your vision to life with our premium custom clothing service. Direct consultation. No limits.
                     </motion.p>
 
                     <motion.div variants={itemVariants}>
                         <Button
-                            className="rounded-full px-8 py-6 text-lg bg-jager-red hover:bg-red-700 hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-red-500/20 w-full md:w-auto font-bold uppercase tracking-wide"
+                            className="rounded-full px-10 py-7 text-lg bg-[#C41E3A] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
                         >
                             Start Your Design
