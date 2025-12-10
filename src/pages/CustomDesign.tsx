@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon } from "lucide-react";
+import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon, UploadCloud } from "lucide-react";
 
 export default function CustomDesign() {
     const [loading, setLoading] = useState(false);
@@ -86,7 +88,6 @@ export default function CustomDesign() {
                 console.error("DB INSERT ERROR:", error);
                 setSubmitStatus({ type: 'error', message: `Database Error: ${error.message}. Please screenshot this and send to support.` });
                 toast.error(`Database error: ${error.message}`);
-                // We still proceed to WhatsApp so the lead isn't lost, but user knows DB failed.
             } else {
                 console.log("DB INSERT SUCCESS:", insertedData);
                 setSubmitStatus({ type: 'success', message: "Request saved securely to database!" });
@@ -126,89 +127,155 @@ export default function CustomDesign() {
         }
     };
 
+    // Animation Variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring" as const,
+                stiffness: 100
+            }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="min-h-screen text-foreground relative overflow-hidden bg-background">
+
+            <Helmet>
+                <title>Custom Design | Jager Clothing - Premium Streetwear</title>
+                <meta name="description" content="Bring your vision to life with Jager Custom Lab. From bulk orders to unique one-offs. Direct design consultation and premium manufacturing." />
+                <meta property="og:title" content="Create Your Masterpiece | Jager Custom Lab" />
+                <meta property="og:description" content="Premium custom apparel service. No limits. Direct consultation. Start your design today." />
+                <link rel="canonical" href="https://jagerclothing.com/custom-design" />
+            </Helmet>
+
             <Header />
 
-            {/* Hero Section */}
-            <section className="relative py-12 px-4 md:py-32 overflow-hidden">
-                <div className="absolute inset-0 bg-jager-red/5 -z-10" />
-                <div className="container mx-auto max-w-6xl text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-jager-red/10 text-jager-red mb-6 border border-jager-red/20">
-                        <Sparkles className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Premium Custom Lab</span>
-                    </div>
-                    <h1 className="text-4xl md:text-7xl font-heading font-bold uppercase tracking-tighter mb-4 md:mb-6">
-                        Create Your <span className="text-stroke-red text-transparent bg-clip-text bg-gradient-to-r from-jager-red to-red-600 block md:inline">Masterpiece</span>
-                    </h1>
-                    <p className="text-base md:text-xl text-grey-text max-w-2xl mx-auto mb-8 font-light">
-                        From bulk orders to unique one-offs. Bring your vision to life with our premium custom clothing service.
-                        Direct consultation. No limits.
-                    </p>
-                    <Button
-                        className="rounded-full px-8 py-6 text-lg bg-jager-red hover:bg-red-700 hover:scale-105 transition-all shadow-lg hover:shadow-red-500/25 w-full md:w-auto"
-                        onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                        Start Your Design
-                    </Button>
-                </div>
-            </section>
+            {/* Hero Section - Simplified for Collection Vibe */}
+            <motion.section
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="relative py-12 md:py-24 px-4 overflow-hidden"
+            >
+                {/* Clean background - No gradients */}
+                <div className="container mx-auto max-w-6xl text-center relative z-10">
 
-            {/* Process Steps */}
-            <section className="py-12 md:py-20 bg-background border-y border-foreground/5">
+                    {/* Badge Removed per simplification request */}
+
+                    {/* Simplified Header Typography */}
+                    <motion.h1 variants={itemVariants} className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight mb-4 md:mb-6 leading-tight">
+                        Create Your Masterpiece
+                    </motion.h1>
+
+                    <motion.p variants={itemVariants} className="text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 font-light leading-relaxed px-2">
+                        From bulk orders to unique one-offs. <br className="hidden md:block" />
+                        Bring your vision to life with our premium custom clothing service.
+                    </motion.p>
+
+                    <motion.div variants={itemVariants}>
+                        <Button
+                            className="rounded-full px-8 py-6 text-lg bg-jager-red hover:bg-red-700 hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-red-500/20 w-full md:w-auto font-bold uppercase tracking-wide"
+                            onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
+                        >
+                            Start Your Design
+                        </Button>
+                    </motion.div>
+                </div>
+            </motion.section>
+
+            {/* Process Steps - Clean Layout (No Borders) */}
+            <section className="py-12 md:py-20 relative z-10">
                 <div className="container mx-auto px-4 max-w-6xl">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
-                        <div className="space-y-4">
-                            <div className="w-16 h-16 mx-auto bg-foreground/5 rounded-2xl flex items-center justify-center mb-4">
-                                <PencilRuler className="w-8 h-8 text-jager-red" />
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={containerVariants}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-12 text-center"
+                    >
+                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
+                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                <PencilRuler className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
                             </div>
-                            <h3 className="font-heading text-xl md:text-2xl font-bold uppercase">1. Brief</h3>
-                            <p className="text-sm md:text-base text-grey-text">Share your idea, quantity, and budget. Simple form, instant connection.</p>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="w-16 h-16 mx-auto bg-foreground/5 rounded-2xl flex items-center justify-center mb-4">
-                                <MessageCircle className="w-8 h-8 text-jager-red" />
+                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">1. Brief</h3>
+                            <p className="text-sm text-muted-foreground">Share your idea, quantity, and budget. Simple form, instant connection.</p>
+                        </motion.div>
+
+                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
+                            {/* Connector line for desktop */}
+                            <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
+
+                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
                             </div>
-                            <h3 className="font-heading text-xl md:text-2xl font-bold uppercase">2. Consult</h3>
-                            <p className="text-sm md:text-base text-grey-text">Chat directly with our design team on WhatsApp to finalize details.</p>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="w-16 h-16 mx-auto bg-foreground/5 rounded-2xl flex items-center justify-center mb-4">
-                                <Shirt className="w-8 h-8 text-jager-red" />
+                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">2. Consult</h3>
+                            <p className="text-sm text-muted-foreground">Chat directly with our design team on WhatsApp to finalize details.</p>
+                        </motion.div>
+
+                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
+                            {/* Connector line for desktop */}
+                            <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
+
+                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                <Shirt className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
                             </div>
-                            <h3 className="font-heading text-xl md:text-2xl font-bold uppercase">3. Create</h3>
-                            <p className="text-sm md:text-base text-grey-text">We produce your premium custom gear and ship it to your door.</p>
-                        </div>
-                    </div>
+                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">3. Create</h3>
+                            <p className="text-sm text-muted-foreground">We produce your premium custom gear and ship it to your door.</p>
+                        </motion.div>
+                    </motion.div>
                 </div>
             </section>
 
-            {/* Main Form Section */}
-            <section id="brief-form" className="py-12 md:py-20 px-4">
+            {/* Main Form Section - Simplified Card */}
+            <section id="brief-form" className="py-8 md:py-20 px-0 md:px-4 relative z-10">
                 <div className="container mx-auto max-w-4xl">
-                    <div className="bg-background border border-foreground/10 shadow-2xl rounded-3xl p-6 md:p-12">
-                        <div className="text-center mb-8 md:mb-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, type: "spring" }}
+                        className="bg-card border border-border md:rounded-3xl p-6 md:p-12 relative overflow-hidden"
+                    >
+                        <div className="text-center mb-8 md:mb-10 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Project Brief</h2>
-                            <p className="text-grey-text text-sm md:text-base">Tell us about your project to start the conversation.</p>
+                            <p className="text-muted-foreground text-sm md:text-base">Tell us about your project to start the conversation.</p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+                        <form onSubmit={handleSubmit} className="space-y-5 md:space-y-8 relative z-10">
                             {submitStatus && (
-                                <div className={`p-4 rounded-lg text-sm font-bold ${submitStatus.type === 'success'
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    className={`p-4 rounded-lg text-sm font-bold ${submitStatus.type === 'success'
                                         ? 'bg-green-500/10 text-green-600 border border-green-500/20'
                                         : 'bg-red-500/10 text-red-600 border border-red-500/20'
-                                    }`}>
+                                        }`}>
                                     {submitStatus.message}
-                                </div>
+                                </motion.div>
                             )}
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                                 <div className="space-y-2">
                                     <Label>Your Name</Label>
                                     <Input
                                         required
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        className="h-12 bg-foreground/5 border-transparent focus:bg-background transition-colors"
+                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        placeholder="Enter your name"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -218,19 +285,21 @@ export default function CustomDesign() {
                                         type="tel"
                                         value={formData.phone}
                                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                        className="h-12 bg-foreground/5 border-transparent focus:bg-background transition-colors"
+                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        placeholder="Enter phone number"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                                 <div className="space-y-2">
                                     <Label>Email</Label>
                                     <Input
                                         type="email"
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        className="h-12 bg-foreground/5 border-transparent focus:bg-background transition-colors"
+                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        placeholder="Enter email address"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -239,7 +308,8 @@ export default function CustomDesign() {
                                         type="number"
                                         value={formData.quantity}
                                         onChange={e => setFormData({ ...formData, quantity: e.target.value })}
-                                        className="h-12 bg-foreground/5 border-transparent focus:bg-background transition-colors"
+                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        placeholder="How many pieces?"
                                     />
                                 </div>
                             </div>
@@ -249,7 +319,8 @@ export default function CustomDesign() {
                                 <Input
                                     value={formData.budget}
                                     onChange={e => setFormData({ ...formData, budget: e.target.value })}
-                                    className="h-12 bg-foreground/5 border-transparent focus:bg-background transition-colors"
+                                    className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                    placeholder="e.g. ₹5,000 - ₹10,000"
                                 />
                             </div>
 
@@ -266,29 +337,66 @@ export default function CustomDesign() {
                                     />
                                     <Label
                                         htmlFor="image-upload"
-                                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${formData.image_url
-                                            ? "border-green-500 bg-green-500/5"
-                                            : "border-foreground/20 hover:border-jager-red hover:bg-foreground/5"
+                                        className={`flex flex-col items-center justify-center w-full h-24 md:h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:scale-105 ${formData.image_url
+                                            ? "border-green-500 bg-green-500/10"
+                                            : "border-input"
                                             }`}
                                     >
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <div className="flex flex-row md:flex-col items-center justify-center gap-3 pt-2 pb-2 md:pt-5 md:pb-6 pointer-events-none relative z-10">
                                             {uploading ? (
-                                                <Loader2 className="w-8 h-8 text-grey-text animate-spin mb-2" />
+                                                <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground animate-spin" />
                                             ) : formData.image_url ? (
                                                 <>
-                                                    <div className="w-10 h-10 mb-2 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg">
-                                                        <Sparkles className="w-5 h-5" />
+                                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg shrink-0">
+                                                        <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                                                     </div>
-                                                    <p className="text-sm font-bold text-green-600">Image Attached!</p>
-                                                    <p className="text-xs text-grey-text mt-1">Click to change</p>
+                                                    <div className="text-left md:text-center">
+                                                        <p className="text-sm font-bold text-green-500">Image Attached!</p>
+                                                        <p className="text-xs text-muted-foreground">Click to change</p>
+                                                    </div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="w-10 h-10 mb-2 rounded-full bg-foreground/5 flex items-center justify-center text-grey-text group-hover:text-jager-red transition-colors">
-                                                        <ImageIcon className="w-5 h-5" />
+                                                    {/* Liquid Blob Icon Background - PRESERVED */}
+                                                    <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+                                                        <motion.div
+                                                            className="absolute inset-0 bg-accent/80 opacity-50"
+                                                            animate={{
+                                                                borderRadius: [
+                                                                    "60% 40% 30% 70% / 60% 30% 70% 40%",
+                                                                    "30% 60% 70% 40% / 50% 60% 30% 60%",
+                                                                    "60% 40% 30% 70% / 60% 30% 70% 40%"
+                                                                ]
+                                                            }}
+                                                            transition={{
+                                                                duration: 4,
+                                                                repeat: Infinity,
+                                                                ease: "easeInOut"
+                                                            }}
+                                                        />
+                                                        <motion.div
+                                                            className="absolute inset-0 bg-accent/50"
+                                                            animate={{
+                                                                borderRadius: [
+                                                                    "40% 60% 70% 30% / 40% 50% 60% 50%",
+                                                                    "60% 30% 50% 70% / 60% 40% 50% 60%",
+                                                                    "40% 60% 70% 30% / 40% 50% 60% 50%"
+                                                                ],
+                                                                rotate: [0, 180, 360]
+                                                            }}
+                                                            transition={{
+                                                                duration: 7,
+                                                                repeat: Infinity,
+                                                                ease: "linear"
+                                                            }}
+                                                        />
+                                                        <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-foreground/80 relative z-10" />
                                                     </div>
-                                                    <p className="text-sm text-grey-text"><span className="font-semibold text-foreground">Click to upload</span> or drag and drop</p>
-                                                    <p className="text-xs text-grey-text mt-1">Accepts any valid image file</p>
+
+                                                    <div className="text-left md:text-center">
+                                                        <p className="text-sm font-medium">Upload Reference</p>
+                                                        <p className="text-xs text-muted-foreground mt-0.5">Click or drag image</p>
+                                                    </div>
                                                 </>
                                             )}
                                         </div>
@@ -301,17 +409,17 @@ export default function CustomDesign() {
                                 <Textarea
                                     required
                                     placeholder="Describe your vision. What kind of apparel? Any specific colors, prints, or fabric requirements?"
-                                    rows={6}
+                                    rows={5}
                                     value={formData.brief}
                                     onChange={e => setFormData({ ...formData, brief: e.target.value })}
-                                    className="bg-foreground/5 border-transparent focus:bg-background transition-colors resize-none p-4"
+                                    className="bg-background/50 border-input focus:border-jager-red/50 transition-all resize-none p-4 text-base min-h-[120px]"
                                 />
                             </div>
 
                             <Button
                                 type="submit"
                                 disabled={loading || uploading}
-                                className="w-full text-lg h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl shadow-lg hover:shadow-green-500/20 transition-all"
+                                className="w-full text-lg h-14 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl shadow-lg hover:shadow-green-500/20 transition-all active:scale-[0.98]"
                             >
                                 {loading ? (
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -321,11 +429,11 @@ export default function CustomDesign() {
                                 {loading ? "Saving..." : "Start Chat on WhatsApp"}
                             </Button>
 
-                            <p className="text-center text-xs text-grey-text">
+                            <p className="text-center text-[10px] md:text-xs text-muted-foreground px-4">
                                 By clicking "Start Chat", you agree to be contacted via WhatsApp regarding your request.
                             </p>
                         </form>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
