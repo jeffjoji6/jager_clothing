@@ -265,18 +265,24 @@ const ProductDetail = () => {
 
               {/* Color */}
               {availableColors.length > 0 && (
-                <div className="space-y-3">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Color: <span className="text-foreground">{selectedColor || 'Select'}</span></span>
+                <div className="space-y-4">
+                  <span className="text-sm font-heading font-black uppercase tracking-widest text-muted-foreground">
+                    Color: <span className="text-foreground">{selectedColor || 'Select'}</span>
+                  </span>
                   <div className="flex flex-wrap gap-3">
                     {availableColors.map((color) => (
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`w-10 h-10 border transition-all ${selectedColor === color ? 'border-foreground ring-1 ring-foreground ring-offset-2' : 'border-border hover:border-foreground'
+                        className={`w-12 h-12 border-2 transition-all relative group ${selectedColor === color
+                            ? 'border-jager-red ring-1 ring-jager-red ring-offset-2 scale-105'
+                            : 'border-border hover:border-foreground'
                           }`}
                         style={{ backgroundColor: color.toLowerCase() === 'white' ? '#fff' : color.toLowerCase() }}
                         title={color}
-                      />
+                      >
+                        {/* Selection Indicator for accessibility/clarity if needed, mostly handled by border */}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -302,7 +308,7 @@ const ProductDetail = () => {
                           }
                         }}
                         className={`w-12 h-12 flex items-center justify-center text-sm font-bold transition-all border relative ${!isInStock
-                          ? 'bg-muted text-muted-foreground border-border cursor-not-allowed opacity-50'
+                          ? 'bg-muted text-muted-foreground border-border cursor-not-allowed opacity-40 line-through'
                           : selectedSize === size
                             ? 'bg-foreground text-background border-foreground'
                             : 'bg-background text-foreground border-border hover:border-foreground'
@@ -310,9 +316,7 @@ const ProductDetail = () => {
                       >
                         {size}
                         {!isInStock && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-full h-px bg-current rotate-45 transform scale-125" />
-                          </div>
+                          <div className="absolute inset-0 bg-background/10" />
                         )}
                       </button>
                     );

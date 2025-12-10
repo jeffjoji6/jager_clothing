@@ -15,6 +15,27 @@ const Collection = () => {
   const [sortBy, setSortBy] = useState<string>("FEATURED");
   const { data: products, isLoading, error } = useProducts();
 
+  // Derive unique categories from products
+  const availableCategories = useMemo(() => {
+    if (!products || products.length === 0) return ["ALL"];
+
+    const categories = new Set<string>();
+    categories.add("ALL");
+
+    // Add dynamic categories from products ONLY
+    products.forEach(p => {
+      if (p.category) {
+        categories.add(p.category.trim().replace('_', ' ').toUpperCase());
+      }
+    });
+
+    // If we want default categories to show up regardless of products, we'd add them here.
+    // But user requested: "if the category not found in the list dont show in the main page"
+    // So we ONLY add what's in the products.
+
+    return Array.from(categories);
+  }, [products]);
+
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -91,6 +112,7 @@ const Collection = () => {
                     setSelectedSizes={setSelectedSizes}
                     selectedColors={selectedColors}
                     setSelectedColors={setSelectedColors}
+                    availableCategories={availableCategories}
                   />
                   <div className="mt-8 pt-6 border-t border-border">
                     <Button className="w-full" onClick={() => setFilterOpen(false)}>
@@ -114,6 +136,7 @@ const Collection = () => {
                 setSelectedSizes={setSelectedSizes}
                 selectedColors={selectedColors}
                 setSelectedColors={setSelectedColors}
+                availableCategories={availableCategories}
               />
             </div>
           </aside>
@@ -150,16 +173,28 @@ const Collection = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    id={product.id}
-                    name={product.name}
-                    price={Number(product.base_price)}
-                    image={product.images}
-                    isNew={product.is_new}
-                  />
-                ))}
+                {filteredProducts.map((product) => {
+                  // Calculate if product is out of stock based on active filters
+                  const isOutOfStock = product.variants
+                    .filter(v => {
+                      const matchesColor = selectedColors.length === 0 || selectedColors.includes(v.color.toUpperCase());
+                      const matchesSize = selectedSizes.length === 0 || selectedSizes.includes(v.size);
+                      return matchesColor && matchesSize;
+                    })
+                    .every(v => v.stock <= 0);
+
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      name={product.name}
+                      price={Number(product.base_price)}
+                      image={product.images}
+                      isNew={product.is_new}
+                      isOutOfStock={isOutOfStock}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -176,6 +211,7 @@ const FilterContent = ({
   setSelectedSizes,
   selectedColors,
   setSelectedColors,
+  availableCategories,
 }: {
   selectedCategory: string;
   setSelectedCategory: (cat: string) => void;
@@ -183,6 +219,7 @@ const FilterContent = ({
   setSelectedSizes: (sizes: string[] | ((prev: string[]) => string[])) => void;
   selectedColors: string[];
   setSelectedColors: (colors: string[] | ((prev: string[]) => string[])) => void;
+  availableCategories: string[];
 }) => {
   const hasActiveFilters = selectedCategory !== "ALL" || selectedSizes.length > 0 || selectedColors.length > 0;
 
@@ -207,7 +244,7 @@ const FilterContent = ({
       <div>
         <h4 className="text-sm font-heading font-bold uppercase mb-4">CATEGORY</h4>
         <div className="space-y-2">
-          {["ALL", "HOODIES", "TEES", "BOTTOMS"].map((cat) => (
+          {availableCategories.map((cat) => (
             <label key={cat} className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="radio"

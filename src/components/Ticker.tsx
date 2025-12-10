@@ -1,6 +1,6 @@
 export const Ticker = () => {
-  const tickerText = "WORLDWIDE SHIPPING +++ PREMIUM QUALITY +++ JAGER CLOTHING";
-  
+  const tickerText = "FREE SHIPPING ALL OVER INDIA +++ PREMIUM QUALITY +++ JAGER CLOTHING";
+
   return (
     <div className="bg-foreground text-background overflow-hidden py-2">
       <div className="flex whitespace-nowrap">

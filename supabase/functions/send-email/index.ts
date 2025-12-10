@@ -8,7 +8,8 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-    to: string;
+    to: string; // Single recipient (legacy support)
+    recipients?: string[]; // Multiple recipients
     subject: string;
     html: string;
     from?: string;
@@ -26,20 +27,41 @@ serve(async (req) => {
         }
 
         const resend = new Resend(resendApiKey);
-        const { to, subject, html, from } = await req.json() as EmailRequest;
+        const { to, recipients, subject, html, from } = await req.json() as EmailRequest;
 
-        if (!to || !subject || !html) {
-            throw new Error("Missing required fields: to, subject, html");
+        // Determine target emails
+        const targets = recipients && recipients.length > 0 ? recipients : (to ? [to] : []);
+
+        if (targets.length === 0 || !subject || !html) {
+            throw new Error("Missing required fields: to/recipients, subject, html");
         }
 
-        const data = await resend.emails.send({
-            from: from || "Jager Clothing <onboarding@resend.dev>", // Default to Resend testing domain
-            to,
-            subject,
-            html,
-        });
+        const sender = from || "Jager Clothing <onboarding@resend.dev>";
 
-        return new Response(JSON.stringify(data), {
+        // Send emails in parallel
+        // Note: Resend has rate limits. For very large batches (e.g. >100), 
+        // we should probably batch this or use Resend's batch API if available in this SDK version.
+        // For this implementation, we'll map promises.
+
+        const results = await Promise.allSettled(targets.map(email =>
+            resend.emails.send({
+                from: sender,
+                to: email,
+                subject,
+                html,
+            })
+        ));
+
+        // Check for failures
+        const failures = results.filter(r => r.status === 'rejected');
+        const successes = results.filter(r => r.status === 'fulfilled');
+
+        return new Response(JSON.stringify({
+            success: true,
+            sent_count: successes.length,
+            failed_count: failures.length,
+            results: results
+        }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
         });

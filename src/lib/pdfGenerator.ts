@@ -11,6 +11,10 @@ export interface CompanyInfo {
   email: string;
   website: string;
   gstin?: string;
+  bank_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  account_holder_name?: string;
 }
 
 export interface OrderPDFData {
@@ -18,6 +22,13 @@ export interface OrderPDFData {
   orderDate: string;
   customerName: string;
   customerAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+  };
+  billingAddress?: {
     street: string;
     city: string;
     state: string;
@@ -51,267 +62,382 @@ const DEFAULT_COMPANY: CompanyInfo = {
 };
 
 const COLORS = {
-  primary: [220, 38, 38] as [number, number, number], // Jager Red
-  secondary: [60, 60, 60] as [number, number, number], // Dark Grey
-  text: [30, 30, 30] as [number, number, number], // Black
-  lightText: [100, 100, 100] as [number, number, number], // Grey
-  tableHeader: [245, 245, 245] as [number, number, number], // Light Grey
+  primary: [175, 31, 23] as [number, number, number], // Jager Red (hsl(3, 76%, 39%))
+  secondary: [0, 0, 0] as [number, number, number], // Black
+  text: [30, 30, 30] as [number, number, number],
+  lightText: [100, 100, 100] as [number, number, number],
+  tableHeader: [245, 245, 245] as [number, number, number],
+  border: [230, 230, 230] as [number, number, number],
 };
 
-const addHeader = (doc: jsPDF, company: CompanyInfo, title: string) => {
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  // Top Bar
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, pageWidth, 5, 'F');
-
-  // Company Name
-  doc.setFontSize(24);
-  doc.setTextColor(...COLORS.primary);
-  doc.setFont("helvetica", "bold");
-  doc.text(company.name, 20, 25);
-
-  // Document Title
-  doc.setFontSize(24);
-  doc.setTextColor(...COLORS.secondary);
-  doc.text(title, pageWidth - 20, 25, { align: "right" });
-
-  // Company Details
-  doc.setFontSize(9);
-  doc.setTextColor(...COLORS.lightText);
-  doc.setFont("helvetica", "normal");
-  let yPos = 35;
-  doc.text(company.address, 20, yPos);
-  yPos += 5;
-  doc.text(`${company.city}, ${company.state} ${company.zip}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Phone: ${company.phone}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Email: ${company.email}`, 20, yPos);
-  if (company.gstin) {
-    yPos += 5;
-    doc.text(`GSTIN: ${company.gstin}`, 20, yPos);
-  }
-
-  // Separator
-  doc.setDrawColor(230, 230, 230);
-  doc.line(20, 65, pageWidth - 20, 65);
-
-  return 75; // Return Y position for next section
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = url;
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+  });
 };
 
-const addFooter = (doc: jsPDF, company: CompanyInfo) => {
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  doc.setFillColor(250, 250, 250);
-  doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
-
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.lightText);
-  doc.text(
-    `Thank you for choosing ${company.name}! Visit us at ${company.website}`,
-    pageWidth / 2,
-    pageHeight - 12,
-    { align: "center" }
-  );
-  doc.text(
-    "This is a computer-generated document and does not require a signature.",
-    pageWidth / 2,
-    pageHeight - 7,
-    { align: "center" }
-  );
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 };
 
-export const generatePackingSlip = (
+export const generatePackingSlip = async (
   orderData: OrderPDFData,
   companyInfo: CompanyInfo = DEFAULT_COMPANY
 ) => {
   const doc = new jsPDF();
-  let yPos = addHeader(doc, companyInfo, "PACKING SLIP");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
 
-  // Order & Shipping Info Grid
+  // Load Logo
+  let logo: HTMLImageElement | null = null;
+  try {
+    logo = await loadImage('/jager_logo.png');
+  } catch (e) {
+    console.error("Failed to load logo", e);
+  }
+
+  // Outer Border (Rounded rect styling)
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, margin, contentWidth, pageHeight - (margin * 2), 3, 3, 'S');
+
+  // Header Section
+  let yPos = margin + 15;
+
+  // Logo (Left) & Company Address (Right)
+  if (logo) {
+    const logoWidth = 35; // Decreased logo size (from 50)
+    const logoHeight = (logo.height / logo.width) * logoWidth;
+    doc.addImage(logo, 'PNG', margin + 10, yPos - 5, logoWidth, logoHeight);
+  } else {
+    doc.setFontSize(28);
+    doc.setFont("helvetica", "bold");
+    doc.text(companyInfo.name, margin + 10, yPos + 10);
+  }
+
+  // Company Address Right Aligned
+  // "JAGER CLOTHING" Bold and Big
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.text);
+  const addressX = pageWidth - margin - 10;
+  doc.text(companyInfo.name.toUpperCase(), addressX, yPos, { align: 'right' });
+
+  // Address details
   doc.setFontSize(10);
-
-  // Left Column: Order Details
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...COLORS.text);
-  doc.text("ORDER DETAILS", 20, yPos);
-
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...COLORS.lightText);
-  doc.text(`Order ID: #${orderData.orderId.slice(0, 8).toUpperCase()}`, 20, yPos + 7);
-  doc.text(`Date: ${new Date(orderData.orderDate).toLocaleDateString()}`, 20, yPos + 12);
+  doc.text(companyInfo.address, addressX, yPos + 6, { align: 'right' });
+  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, addressX, yPos + 11, { align: 'right' });
 
-  // Right Column: Ship To
+  yPos += 35;
+
+  // Billing (Left) & Shipping (Right) Addresses
+  const colWidth = contentWidth / 2;
+
+  // Billing Address (Left)
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  doc.text("SHIP TO", 120, yPos);
+  doc.text("Billing Address:", margin + 10, yPos);
 
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(...COLORS.lightText);
-  doc.text(orderData.customerName, 120, yPos + 7);
-  doc.text(orderData.customerAddress.street, 120, yPos + 12);
-  doc.text(
-    `${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`,
-    120,
-    yPos + 17
-  );
-  doc.text(`Phone: ${orderData.customerAddress.phone}`, 120, yPos + 22);
+  let addrY = yPos + 7;
+  // Fallback to customerAddress (shipping) if billingAddress not provided
+  const billAddr = orderData.billingAddress || orderData.customerAddress;
+  const billName = orderData.billingAddress ? orderData.customerName : orderData.customerName; // Using same name for now
 
-  yPos += 40;
+  doc.text(billName, margin + 10, addrY); addrY += 6;
+  doc.text(billAddr.street, margin + 10, addrY); addrY += 6;
+  doc.text(`${billAddr.city}, ${billAddr.state} ${billAddr.zip}`, margin + 10, addrY); addrY += 6;
+  doc.text(billAddr.phone, margin + 10, addrY);
 
-  // Items Table
+  // Shipping Address (Right)
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Shipping Address:", margin + 10 + colWidth, yPos);
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  addrY = yPos + 7;
+  doc.text(orderData.customerName, margin + 10 + colWidth, addrY); addrY += 6;
+  doc.text(orderData.customerAddress.street, margin + 10 + colWidth, addrY); addrY += 6;
+  doc.text(`${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`, margin + 10 + colWidth, addrY); addrY += 6;
+  doc.text(orderData.customerAddress.phone, margin + 10 + colWidth, addrY);
+
+  yPos = addrY + 25;
+
+  // "Your Order of..." Banner
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Your Order of ${new Date(orderData.orderDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })} (#${orderData.orderId.slice(0, 8).toUpperCase()})`, margin + 10, yPos);
+
+  doc.setDrawColor(...COLORS.border);
+  doc.setLineWidth(0.5);
+  doc.line(margin + 5, yPos + 3, pageWidth - margin - 5, yPos + 3);
+
+  yPos += 15;
+
+  // Items Table - NO PRICE, NO RATE as requested
+  // Columns: Qty | Item Description
   autoTable(doc, {
     startY: yPos,
-    head: [['Item', 'Size', 'Color', 'Qty']],
+    margin: { left: margin + 5, right: margin + 5 },
+    head: [['QTY', 'ITEM DESCRIPTION']],
     body: orderData.items.map(item => [
-      item.name,
-      item.size,
-      item.color,
-      item.quantity
+      item.quantity,
+      `${item.name}\nColor: ${item.color} | Size: ${item.size}`
     ]),
     theme: 'plain',
     headStyles: {
-      fillColor: COLORS.tableHeader,
+      fillColor: [240, 240, 240], // Slightly darker gray for better visibility
       textColor: COLORS.text,
       fontStyle: 'bold',
-      cellPadding: 4,
+      fontSize: 11, // Bigger
+      halign: 'left',
+      cellPadding: 6,
     },
     styles: {
-      fontSize: 10,
-      cellPadding: 4,
+      fontSize: 11, // Bigger body
       textColor: COLORS.text,
+      cellPadding: 8, // More padding
+      valign: 'top',
     },
     columnStyles: {
-      0: { cellWidth: 'auto' }, // Item
-      1: { cellWidth: 30 }, // Size
-      2: { cellWidth: 40 }, // Color
-      3: { cellWidth: 20, halign: 'center' }, // Qty
+      0: { cellWidth: 25, halign: 'center' }, // Qty
+      1: { cellWidth: 'auto' }, // Description
     },
   });
 
-  addFooter(doc, companyInfo);
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+  // Footer
+  // Notes
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("NOTES", margin + 10, finalY + 10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Thank you for buying from Jager Clothing!", margin + 10, finalY + 16);
+
+  // Big Thank You (right bottom)
+  const footerY = pageHeight - margin - 20;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.primary); // Jager Red "Thank You"
+  doc.text("THANK YOU", pageWidth - margin - 10, footerY + 12, { align: "right" });
+
   doc.save(`packing-slip-${orderData.orderId.slice(0, 8)}.pdf`);
 };
 
-export const generateInvoice = (
+export const generateInvoice = async (
   orderData: OrderPDFData,
   invoiceNumber: string,
   companyInfo: CompanyInfo = DEFAULT_COMPANY,
   gstRate: number = 18
 ) => {
   const doc = new jsPDF();
-  let yPos = addHeader(doc, companyInfo, "TAX INVOICE");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
 
-  // Order & Billing Info Grid
-  doc.setFontSize(10);
-
-  // Left Column: Invoice Details
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...COLORS.text);
-  doc.text("INVOICE DETAILS", 20, yPos);
-
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...COLORS.lightText);
-  doc.text(`Invoice No: ${invoiceNumber}`, 20, yPos + 7);
-  doc.text(`Order ID: #${orderData.orderId.slice(0, 8).toUpperCase()}`, 20, yPos + 12);
-  doc.text(`Date: ${new Date(orderData.orderDate).toLocaleDateString()}`, 20, yPos + 17);
-  if (orderData.paymentMethod) {
-    doc.text(`Payment: ${orderData.paymentMethod}`, 20, yPos + 22);
+  // Load Logo
+  let logo: HTMLImageElement | null = null;
+  try {
+    logo = await loadImage('/jager_logo.png');
+  } catch (e) {
+    console.error("Failed to load logo", e);
   }
 
-  // Right Column: Bill To
+  // Helper for INR without symbol glitch
+  const formatINR = (n: number) => `Rs. ${n.toLocaleString('en-IN')}`;
+
+  let yPos = margin + 10;
+
+  // --- HEADER ---
+  // Left: Logo
+  if (logo) {
+    const logoWidth = 35;
+    const logoHeight = (logo.height / logo.width) * logoWidth;
+    doc.addImage(logo, 'PNG', margin, yPos - 5, logoWidth, logoHeight);
+  } else {
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text(companyInfo?.name || "Jager Clothing", margin, yPos + 10);
+  }
+
+  // Right: INVOICE Title & Details
+  const rightX = pageWidth - margin;
+  doc.setFontSize(30); // Slightly smaller than 36 for elegance
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  doc.text("BILL TO", 120, yPos);
+  doc.text("INVOICE", rightX, yPos + 5, { align: 'right' });
 
+  // Invoice Details (Right, below "INVOICE")
+  yPos += 20;
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...COLORS.lightText);
-  doc.text(orderData.customerName, 120, yPos + 7);
-  doc.text(orderData.customerAddress.street, 120, yPos + 12);
-  doc.text(
-    `${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`,
-    120,
-    yPos + 17
-  );
-  doc.text(`Phone: ${orderData.customerAddress.phone}`, 120, yPos + 22);
 
-  yPos += 40;
+  doc.text(`Invoice No. ${invoiceNumber}`, rightX, yPos, { align: 'right' });
+  doc.text(`${new Date(orderData.orderDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, rightX, yPos + 5, { align: 'right' });
 
-  // Items Table
+  // --- ADDRESS SECTION ---
+  yPos += 20;
+
+  // "BILLED TO:" (Left)
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.text); // Black for label
+  doc.text("BILLED TO:", margin, yPos);
+
+  yPos += 6;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  // Use Billing Address if available, else Customer Address
+  const billAddr = orderData.billingAddress || orderData.customerAddress;
+  const billName = orderData.billingAddress ? orderData.customerName : orderData.customerName;
+
+  doc.text(billName, margin, yPos); yPos += 5;
+  if (billAddr.phone) { doc.text(billAddr.phone, margin, yPos); yPos += 5; }
+  doc.text(billAddr.street, margin, yPos); yPos += 5;
+  doc.text(`${billAddr.city}, ${billAddr.state} ${billAddr.zip}`, margin, yPos); yPos += 5;
+  doc.text("India", margin, yPos);
+
+  // --- TABLE ---
+  yPos += 15;
+
   autoTable(doc, {
     startY: yPos,
-    head: [['Item', 'Details', 'Qty', 'Rate', 'Amount']],
+    margin: { left: margin, right: margin },
+    // Explicit Columns: Item, Size, Quantity, Price, Total
+    head: [['Item', 'Size', 'Quantity', 'Price', 'Total']],
     body: orderData.items.map(item => [
-      item.name,
-      `${item.size} / ${item.color}`,
+      item.name + (item.color ? `\n(${item.color})` : ''), // Put Color with Name
+      item.size,
       item.quantity,
-      `₹${item.price.toLocaleString()}`,
-      `₹${(item.price * item.quantity).toLocaleString()}`
+      formatINR(item.price),
+      formatINR(item.price * item.quantity)
     ]),
-    theme: 'grid',
+    theme: 'plain',
     headStyles: {
-      fillColor: COLORS.primary,
-      textColor: [255, 255, 255],
+      fillColor: [250, 250, 250],
+      textColor: COLORS.text,
       fontStyle: 'bold',
-      cellPadding: 4,
+      halign: 'left',
+      cellPadding: 10,
     },
     styles: {
-      fontSize: 9,
-      cellPadding: 4,
+      fontSize: 10,
       textColor: COLORS.text,
-      lineColor: [230, 230, 230],
+      cellPadding: 10,
+      valign: 'middle', // Vertically center for better look
+      lineColor: COLORS.border,
+      lineWidth: { bottom: 0.1 },
     },
     columnStyles: {
-      0: { cellWidth: 'auto' }, // Item
-      1: { cellWidth: 40 }, // Details
-      2: { cellWidth: 20, halign: 'center' }, // Qty
-      3: { cellWidth: 30, halign: 'right' }, // Rate
-      4: { cellWidth: 30, halign: 'right' }, // Amount
+      0: { cellWidth: 'auto', halign: 'left' }, // Item - takes remaining space
+      1: { cellWidth: 30, halign: 'center' }, // Size - increased from 20
+      2: { cellWidth: 35, halign: 'center' }, // Quantity - increased from 25
+      3: { cellWidth: 30, halign: 'right' }, // Price - reduced from 35
+      4: { cellWidth: 30, halign: 'right' }, // Total - reduced from 35
     },
-    foot: [[
-      { content: 'Total', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
-      { content: `₹${orderData.subtotal.toLocaleString()}`, styles: { halign: 'right', fontStyle: 'bold' } }
-    ]],
+    didParseCell: (data) => {
+      if (data.section === 'head') {
+        // Center align Size and Quantity headers
+        if (data.column.index === 1 || data.column.index === 2) data.cell.styles.halign = 'center';
+        // Right align Price and Total headers
+        if (data.column.index > 2) data.cell.styles.halign = 'right';
+      }
+    }
   });
 
-  // Tax Summary
   const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-  // Calculate Tax Breakdown
-  const subtotalBeforeTax = orderData.total - orderData.tax; // Simplified for display
-  const cgst = orderData.tax / 2;
-  const sgst = orderData.tax / 2;
+  // --- FOOTER & TOTALS ---
+  const totalsX = pageWidth - margin;
+  let currentY = finalY;
 
-  // Summary Box
-  const summaryX = 120;
-  doc.setFontSize(9);
-  doc.setTextColor(...COLORS.lightText);
+  const addTotalRow = (label: string, value: string, isBold: boolean = false) => {
+    doc.setFont("helvetica", isBold ? "bold" : "normal");
+    doc.setFontSize(isBold ? 11 : 10);
+    doc.setTextColor(...COLORS.text);
 
-  doc.text("Subtotal:", summaryX, finalY);
-  doc.text(`₹${orderData.subtotal.toLocaleString()}`, 190, finalY, { align: "right" });
+    doc.text(label, totalsX - 60, currentY, { align: 'right' });
+    doc.text(value, totalsX, currentY, { align: 'right' });
+    currentY += 8;
+  };
 
-  doc.text("Shipping:", summaryX, finalY + 6);
-  doc.text(`₹${orderData.shipping.toLocaleString()}`, 190, finalY + 6, { align: "right" });
-
-  doc.text(`CGST (${gstRate / 2}%):`, summaryX, finalY + 12);
-  doc.text(`₹${cgst.toFixed(2)}`, 190, finalY + 12, { align: "right" });
-
-  doc.text(`SGST (${gstRate / 2}%):`, summaryX, finalY + 18);
-  doc.text(`₹${sgst.toFixed(2)}`, 190, finalY + 18, { align: "right" });
+  // No Tax, just Subtotal + Shipping (if any) -> Total
+  // Using simplified total since user said "avoid tax".
+  // Assuming orderData.total is already the final amount (users paying).
+  // If we want to show breakdown:
+  addTotalRow("Subtotal", formatINR(orderData.subtotal));
+  if (orderData.shipping > 0) {
+    addTotalRow("Shipping", formatINR(orderData.shipping));
+  }
 
   // Divider
-  doc.setDrawColor(200, 200, 200);
-  doc.line(summaryX, finalY + 24, 190, finalY + 24);
+  doc.setDrawColor(...COLORS.border);
+  doc.setLineWidth(0.5);
+  doc.line(totalsX - 90, currentY - 4, totalsX, currentY - 4);
 
-  // Grand Total
-  doc.setFontSize(12);
+  addTotalRow("Total", formatINR(orderData.total), true);
+
+  // "Thank you!"
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "normal");
+  doc.text("Thank you!", margin, finalY + 15);
+
+  // Payment Info
+  const paymentY = pageHeight - margin - 35;
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...COLORS.primary);
-  doc.text("GRAND TOTAL:", summaryX, finalY + 32);
-  doc.text(`₹${orderData.total.toLocaleString()}`, 190, finalY + 32, { align: "right" });
+  doc.text("PAYMENT INFORMATION", margin, paymentY);
 
-  addFooter(doc, companyInfo);
-  doc.save(`invoice-${invoiceNumber}-${orderData.orderId.slice(0, 8)}.pdf`);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(companyInfo?.name || "Jager Clothing", margin, paymentY + 5);
+  // Account Details from settings
+  if (companyInfo?.bank_name) {
+    doc.text(`Bank: ${companyInfo.bank_name}`, margin, paymentY + 10);
+  }
+  if (companyInfo?.account_number) {
+    doc.text(`A/c No: ${companyInfo.account_number}`, margin, paymentY + 15);
+  }
+  if (companyInfo?.ifsc_code) {
+    doc.text(`IFSC: ${companyInfo.ifsc_code}`, margin, paymentY + 20);
+  }
+
+  // Company Footer
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.text);
+  doc.text(companyInfo?.name || "Jager Clothing", pageWidth - margin, pageHeight - margin - 10, { align: 'right' });
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...COLORS.lightText);
+  doc.text(companyInfo?.address || "", pageWidth - margin, pageHeight - margin - 5, { align: 'right' });
+  doc.text(`${companyInfo?.city || ""}, ${companyInfo?.state || ""} - ${companyInfo?.zip || ""}`, pageWidth - margin, pageHeight - margin, { align: 'right' });
+
+  doc.save(`invoice-${invoiceNumber}.pdf`);
+};
+const addHeader = (doc: jsPDF, company: CompanyInfo, title: string) => {
+  // This function is no longer used by generatePackingSlip, and generateInvoice has its own simplified header.
+  // Keeping it as a placeholder to avoid potential errors if other parts of the system still reference it.
+  // In a real refactor, this would be removed or properly integrated.
+  return 20;
 };

@@ -53,10 +53,11 @@ interface ProductVariant {
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Grey', 'Navy', 'Olive', 'Brown', 'Beige', 'Cream', 'Charcoal'];
-const CATEGORIES = ['T-Shirts', 'Hoodies', 'Sweatshirts', 'Pants', 'Shorts', 'Accessories', 'Jackets'];
+const CATEGORIES = ['TEES', 'HOODIES', 'BOTTOMS', 'Custom'];
+
 
 interface ProductWithStock extends Product {
-  product_variants: { stock: number }[];
+  product_variants: { stock: number; is_archived?: boolean }[];
 }
 
 const Products = () => {
@@ -96,7 +97,7 @@ const Products = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*, product_variants(stock)')
+        .select('*, product_variants(stock, is_archived)')
         .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
@@ -107,11 +108,15 @@ const Products = () => {
 
   // Calculate total stock for a product
   const getTotalStock = (product: ProductWithStock) => {
-    return product.product_variants?.reduce((sum, variant) => sum + (variant.stock || 0), 0) || 0;
+    return product.product_variants?.reduce((sum, variant) => {
+      // Only count non-archived variants
+      if (variant.is_archived) return sum;
+      return sum + Number(variant.stock || 0);
+    }, 0) || 0;
   };
 
   // Fetch variants when editing
-  const { data: productVariants } = useQuery({
+  const { data: productVariants, isLoading: isLoadingVariants } = useQuery({
     queryKey: ['admin', 'product', editingProduct?.id, 'variants'],
     queryFn: async () => {
       if (!editingProduct) return [];
@@ -125,14 +130,17 @@ const Products = () => {
       return data as ProductVariant[];
     },
     enabled: !!editingProduct,
+    // Ensure we don't cache stale data when switching products
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Update variants when fetched
   useEffect(() => {
-    if (productVariants) {
+    if (editingProduct && productVariants) {
       setVariants(productVariants);
     }
-  }, [productVariants]);
+  }, [productVariants, editingProduct]);
 
   // Handle image upload
   // Handle image upload
@@ -268,8 +276,9 @@ const Products = () => {
         .insert({
           name: productForm.name,
           description: productForm.description || null,
-          base_price: Number(productForm.base_price),
-          discounted_price: productForm.discounted_price ? Number(productForm.discounted_price) : null,
+          // Derive base price from the first variant if available, else 0.
+          base_price: variants.length > 0 ? Number(variants[0].actual_price || 0) : 0,
+          discounted_price: variants.length > 0 ? (variants[0].discounted_price ? Number(variants[0].discounted_price) : null) : null,
           category: productForm.category || null,
           images: productForm.images.length > 0 ? productForm.images : null,
           featured: productForm.featured,
@@ -277,7 +286,7 @@ const Products = () => {
           amazon_url: productForm.amazon_url || null,
           amazon_asin: productForm.amazon_asin || null,
           sku: productForm.sku || null,
-          brand: productForm.brand || null,
+          brand: null, // Brand removed
           material: productForm.material || null,
           care_instructions: productForm.care_instructions || null,
         })
@@ -327,8 +336,9 @@ const Products = () => {
         .update({
           name: productForm.name,
           description: productForm.description || null,
-          base_price: Number(productForm.base_price),
-          discounted_price: productForm.discounted_price ? Number(productForm.discounted_price) : null,
+          // Derive base price from the first variant if available
+          base_price: variants.length > 0 ? Number(variants[0].actual_price || 0) : 0,
+          discounted_price: variants.length > 0 ? (variants[0].discounted_price ? Number(variants[0].discounted_price) : null) : null,
           category: productForm.category || null,
           images: productForm.images.length > 0 ? productForm.images : null,
           featured: productForm.featured,
@@ -336,7 +346,7 @@ const Products = () => {
           amazon_url: productForm.amazon_url || null,
           amazon_asin: productForm.amazon_asin || null,
           sku: productForm.sku || null,
-          brand: productForm.brand || null,
+          brand: null,
           material: productForm.material || null,
           care_instructions: productForm.care_instructions || null,
         })
@@ -345,39 +355,66 @@ const Products = () => {
       if (productError) throw productError;
 
       // 2. Upsert variants (Update existing, Insert new)
-      if (variants.length > 0) {
-        const variantsToUpsert = variants.map(v => {
-          const isNew = v.id.startsWith('temp-');
-          return {
-            id: isNew ? undefined : v.id, // Undefined ID triggers insert
-            product_id: editingProduct.id,
-            size: v.size,
-            color: v.color,
-            stock: v.stock,
-            price_modifier: v.price_modifier,
-            actual_price: v.actual_price,
-            discounted_price: v.discounted_price,
-          };
-        });
+      // We collect all IDs that should be KEPT (active).
+      // Start with the existing IDs that are not temp.
+      let protectedIds = variants.filter(v => !v.id.startsWith('temp-')).map(v => v.id);
 
-        const { error: upsertError } = await supabase
+      const variantsToInsert = variants.filter(v => v.id.startsWith('temp-')).map(v => ({
+        product_id: editingProduct.id,
+        size: v.size,
+        color: v.color,
+        stock: v.stock,
+        price_modifier: v.price_modifier,
+        actual_price: v.actual_price,
+        discounted_price: v.discounted_price,
+        is_archived: false, // Ensure resurrected variants are active
+      }));
+
+      const variantsToUpdate = variants.filter(v => !v.id.startsWith('temp-')).map(v => ({
+        id: v.id,
+        product_id: editingProduct.id,
+        size: v.size,
+        color: v.color,
+        stock: v.stock,
+        price_modifier: v.price_modifier,
+        actual_price: v.actual_price,
+        discounted_price: v.discounted_price,
+        is_archived: false,
+      }));
+
+      // Handle "New" Variants (which might actually be archived existing ones)
+      if (variantsToInsert.length > 0) {
+        // Use UPSERT checking for conflict on (product_id, size, color)
+        const { data: insertedVariants, error: insertError } = await supabase
           .from('product_variants')
-          .upsert(variantsToUpsert);
+          .upsert(variantsToInsert, { onConflict: 'product_id, size, color' })
+          .select('id');
 
-        if (upsertError) throw upsertError;
+        if (insertError) throw insertError;
+
+        // Add the IDs of these upserted variants to the protected list
+        if (insertedVariants) {
+          protectedIds = [...protectedIds, ...insertedVariants.map(v => v.id)];
+        }
       }
 
-      // 3. Delete removed variants
-      // 3. Soft delete removed variants
-      const currentIds = variants.filter(v => !v.id.startsWith('temp-')).map(v => v.id);
+      // Handle Existing Variants
+      if (variantsToUpdate.length > 0) {
+        const { error: updateError } = await supabase
+          .from('product_variants')
+          .upsert(variantsToUpdate);
+        if (updateError) throw updateError;
+      }
 
+      // 3. Soft delete removed variants (archive anything NOT in protectedIds)
+      // Note: We use protectedIds (which covers both preserved existing AND newly added/resurrected)
       let deleteQuery = supabase
         .from('product_variants')
         .update({ is_archived: true })
         .eq('product_id', editingProduct.id);
 
-      if (currentIds.length > 0) {
-        deleteQuery = deleteQuery.not('id', 'in', `(${currentIds.join(',')})`);
+      if (protectedIds.length > 0) {
+        deleteQuery = deleteQuery.not('id', 'in', `(${protectedIds.join(',')})`);
       }
 
       const { error: deleteError } = await deleteQuery;
@@ -396,6 +433,10 @@ const Products = () => {
       resetForm();
       setEditingProduct(null);
     },
+    onError: (error) => {
+      console.error("Update failed:", error);
+      toast.error(`Failed to update product: ${error.message}`);
+    }
   });
 
   const deleteProduct = useMutation({
@@ -448,25 +489,31 @@ const Products = () => {
   };
 
   const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description || "",
-      base_price: product.base_price.toString(),
-      discounted_price: product.discounted_price?.toString() || "",
-      category: product.category || "",
-      images: product.images || [],
-      featured: product.featured,
-      is_new: product.is_new,
-      amazon_url: product.amazon_url || "",
-      amazon_asin: product.amazon_asin || "",
-      sku: product.sku || "",
-      brand: product.brand || "",
-      material: product.material || "",
-      care_instructions: product.care_instructions || "",
-    });
-    // Variants will be loaded by the query
-    setDialogOpen(true);
+    try {
+      console.log("Editing product:", product);
+      setEditingProduct(product);
+      setProductForm({
+        name: product.name || "",
+        description: product.description || "",
+        base_price: product.base_price?.toString() || "0",
+        discounted_price: product.discounted_price?.toString() || "",
+        category: product.category || "",
+        images: product.images || [],
+        featured: !!product.featured,
+        is_new: !!product.is_new,
+        amazon_url: product.amazon_url || "",
+        amazon_asin: product.amazon_asin || "",
+        sku: product.sku || "",
+        brand: product.brand || "",
+        material: product.material || "",
+        care_instructions: product.care_instructions || "",
+      });
+      // Variants will be loaded by the query
+      setDialogOpen(true);
+    } catch (error) {
+      console.error("Error in handleEdit:", error);
+      toast.error("Failed to open edit dialog. Check console for details.");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -477,10 +524,11 @@ const Products = () => {
       toast.error("Product Name is required");
       return;
     }
-    if (!productForm.base_price || Number(productForm.base_price) <= 0) {
-      toast.error("Valid Base Price is required");
-      return;
-    }
+    // Base price is now derived from variants, so we just check if variants exist
+    // if (!productForm.base_price || Number(productForm.base_price) <= 0) {
+    //   toast.error("Valid Base Price is required");
+    //   return;
+    // }
     if (!productForm.category) {
       toast.error("Category is required");
       return;
@@ -535,10 +583,9 @@ const Products = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="pricing">Pricing</TabsTrigger>
-                  <TabsTrigger value="variants">Variants</TabsTrigger>
+                  <TabsTrigger value="variants">Variants (Pricing)</TabsTrigger>
                   <TabsTrigger value="details">Details</TabsTrigger>
                 </TabsList>
 
@@ -562,12 +609,13 @@ const Products = () => {
                       className="mt-1"
                     />
                   </div>
+                  {/* Category Selection with Custom Option */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-heading font-bold uppercase">Category</Label>
                       <Select
-                        value={productForm.category}
-                        onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                        value={CATEGORIES.includes(productForm.category) ? productForm.category : (productForm.category ? "Custom" : "")}
+                        onValueChange={(value) => setProductForm({ ...productForm, category: value === "Custom" ? "" : value })}
                       >
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Select Category" />
@@ -578,6 +626,16 @@ const Products = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* Show input if Custom is selected or if current category is not in list but exists */}
+                      {(productForm.category && !CATEGORIES.includes(productForm.category)) || (!CATEGORIES.includes(productForm.category) && productForm.category === "") ? (
+                        <div className="mt-2">
+                          <Input
+                            placeholder="Enter custom category"
+                            value={productForm.category}
+                            onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                     <div>
                       <Label className="text-sm font-heading font-bold uppercase">SKU</Label>
@@ -589,15 +647,7 @@ const Products = () => {
                       />
                     </div>
                   </div>
-                  <div>
-                    <Label className="text-sm font-heading font-bold uppercase">Brand</Label>
-                    <Input
-                      value={productForm.brand}
-                      onChange={(e) => setProductForm({ ...productForm, brand: e.target.value })}
-                      placeholder="Brand name"
-                      className="mt-1"
-                    />
-                  </div>
+                  {/* Brand Removed */}
 
                   {/* Image Upload */}
                   {/* Image Upload */}
@@ -741,65 +791,20 @@ const Products = () => {
                 </TabsContent>
 
                 {/* Pricing Tab */}
-                <TabsContent value="pricing" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-heading font-bold uppercase">Actual Price (₹) *</Label>
-                      <Input
-                        type="number"
-                        value={productForm.base_price}
-                        onChange={(e) => setProductForm({ ...productForm, base_price: e.target.value })}
-                        required
-                        min="0"
-                        step="0.01"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-heading font-bold uppercase">Discounted Price (₹)</Label>
-                      <Input
-                        type="number"
-                        value={productForm.discounted_price}
-                        onChange={(e) => setProductForm({ ...productForm, discounted_price: e.target.value })}
-                        min="0"
-                        step="0.01"
-                        className="mt-1"
-                      />
-                      {productForm.discounted_price && productForm.base_price && (
-                        <p className="text-xs text-jager-red mt-1 font-bold">
-                          {calculateDiscount()}% OFF
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-heading font-bold uppercase flex items-center gap-2">
-                      <LinkIcon className="h-4 w-4" />
-                      Amazon URL
-                    </Label>
-                    <Input
-                      value={productForm.amazon_url}
-                      onChange={(e) => setProductForm({ ...productForm, amazon_url: e.target.value })}
-                      placeholder="https://amazon.in/dp/..."
-                      type="url"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-heading font-bold uppercase">Amazon ASIN</Label>
-                    <Input
-                      value={productForm.amazon_asin}
-                      onChange={(e) => setProductForm({ ...productForm, amazon_asin: e.target.value })}
-                      placeholder="B08XXXXXXX"
-                      className="mt-1"
-                    />
-                  </div>
-                </TabsContent>
+
 
                 {/* Variants Tab */}
                 <TabsContent value="variants" className="space-y-4">
                   <div className="border border-foreground p-4 rounded-lg space-y-4">
-                    <h3 className="font-heading font-bold uppercase text-sm">Add Variant</h3>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-heading font-bold uppercase text-sm">Add Variant</h3>
+                      <div className="text-sm">
+                        <span className="text-grey-text">Total Stock: </span>
+                        <span className="font-heading font-bold">
+                          {variants.reduce((sum, v) => sum + Number(v.stock || 0), 0)}
+                        </span>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-6 gap-2">
                       <Select value={newVariant.size} onValueChange={(value) => setNewVariant({ ...newVariant, size: value })}>
                         <SelectTrigger>
@@ -957,121 +962,122 @@ const Products = () => {
       </div>
 
       {/* Products List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : products && products.length > 0 ? (
-        <div className="grid gap-4">
-          {products.map((product) => {
-            const discount = product.discounted_price
-              ? Math.round(((product.base_price - product.discounted_price) / product.base_price) * 100)
-              : 0;
+      {
+        isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : products && products.length > 0 ? (
+          <div className="grid gap-4">
+            {products.map((product) => {
+              const discount = product.discounted_price
+                ? Math.round(((product.base_price - product.discounted_price) / product.base_price) * 100)
+                : 0;
 
-            return (
-              <Card key={product.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-4 flex-1">
-                      {product.images && product.images.length > 0 && (
-                        <img
-                          src={Array.isArray(product.images) ? product.images[0] : product.images}
-                          alt={product.name}
-                          className="w-24 h-24 object-cover bg-grey-bg rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-heading font-bold uppercase text-lg">{product.name}</h3>
-                          {product.featured && (
-                            <Badge className="bg-jager-red text-white text-xs">FEATURED</Badge>
-                          )}
-                          {product.is_new && (
-                            <Badge className="bg-blue-500 text-white text-xs">NEW</Badge>
-                          )}
-                          {discount > 0 && (
-                            <Badge className="bg-green-500 text-white text-xs">{discount}% OFF</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-grey-text mb-2">
-                          {product.description || "No description"}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm mb-2">
-                          <div className="flex items-center gap-2">
-                            {product.discounted_price ? (
-                              <>
-                                <span className="font-heading font-bold text-jager-red">
-                                  ₹{product.discounted_price.toLocaleString()}
-                                </span>
-                                <span className="line-through text-grey-text">
-                                  ₹{product.base_price.toLocaleString()}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="font-heading font-bold">
-                                ₹{product.base_price.toLocaleString()}
-                              </span>
+              return (
+                <Card key={product.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-4 flex-1">
+                        {product.images && product.images.length > 0 && (
+                          <img
+                            src={Array.isArray(product.images) ? product.images[0] : product.images}
+                            alt={product.name}
+                            className="w-24 h-24 object-cover bg-grey-bg rounded"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-heading font-bold uppercase text-lg">{product.name}</h3>
+                            {product.featured && (
+                              <Badge className="bg-jager-red text-white text-xs">FEATURED</Badge>
+                            )}
+                            {product.is_new && (
+                              <Badge className="bg-blue-500 text-white text-xs">NEW</Badge>
+                            )}
+                            {discount > 0 && (
+                              <Badge className="bg-green-500 text-white text-xs">{discount}% OFF</Badge>
                             )}
                           </div>
-                          {product.category && (
-                            <span className="text-grey-text">Category: {product.category}</span>
+                          <p className="text-sm text-grey-text mb-2">
+                            {product.description || "No description"}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm mb-2">
+                            <div className="flex items-center gap-2">
+                              {product.discounted_price ? (
+                                <>
+                                  <span className="font-heading font-bold text-jager-red">
+                                    ₹{product.discounted_price.toLocaleString()}
+                                  </span>
+                                  <span className="line-through text-grey-text">
+                                    ₹{product.base_price.toLocaleString()}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="font-heading font-bold">
+                                  ₹{product.base_price.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            {product.category && (
+                              <span className="text-grey-text">Category: {product.category}</span>
+                            )}
+                            {product.sku && (
+                              <span className="text-grey-text">SKU: {product.sku}</span>
+                            )}
+                          </div>
+                          {product.amazon_url && (
+                            <a
+                              href={product.amazon_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-jager-red underline flex items-center gap-1"
+                            >
+                              <LinkIcon className="h-3 w-3" />
+                              View on Amazon
+                            </a>
                           )}
-                          {product.sku && (
-                            <span className="text-grey-text">SKU: {product.sku}</span>
-                          )}
-                        </div>
-                        {product.amazon_url && (
-                          <a
-                            href={product.amazon_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-jager-red underline flex items-center gap-1"
-                          >
-                            <LinkIcon className="h-3 w-3" />
-                            View on Amazon
-                          </a>
-                        )}
-                        <div className="mt-2 flex items-center gap-2">
-                          <Badge variant="outline" className={getTotalStock(product) === 0 ? "text-red-500 border-red-500" : getTotalStock(product) < 10 ? "text-yellow-500 border-yellow-500" : "text-green-500 border-green-500"}>
-                            Stock: {getTotalStock(product)}
-                          </Badge>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge variant="outline" className={getTotalStock(product) === 0 ? "text-red-500 border-red-500" : getTotalStock(product) <= 1 ? "text-yellow-500 border-yellow-500" : "text-green-500 border-green-500"}>
+                              Stock: {getTotalStock(product)}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this product?")) {
+                              deleteProduct.mutate(product.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(product)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to delete this product?")) {
-                            deleteProduct.mutate(product.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Package className="h-16 w-16 text-grey-text mx-auto mb-4" />
-            <p className="text-grey-text">No products yet. Add your first product!</p>
-          </CardContent>
-        </Card>
-      )
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Package className="h-16 w-16 text-grey-text mx-auto mb-4" />
+              <p className="text-grey-text">No products yet. Add your first product!</p>
+            </CardContent>
+          </Card>
+        )
       }
     </div >
   );

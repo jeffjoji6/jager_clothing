@@ -105,10 +105,27 @@ const OrderDetail = () => {
     enabled: !!id && !!order,
   });
 
-  // Note: Fetching customer email requires backend API
-  // For now, using user_id as placeholder
+  // Fetch customer email
+  const { data: customerEmail } = useQuery({
+    queryKey: ['admin', 'user_email', order?.user_id],
+    queryFn: async () => {
+      if (!order?.user_id) return null;
+      const { data, error } = await supabase.rpc('get_user_emails', {
+        user_ids: [order.user_id]
+      });
+
+      if (error) {
+        console.error("Failed to fetch customer email:", error);
+        return null;
+      }
+
+      return data && data[0] ? data[0].email : null;
+    },
+    enabled: !!order?.user_id,
+  });
+
   const customer = order?.user_id ? {
-    email: `user_${order.user_id.slice(0, 8)}@customer.com`,
+    email: customerEmail || "Email not available",
     id: order.user_id,
   } : null;
 
@@ -134,7 +151,7 @@ const OrderDetail = () => {
     mutationFn: async () => {
       const { error } = await supabase
         .from('orders')
-        .update({ 
+        .update({
           tracking_number: trackingNumber,
           status: 'shipped'
         })
@@ -165,14 +182,14 @@ const OrderDetail = () => {
   });
 
   // Generate PDF Packing Slip
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!order || !orderItems) {
       toast.error("Order data not available");
       return;
     }
 
     try {
-      generatePackingSlip({
+      await generatePackingSlip({
         orderId: order.id,
         orderDate: format(new Date(order.created_at), 'dd MMM yyyy'),
         customerName: order.shipping_address?.full_name || "Customer",
@@ -203,7 +220,7 @@ const OrderDetail = () => {
   };
 
   // Generate Invoice with GST
-  const generateInvoicePDF = () => {
+  const generateInvoicePDF = async () => {
     if (!order || !orderItems) {
       toast.error("Order data not available");
       return;
@@ -212,8 +229,8 @@ const OrderDetail = () => {
     try {
       // Generate invoice number (can be stored in database)
       const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}-${format(new Date(), 'yyyyMMdd')}`;
-      
-      generateInvoice(
+
+      await generateInvoice(
         {
           orderId: order.id,
           orderDate: format(new Date(order.created_at), 'dd MMM yyyy'),
@@ -267,6 +284,19 @@ const OrderDetail = () => {
     cancelled: "bg-red-500",
   };
 
+  // Helper to normalize status for UI
+  const getDisplayStatus = (status: string) => {
+    if (['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(status)) return 'PROCESSING';
+    if (status === 'new') return 'CONFIRMED';
+    return status.replace('_', ' ').toUpperCase();
+  };
+
+  // Helper to normalize status for Select value
+  const getSelectValue = (status: string) => {
+    if (['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(status)) return 'printing';
+    return status;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -282,9 +312,94 @@ const OrderDetail = () => {
           </p>
         </div>
         <Badge className={`${statusColors[order.status] || 'bg-gray-500'} text-white uppercase ml-auto`}>
-          {order.status.replace('_', ' ')}
+          {getDisplayStatus(order.status)}
         </Badge>
       </div>
+
+      {/* Visual Order Stepper */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="relative">
+            {/* Progress Bar Background */}
+            <div className="absolute top-[15px] left-0 w-full h-[2px] bg-grey-bg/20 -z-10" />
+
+            <div className="flex justify-between w-full">
+              {[
+                { id: 'new', label: 'Confirmed', icon: "✓" },
+                { id: 'processing', label: 'Processing', icon: "⚙️" },
+                { id: 'shipped', label: 'Shipped', icon: "🚚" },
+                { id: 'delivered', label: 'Delivered', icon: "🏠" }
+              ].map((step, index) => {
+                // Determine status matches
+                const isConfirmed = order.status === 'new' || ['pending_print', 'printing', 'quality_check', 'ready_to_ship', 'shipped', 'delivered'].includes(order.status);
+                const isProcessing = ['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(order.status) || ['shipped', 'delivered'].includes(order.status);
+                const isShipped = order.status === 'shipped' || order.status === 'delivered';
+                const isDelivered = order.status === 'delivered';
+
+                let isActive = false;
+                let isCompleted = false;
+
+                if (step.id === 'new') {
+                  isActive = order.status === 'new';
+                  isCompleted = isConfirmed;
+                } else if (step.id === 'processing') {
+                  isActive = ['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(order.status);
+                  isCompleted = isShipped || isDelivered;
+                } else if (step.id === 'shipped') {
+                  isActive = order.status === 'shipped';
+                  isCompleted = isDelivered;
+                } else if (step.id === 'delivered') {
+                  isActive = order.status === 'delivered';
+                  isCompleted = false; // Last step stays active
+                }
+
+                const handleStepClick = () => {
+                  if (step.id === 'new') updateStatus.mutate('new');
+                  else if (step.id === 'processing') {
+                    // Default to pending_print if moving into processing, or keep current if already there
+                    if (!['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(order.status)) {
+                      updateStatus.mutate('pending_print');
+                    }
+                  }
+                  else if (step.id === 'shipped') updateStatus.mutate('shipped');
+                  else if (step.id === 'delivered') updateStatus.mutate('delivered');
+                };
+
+                return (
+                  <div
+                    key={step.id}
+                    className="flex flex-col items-center cursor-pointer group"
+                    onClick={handleStepClick}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 z-10 
+                              ${isActive
+                        ? 'bg-jager-red border-jager-red text-white scale-110 shadow-lg'
+                        : isCompleted
+                          ? 'bg-foreground border-foreground text-background'
+                          : 'bg-background border-border text-muted-foreground'
+                      } group-hover:border-jager-red`}
+                    >
+                      {isCompleted ? "✓" : (index + 1)}
+                    </div>
+                    <span className={`text-xs md:text-sm font-heading font-black uppercase mt-3 transition-colors tracking-wide ${isActive ? 'text-jager-red' : isCompleted ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Progress Bar Fill - Simplified for 4 steps */}
+            <div className="absolute top-[15px] left-0 h-[2px] bg-foreground -z-10 transition-all duration-500"
+              style={{
+                width: order.status === 'delivered' ? '100%'
+                  : order.status === 'shipped' ? '66%'
+                    : ['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(order.status) ? '33%'
+                      : '0%'
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Left Column */}
@@ -387,7 +502,7 @@ const OrderDetail = () => {
               <div>
                 <Label className="text-sm font-heading font-bold uppercase mb-2 block">Change Status</Label>
                 <Select
-                  value={order.status}
+                  value={getSelectValue(order.status)}
                   onValueChange={(value) => updateStatus.mutate(value)}
                   disabled={updateStatus.isPending}
                 >
@@ -395,11 +510,8 @@ const OrderDetail = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="pending_print">Pending Print</SelectItem>
-                    <SelectItem value="printing">Printing</SelectItem>
-                    <SelectItem value="quality_check">Quality Check</SelectItem>
-                    <SelectItem value="ready_to_ship">Ready to Ship</SelectItem>
+                    <SelectItem value="new">Confirmed</SelectItem>
+                    <SelectItem value="printing">Processing</SelectItem>
                     <SelectItem value="shipped">Shipped</SelectItem>
                     <SelectItem value="delivered">Delivered</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>

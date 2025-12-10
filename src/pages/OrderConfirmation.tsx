@@ -39,8 +39,20 @@ const OrderTracker = ({ status }: { status: string }) => {
   // Map status to step index
   const getStatusIndex = (status: string) => {
     const normalizedStatus = status.toLowerCase();
-    if (normalizedStatus === 'pending' || normalizedStatus === 'new') return 0; // Treat pending/new as confirmed
-    return steps.findIndex(s => s.id === normalizedStatus);
+
+    // Confirmed
+    if (normalizedStatus === 'pending' || normalizedStatus === 'new' || normalizedStatus === 'confirmed') return 0;
+
+    // Processing
+    if (['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(normalizedStatus)) return 1;
+
+    // Shipped
+    if (normalizedStatus === 'shipped') return 2;
+
+    // Delivered
+    if (normalizedStatus === 'delivered') return 3;
+
+    return 0; // Default to confirmed if unknown
   };
 
   const currentStepIndex = getStatusIndex(status);

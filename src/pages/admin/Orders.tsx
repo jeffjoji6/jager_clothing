@@ -61,7 +61,15 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (statusFilter !== "all") {
-        query = query.eq('status', statusFilter);
+        if (statusFilter === 'printing') {
+          // If filtering by "Processing" (printing), include all processing statuses
+          query = query.in('status', ['pending_print', 'printing', 'quality_check', 'ready_to_ship']);
+        } else if (statusFilter === 'new') {
+          // If filtering by "Confirmed" (new), include new
+          query = query.eq('status', 'new');
+        } else {
+          query = query.eq('status', statusFilter);
+        }
       }
 
       if (typeFilter !== "all") {
@@ -91,6 +99,11 @@ const Orders = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+      toast.success("Order status updated");
+    },
+    onError: (error) => {
+      console.error("Status update failed:", error);
+      toast.error(`Failed to update status: ${error.message}`);
     },
   });
 
@@ -99,7 +112,7 @@ const Orders = () => {
     mutationFn: async ({ orderId, tracking }: { orderId: string; tracking: string }) => {
       const { error } = await supabase
         .from('orders')
-        .update({ 
+        .update({
           tracking_number: tracking,
           status: 'shipped'
         })
@@ -144,7 +157,7 @@ const Orders = () => {
       }
 
       // Generate packing slip
-      generatePackingSlip({
+      await generatePackingSlip({
         orderId: order.id,
         orderDate: format(new Date(order.created_at || new Date()), 'dd MMM yyyy'),
         customerName: order.shipping_address?.full_name || "Customer",
@@ -173,6 +186,19 @@ const Orders = () => {
       console.error("PDF generation error:", error);
       toast.error("Failed to generate PDF: " + (error.message || "Unknown error"));
     }
+  };
+
+  // Helper to normalize status for UI
+  const getDisplayStatus = (status: string) => {
+    if (['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(status)) return 'PROCESSING';
+    if (status === 'new') return 'CONFIRMED';
+    return status.replace('_', ' ').toUpperCase();
+  };
+
+  // Helper to normalize status for Select value
+  const getSelectValue = (status: string) => {
+    if (['pending_print', 'printing', 'quality_check', 'ready_to_ship'].includes(status)) return 'printing';
+    return status;
   };
 
   return (
@@ -206,11 +232,8 @@ const Orders = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="pending_print">Pending Print</SelectItem>
-                <SelectItem value="printing">Printing</SelectItem>
-                <SelectItem value="quality_check">Quality Check</SelectItem>
-                <SelectItem value="ready_to_ship">Ready to Ship</SelectItem>
+                <SelectItem value="new">Confirmed</SelectItem>
+                <SelectItem value="printing">Processing</SelectItem>
                 <SelectItem value="shipped">Shipped</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -254,7 +277,7 @@ const Orders = () => {
                         Order #{order.id.slice(0, 8).toUpperCase()}
                       </Link>
                       <Badge className={`${statusColors[order.status] || 'bg-gray-500'} text-white uppercase text-xs`}>
-                        {order.status.replace('_', ' ')}
+                        {getDisplayStatus(order.status)}
                       </Badge>
                     </div>
                     <p className="text-sm text-grey-text">
@@ -288,24 +311,27 @@ const Orders = () => {
                     <p className="text-lg font-heading font-bold">₹{Number(order.total).toLocaleString()}</p>
                   </div>
                   <div className="md:col-span-3 flex flex-col gap-2">
-                    <Select
-                      value={order.status}
-                      onValueChange={(value) => handleStatusChange(order.id, value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="pending_print">Pending Print</SelectItem>
-                        <SelectItem value="printing">Printing</SelectItem>
-                        <SelectItem value="quality_check">Quality Check</SelectItem>
-                        <SelectItem value="ready_to_ship">Ready to Ship</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={getSelectValue(order.status)}
+                        onValueChange={(value) => handleStatusChange(order.id, value)}
+                        disabled={updateStatus.isPending && updateStatus.variables?.orderId === order.id}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">Confirmed</SelectItem>
+                          <SelectItem value="printing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {updateStatus.isPending && updateStatus.variables?.orderId === order.id && (
+                        <Loader2 className="h-4 w-4 animate-spin text-jager-red" />
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -340,4 +366,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
