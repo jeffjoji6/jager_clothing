@@ -11,52 +11,62 @@
     /* Pure Contrast */
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
-    
+
     /* Jager Red - The Accent */
     --jager-red: 3 76% 39%;
     --jager-red-hover: 3 76% 30%;
-    
+
     /* Neutrals */
     --grey-bg: 0 0% 96%;
     --grey-text: 0 0% 40%;
-    
+
     /* Sharp Borders */
     --border: 0 0% 0%;
     --input-border: 0 0% 85%;
-    
+
     /* Card & Surfaces */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
-    
+
     /* Primary = Black */
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
-    
+
     /* Secondary = White with Black Border */
     --secondary: 0 0% 100%;
     --secondary-foreground: 0 0% 0%;
-    
+
     /* Accent = Jager Red */
     --accent: 3 76% 39%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Muted */
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 40%;
-    
+
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     /* Zero Radius - Sharp Edges Only */
     --radius: 0rem;
-    
+
     /* Popover */
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
-    
+
     /* Ring */
     --ring: 0 0% 0%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 0%;
   }
 }
 
@@ -72,43 +82,51 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading font-bold uppercase tracking-tight;
   }
 }
 
 @layer utilities {
+
   /* Ticker Animation */
   @keyframes ticker {
     0% {
       transform: translateX(0);
     }
+
     100% {
       transform: translateX(-50%);
     }
   }
-  
+
   .animate-ticker {
     animation: ticker 20s linear infinite;
   }
-  
+
   /* Hero Fade In */
   @keyframes fadeInUp {
     from {
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   .animate-fade-in-up {
     animation: fadeInUp 0.8s ease-out forwards;
   }
-  
+
   /* Product Card Hover */
   .product-card-hover {
     @apply transition-transform duration-300 hover:scale-[1.02];

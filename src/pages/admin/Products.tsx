@@ -557,7 +557,7 @@ const Products = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold uppercase tracking-tight">Products</h1>
           <p className="text-grey-text mt-1">Manage your product catalog with detailed information</p>
@@ -805,7 +805,7 @@ const Products = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="grid grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                       <Select value={newVariant.size} onValueChange={(value) => setNewVariant({ ...newVariant, size: value })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Size" />
@@ -977,36 +977,33 @@ const Products = () => {
               return (
                 <Card key={product.id}>
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4 flex-1">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="flex gap-4 flex-1 w-full">
                         {product.images && product.images.length > 0 && (
                           <img
                             src={Array.isArray(product.images) ? product.images[0] : product.images}
                             alt={product.name}
-                            className="w-24 h-24 object-cover bg-grey-bg rounded"
+                            className="w-24 h-24 object-cover bg-grey-bg rounded hover:scale-105 transition-transform"
                           />
                         )}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-heading font-bold uppercase text-lg">{product.name}</h3>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 className="font-heading font-bold uppercase text-lg truncate">{product.name}</h3>
                             {product.featured && (
-                              <Badge className="bg-jager-red text-white text-xs">FEATURED</Badge>
+                              <Badge className="bg-jager-red text-white text-xs whitespace-nowrap">FEATURED</Badge>
                             )}
                             {product.is_new && (
-                              <Badge className="bg-blue-500 text-white text-xs">NEW</Badge>
+                              <Badge className="bg-blue-500 text-white text-xs whitespace-nowrap">NEW</Badge>
                             )}
                             {discount > 0 && (
-                              <Badge className="bg-green-500 text-white text-xs">{discount}% OFF</Badge>
+                              <Badge className="bg-green-500 text-white text-xs whitespace-nowrap">{discount}% OFF</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-grey-text mb-2">
-                            {product.description || "No description"}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm mb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-sm mb-1 flex-wrap">
+                            <div className="font-mono">
                               {product.discounted_price ? (
                                 <>
-                                  <span className="font-heading font-bold text-jager-red">
+                                  <span className="font-heading font-bold text-jager-red mr-2">
                                     ₹{product.discounted_price.toLocaleString()}
                                   </span>
                                   <span className="line-through text-grey-text">
@@ -1020,10 +1017,10 @@ const Products = () => {
                               )}
                             </div>
                             {product.category && (
-                              <span className="text-grey-text">Category: {product.category}</span>
+                              <span className="text-grey-text border-l border-gray-300 pl-2">Category: {product.category}</span>
                             )}
                             {product.sku && (
-                              <span className="text-grey-text">SKU: {product.sku}</span>
+                              <span className="text-grey-text border-l border-gray-300 pl-2">SKU: {product.sku}</span>
                             )}
                           </div>
                           {product.amazon_url && (
@@ -1031,7 +1028,7 @@ const Products = () => {
                               href={product.amazon_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-jager-red underline flex items-center gap-1"
+                              className="text-xs text-jager-red underline flex items-center gap-1 mb-2"
                             >
                               <LinkIcon className="h-3 w-3" />
                               View on Amazon
@@ -1044,7 +1041,7 @@ const Products = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                         <Button
                           variant="outline"
                           size="sm"

@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarInset,
   SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
@@ -137,7 +138,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-background">
         <Sidebar>
           <SidebarHeader className="border-b border-foreground">
@@ -220,7 +221,15 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
         </Sidebar>
         <SidebarInset className="flex-1 overflow-auto">
-          <main className="flex-1 p-6 md:p-8">{children}</main>
+          {/* Mobile Header */}
+          <header className="sticky top-0 z-40 flex items-center gap-4 border-b border-foreground bg-background px-4 py-3 md:hidden">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex items-center gap-2">
+              <img src="/jager_logo.png" alt="Jager Logo" className="h-6 w-auto" />
+              <span className="font-heading font-bold uppercase text-sm">JÄGER</span>
+            </div>
+          </header>
+          <main className="flex-1 p-4 md:p-8">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

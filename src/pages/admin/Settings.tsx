@@ -233,7 +233,7 @@ const Settings = () => {
                   {/* Basic Info */}
                   <div className="space-y-4">
                     <h3 className="font-heading font-bold uppercase text-sm">Basic Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Company Name</Label>
                         <Input
@@ -323,7 +323,7 @@ const Settings = () => {
                   {/* Bank Details */}
                   <div className="space-y-4 border-t pt-4">
                     <h3 className="font-heading font-bold uppercase text-sm">Bank Account Details</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Bank Name</Label>
                         <Input
@@ -362,7 +362,7 @@ const Settings = () => {
                   {/* Invoice Settings */}
                   <div className="space-y-4 border-t pt-4">
                     <h3 className="font-heading font-bold uppercase text-sm">Invoice Settings</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Invoice Prefix</Label>
                         <Input
