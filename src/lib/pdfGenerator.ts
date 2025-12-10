@@ -323,7 +323,7 @@ export const generateInvoice = async (
     startY: yPos,
     margin: { left: margin, right: margin },
     // Explicit Columns: Item, Size, Quantity, Price, Total
-    head: [['Item', 'Size', 'Quantity', 'Price', 'Total']],
+    head: [['Item', 'Size', 'Quantity', 'Price (Rs)', 'Total (Rs)']],
     body: orderData.items.map(item => [
       item.name + (item.color ? `\n(${item.color})` : ''), // Put Color with Name
       item.size,
@@ -337,22 +337,22 @@ export const generateInvoice = async (
       textColor: COLORS.text,
       fontStyle: 'bold',
       halign: 'left',
-      cellPadding: 10,
+      cellPadding: 8, // Reduced slightly
     },
     styles: {
       fontSize: 10,
       textColor: COLORS.text,
-      cellPadding: 10,
+      cellPadding: 8, // Reduced slightly to allow more text space
       valign: 'middle', // Vertically center for better look
       lineColor: COLORS.border,
       lineWidth: { bottom: 0.1 },
     },
     columnStyles: {
       0: { cellWidth: 'auto', halign: 'left' }, // Item - takes remaining space
-      1: { cellWidth: 30, halign: 'center' }, // Size - increased from 20
-      2: { cellWidth: 35, halign: 'center' }, // Quantity - increased from 25
-      3: { cellWidth: 30, halign: 'right' }, // Price - reduced from 35
-      4: { cellWidth: 30, halign: 'right' }, // Total - reduced from 35
+      1: { cellWidth: 25, halign: 'center' }, // Size - increased to prevent wrapping
+      2: { cellWidth: 30, halign: 'center' }, // Quantity - increased to prevent wrapping
+      3: { cellWidth: 30, halign: 'right' }, // Price
+      4: { cellWidth: 30, halign: 'right' }, // Total
     },
     didParseCell: (data) => {
       if (data.section === 'head') {

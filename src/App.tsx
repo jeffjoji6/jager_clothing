@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Collection from "./pages/Collection";
 import ProductDetail from "./pages/ProductDetail";
 import CustomLab from "./pages/CustomLab";
+import CustomDesign from "./pages/CustomDesign";
 import CustomLabBasic from "./pages/CustomLabBasic";
 import CustomLabPro from "./pages/CustomLabPro";
 import Login from "./pages/Login";
@@ -31,6 +32,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminInventory from "./pages/admin/Inventory";
 import AdminCustomProducts from "./pages/admin/CustomProducts";
 import AdminJagerPro from "./pages/admin/JagerPro";
+import AdminDesignRequests from "./pages/admin/DesignRequests";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBilling from "./pages/admin/Billing";
@@ -54,6 +56,7 @@ const App = () => (
               <Route path="/collection" element={<Collection />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/custom-lab" element={<CustomLab />} />
+              <Route path="/custom-design" element={<CustomDesign />} />
               <Route path="/custom-lab/basic" element={<CustomLabBasic />} />
               <Route path="/custom-lab/pro" element={<CustomLabPro />} />
               <Route path="/login" element={<Login />} />
@@ -120,6 +123,13 @@ const App = () => (
                 <AdminProtectedRoute requiredRole="designer">
                   <AdminLayout>
                     <AdminJagerPro />
+                  </AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/design-requests" element={
+                <AdminProtectedRoute requiredRole="designer">
+                  <AdminLayout>
+                    <AdminDesignRequests />
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />

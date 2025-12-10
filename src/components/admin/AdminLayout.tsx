@@ -76,15 +76,9 @@ const menuGroups = [
         roles: ["admin", "staff"],
       },
       {
-        title: "Custom Products",
-        icon: Package,
-        url: "/admin/custom-products",
-        roles: ["admin", "staff", "designer"],
-      },
-      {
-        title: "Jager Pro",
+        title: "Jager Custom Design",
         icon: Palette,
-        url: "/admin/jager-pro",
+        url: "/admin/design-requests",
         roles: ["admin", "staff", "designer"],
       },
     ]

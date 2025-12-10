@@ -49,11 +49,11 @@ export const Header = () => {
                     COLLECTION
                   </Link>
                   <Link
-                    to="/custom-lab"
+                    to="/custom-design"
                     className="text-4xl font-heading font-bold uppercase tracking-tight hover:text-jager-red transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    CUSTOM LAB
+                    CUSTOM DESIGN
                   </Link>
                   {user ? (
                     <>
@@ -121,8 +121,8 @@ export const Header = () => {
               COLLECTION
             </Link>
             <span className="text-grey-text">|</span>
-            <Link to="/custom-lab" className="text-sm font-heading font-bold uppercase tracking-wide hover:text-jager-red transition-colors">
-              CUSTOM LAB
+            <Link to="/custom-design" className="text-sm font-heading font-bold uppercase tracking-wide hover:text-jager-red transition-colors">
+              CUSTOM DESIGN
             </Link>
           </nav>
 

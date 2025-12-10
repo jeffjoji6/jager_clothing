@@ -42,6 +42,7 @@ interface CompanySettings {
   account_holder_name: string;
   invoice_prefix: string;
   default_tax_rate: number;
+  whatsapp_number: string;
 }
 
 const Settings = () => {
@@ -200,10 +201,7 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-heading font-bold uppercase tracking-tight">Settings</h1>
-        <p className="text-grey-text mt-1">Configure your admin panel</p>
-      </div>
+      {/* ... existing headers ... */}
 
       <Tabs defaultValue="company" className="space-y-6">
         <TabsList>
@@ -260,6 +258,15 @@ const Settings = () => {
                         />
                       </div>
                       <div>
+                        <Label>WhatsApp Number</Label>
+                        <Input
+                          value={companyInfo.whatsapp_number || ''}
+                          onChange={(e) => setCompanyInfo({ ...companyInfo, whatsapp_number: e.target.value })}
+                          placeholder="+91 98765 43210"
+                        />
+                        <p className="text-xs text-grey-text mt-1">Include country code (e.g. +91)</p>
+                      </div>
+                      <div>
                         <Label>Website</Label>
                         <Input
                           value={companyInfo.website || ''}
@@ -278,7 +285,10 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  {/* Address */}
+                  {/* ... rest of the form ... */}
+                  {/* I need to make sure I don't delete the rest of the file content. 
+                      Since replace_file_content replaces a chunk, I'll match the Basic Info block properly.
+                  */}
                   <div className="space-y-4 border-t pt-4">
                     <h3 className="font-heading font-bold uppercase text-sm">Address</h3>
                     <div className="grid grid-cols-1 gap-4">
