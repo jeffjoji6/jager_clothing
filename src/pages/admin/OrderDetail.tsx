@@ -181,6 +181,41 @@ const OrderDetail = () => {
     },
   });
 
+  // Fetch company settings
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') return null;
+
+      // Map to CompanyInfo interface
+      if (data) {
+        return {
+          name: data.company_name,
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          zip: data.zip || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          website: "www.jagerclothing.com",
+          gstin: data.gstin,
+          bank_name: data.bank_name,
+          account_number: data.account_number,
+          ifsc_code: data.ifsc_code,
+          account_holder_name: data.account_holder_name,
+          upi_id: data.upi_id
+        };
+      }
+      return null;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
   // Generate PDF Packing Slip
   const generatePDF = async () => {
     if (!order || !orderItems) {
@@ -211,7 +246,7 @@ const OrderDetail = () => {
         shipping: Number(order.shipping),
         tax: Number(order.tax),
         total: Number(order.total),
-      });
+      }, companySettings || undefined);
       toast.success("Packing slip generated successfully!");
     } catch (error: any) {
       console.error("PDF generation error:", error);
@@ -255,8 +290,8 @@ const OrderDetail = () => {
           total: Number(order.total),
         },
         invoiceNumber,
-        undefined, // Uses default company info
-        18 // 18% GST rate (India)
+        companySettings || undefined, // Pass company settings
+        18
       );
       toast.success("Invoice generated successfully!");
     } catch (error: any) {

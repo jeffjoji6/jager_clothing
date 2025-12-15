@@ -58,6 +58,7 @@ interface CompanySettings {
   account_number?: string;
   ifsc_code?: string;
   account_holder_name?: string;
+  upi_id?: string;
 }
 
 const Billing = () => {
@@ -89,13 +90,22 @@ const Billing = () => {
         query = query.eq('payment_status', statusFilter);
       }
 
-      if (searchQuery) {
-        query = query.or(`invoice_number.ilike.%${searchQuery}%,order_id.ilike.%${searchQuery}%`);
-      }
-
       const { data, error } = await query;
       if (error) throw error;
-      return data as Invoice[];
+
+      let filteredData = data as Invoice[];
+
+      if (searchQuery) {
+        const lowerQ = searchQuery.toLowerCase();
+        filteredData = filteredData.filter(inv =>
+          inv.invoice_number?.toLowerCase().includes(lowerQ) ||
+          inv.order_id?.toLowerCase().includes(lowerQ) ||
+          inv.billing_address?.full_name?.toLowerCase().includes(lowerQ) ||
+          inv.billing_address?.phone?.includes(lowerQ)
+        );
+      }
+
+      return filteredData;
     },
   });
 
@@ -396,6 +406,7 @@ const Billing = () => {
           account_number: companySettings?.account_number,
           ifsc_code: companySettings?.ifsc_code,
           account_holder_name: companySettings?.account_holder_name,
+          upi_id: companySettings?.upi_id,
         },
         0 // No tax
       );
@@ -524,6 +535,7 @@ const Billing = () => {
           account_number: companySettings?.account_number,
           ifsc_code: companySettings?.ifsc_code,
           account_holder_name: companySettings?.account_holder_name,
+          upi_id: companySettings?.upi_id,
         },
         invoice.tax_rate
       );

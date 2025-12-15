@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,6 +43,9 @@ interface CompanySettings {
   invoice_prefix: string;
   default_tax_rate: number;
   whatsapp_number: string;
+  upi_id?: string;
+  shipping_rate: number;
+  free_shipping_threshold: number;
 }
 
 const Settings = () => {
@@ -68,22 +71,37 @@ const Settings = () => {
   });
 
   // Update company info state when data loads
-  useState(() => {
+  useEffect(() => {
     if (companySettings) {
       setCompanyInfo(companySettings);
     }
-  });
+  }, [companySettings]);
 
   // Update company settings
   const updateCompanySettings = useMutation({
     mutationFn: async (settings: Partial<CompanySettings>) => {
+      // Sanitize payload to remove any unknown keys (like 'name' if it crept in)
+      const validColumns = [
+        'id', 'company_name', 'address', 'city', 'state', 'zip', 'phone', 'email',
+        'website', 'gstin', 'bank_name', 'account_number', 'ifsc_code',
+        'account_holder_name', 'invoice_prefix', 'default_tax_rate',
+        'whatsapp_number', 'upi_id', 'shipping_rate', 'free_shipping_threshold'
+      ];
+
+      const payload: any = {
+        id: '00000000-0000-0000-0000-000000000001',
+        updated_at: new Date().toISOString(),
+      };
+
+      Object.keys(settings).forEach(key => {
+        if (validColumns.includes(key)) {
+          payload[key] = (settings as any)[key];
+        }
+      });
+
       const { data, error } = await supabase
         .from('company_settings')
-        .upsert({
-          id: '00000000-0000-0000-0000-000000000001',
-          ...settings,
-          updated_at: new Date().toISOString(),
-        })
+        .upsert(payload)
         .select()
         .single();
 
@@ -366,6 +384,15 @@ const Settings = () => {
                           placeholder="HDFC0001234"
                         />
                       </div>
+                      <div className="md:col-span-2">
+                        <Label>UPI ID</Label>
+                        <Input
+                          value={companyInfo.upi_id || ''}
+                          onChange={(e) => setCompanyInfo({ ...companyInfo, upi_id: e.target.value })}
+                          placeholder="username@bank (e.g., jager@okhdfcbank)"
+                        />
+                        <p className="text-xs text-grey-text mt-1">This will be displayed on invoices for direct payments.</p>
+                      </div>
                     </div>
                   </div>
 
@@ -556,12 +583,63 @@ const Settings = () => {
           <Card>
             <CardHeader>
               <CardTitle className="font-heading font-bold uppercase">Shipping Settings</CardTitle>
-              <CardDescription>Configure shipping zones and rates</CardDescription>
+              <CardDescription>Configure shipping charges and free shipping thresholds</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-grey-text text-sm">
-                Shipping settings coming soon. Configure shipping zones, rates, and carriers.
-              </p>
+              {isLoadingSettings ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Standard Shipping Rate (₹)</Label>
+                      <Input
+                        type="number"
+                        value={companyInfo.shipping_rate || 0}
+                        onChange={(e) => setCompanyInfo({ ...companyInfo, shipping_rate: parseFloat(e.target.value) || 0 })}
+                        placeholder="100"
+                      />
+                      <p className="text-xs text-grey-text mt-1">
+                        Amount charged for shipping on standard orders.
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Free Shipping Threshold (₹)</Label>
+                      <Input
+                        type="number"
+                        value={companyInfo.free_shipping_threshold || 0}
+                        onChange={(e) => setCompanyInfo({ ...companyInfo, free_shipping_threshold: parseFloat(e.target.value) || 0 })}
+                        placeholder="499"
+                      />
+                      <p className="text-xs text-grey-text mt-1">
+                        Orders above this subtotal amount will qualify for free shipping.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button
+                      onClick={handleSaveCompanyInfo}
+                      disabled={updateCompanySettings.isPending}
+                      className="bg-jager-red hover:bg-red-800"
+                    >
+                      {updateCompanySettings.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Shipping Settings
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

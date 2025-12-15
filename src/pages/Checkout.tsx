@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -52,9 +53,33 @@ const Checkout = () => {
     is_default: false,
   });
 
-  const shippingCharge = 0;
-  const tax = Math.round(totalPrice * 0.18); // 18% GST
-  const finalTotal = totalPrice + shippingCharge + tax;
+  // Fetch shipping and tax settings
+  const { data: companySettings } = useQuery({
+    queryKey: ['checkout-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('shipping_rate, free_shipping_threshold, default_tax_rate')
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') return null;
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const standardShippingRate = companySettings?.shipping_rate ?? 100;
+  const freeShippingThreshold = companySettings?.free_shipping_threshold ?? 499;
+  const taxRate = companySettings?.default_tax_rate ?? 18;
+
+  const shippingCharge = totalPrice > freeShippingThreshold ? 0 : standardShippingRate;
+
+  // Tax is inclusive of the product price
+  // We extract the tax amount for display/database purposes but don't add it to the total again.
+  const tax = Math.round(totalPrice - (totalPrice / (1 + (taxRate / 100))));
+
+  const finalTotal = totalPrice + shippingCharge;
 
   // Set default address when addresses load
   useEffect(() => {
@@ -603,7 +628,7 @@ const Checkout = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-grey-text">Tax (GST)</span>
+                    <span className="text-grey-text">Tax (Included)</span>
                     <span>₹{tax.toLocaleString()}</span>
                   </div>
                   <div className="border-t border-foreground pt-2 mt-2">
@@ -630,7 +655,7 @@ const Checkout = () => {
                   )}
                 </Button>
                 <p className="text-xs text-jager-red text-center font-bold">
-                  ✓ Free shipping applied
+                  {shippingCharge === 0 ? "✓ Free shipping applied" : `Add items worth ₹${(freeShippingThreshold - totalPrice).toLocaleString()} more for free shipping`}
                 </p>
               </div>
             </div>

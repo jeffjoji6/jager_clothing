@@ -76,13 +76,24 @@ const Orders = () => {
         query = query.eq('order_type', typeFilter);
       }
 
-      if (searchQuery) {
-        query = query.or(`id.ilike.%${searchQuery}%,user.email.ilike.%${searchQuery}%`);
-      }
-
+      // Fetch data first, then client-side filter for search (better for UUID/JSON fields)
       const { data, error } = await query;
       if (error) throw error;
-      return data as Order[];
+
+      let result = data as Order[];
+
+      if (searchQuery) {
+        const lowerQ = searchQuery.toLowerCase();
+        result = result.filter(order =>
+          order.id.toLowerCase().includes(lowerQ) ||
+          order.shipping_address?.full_name?.toLowerCase().includes(lowerQ) ||
+          order.shipping_address?.phone?.includes(lowerQ) ||
+          order.shipping_address?.email?.toLowerCase().includes(lowerQ) ||
+          order.tracking_number?.toLowerCase().includes(lowerQ)
+        );
+      }
+
+      return result;
     },
   });
 
@@ -140,6 +151,41 @@ const Orders = () => {
     setSearchParams(searchParams);
   };
 
+  // Fetch company settings
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') return null;
+
+      // Map to CompanyInfo interface
+      if (data) {
+        return {
+          name: data.company_name,
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          zip: data.zip || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          website: "www.jagerclothing.com", // Keeping website static or add to DB if needed
+          gstin: data.gstin,
+          bank_name: data.bank_name,
+          account_number: data.account_number, // Note: DB likely has bank_account column based on Settings.tsx but let's check schema
+          ifsc_code: data.ifsc_code,
+          account_holder_name: data.account_holder_name,
+          upi_id: data.upi_id
+        };
+      }
+      return null;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 mins
+  });
+
   // Generate PDF function
   const generatePDF = async (order: Order) => {
     try {
@@ -179,7 +225,7 @@ const Orders = () => {
         shipping: Number(order.shipping || 0),
         tax: Number(order.tax || 0),
         total: Number(order.total || 0),
-      });
+      }, companySettings || undefined); // Pass company settings
 
       toast.success("Packing slip generated successfully!");
     } catch (error: any) {

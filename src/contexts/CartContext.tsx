@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
+import { toast } from 'sonner';
 
 export interface CartItem {
   id: string; // variant_id for Supabase sync
@@ -10,6 +11,7 @@ export interface CartItem {
   size: string;
   quantity: number;
   variant_id?: string; // For Supabase cart table
+  max_stock: number;
 }
 
 interface CartContextType {
@@ -81,6 +83,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             image: Array.isArray(product?.images) ? product.images[0] : product?.images || '/placeholder.svg',
             size: variant?.size || '',
             quantity: cart.quantity,
+            max_stock: variant?.stock || 0
           };
         });
 
@@ -89,6 +92,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const localCart = loadCartFromStorage();
         if (localCart.length > 0) {
           // Merge logic: prefer Supabase, but add unique items from local
+          // Helper to deduplicate items
+          const deduplicate = (list: CartItem[]) => {
+            const seen = new Set();
+            return list.filter(item => {
+              const key = `${item.id}-${item.size}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          };
+
           const merged = [...cartItems];
           localCart.forEach((localItem) => {
             const exists = merged.find((i) => i.id === localItem.id && i.size === localItem.size);
@@ -96,15 +110,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               merged.push(localItem);
             }
           });
-          setItems(merged);
-          // Save merged cart to Supabase
-          await syncToSupabase(merged);
+
+          const finalItems = deduplicate(merged);
+          setItems(finalItems);
+
+          // Save merged cart to Supabase if changed
+          if (finalItems.length !== cartItems.length) {
+            await syncToSupabase(finalItems);
+          }
           localStorage.removeItem(STORAGE_KEY);
+        } else {
+          setItems(cartItems);
         }
       } else {
         // Load from localStorage
         const localCart = loadCartFromStorage();
-        setItems(localCart);
+        // Deduplicate local cart just in case
+        const seen = new Set();
+        const uniqueLocal = localCart.filter(item => {
+          const key = `${item.id}-${item.size}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setItems(uniqueLocal);
       }
     } catch (error) {
       console.error('Failed to load cart:', error);
@@ -170,12 +199,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id && i.size === item.size);
       const quantityToAdd = item.quantity || 1;
+      const currentQuantity = existing ? existing.quantity : 0;
+      const newQuantity = currentQuantity + quantityToAdd;
+
+      // Check stock limit
+      if (newQuantity > item.max_stock) {
+        toast.error(`Only ${item.max_stock} items available`, {
+          description: `Cannot add ${quantityToAdd} more. Maximum stock reached for ${item.name}`
+        });
+        return prev;
+      }
 
       let updated;
       if (existing) {
         updated = prev.map((i) =>
           i.id === item.id && i.size === item.size
-            ? { ...i, quantity: i.quantity + quantityToAdd }
+            ? { ...i, quantity: newQuantity }
             : i
         );
       } else {
@@ -203,7 +242,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await removeItem(id, size);
       return;
     }
+
     setItems((prev) => {
+      const item = prev.find(i => i.id === id && i.size === size);
+      if (item && quantity > item.max_stock) {
+        toast.error(`Only ${item.max_stock} items available`, {
+          description: `Maximum stock for ${item.name}`
+        });
+        return prev.map(i => i.id === id && i.size === size ? { ...i, quantity: item.max_stock } : i);
+      }
+
       const updated = prev.map((i) =>
         i.id === id && i.size === size ? { ...i, quantity } : i
       );

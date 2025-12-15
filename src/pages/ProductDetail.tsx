@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sizeError, setSizeError] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
@@ -56,7 +57,7 @@ const ProductDetail = () => {
     });
   }, [product?.variants, selectedSize, selectedColor]);
 
-  // Auto-select variant
+  // Auto-select variant and reset quantity when variant changes
   useEffect(() => {
     if (availableVariants.length > 0) {
       const isCurrentVariantAvailable = selectedVariant && availableVariants.find(v => v.id === selectedVariant);
@@ -64,7 +65,9 @@ const ProductDetail = () => {
         setSelectedVariant(availableVariants[0].id);
       }
     }
-  }, [availableVariants, selectedVariant]);
+    // Reset quantity to 1 when variant changes
+    setQuantity(1);
+  }, [availableVariants, selectedVariant, selectedSize, selectedColor]);
 
   // Intersection Observer for Sticky Bar
   useEffect(() => {
@@ -88,18 +91,35 @@ const ProductDetail = () => {
   }, [product]);
 
   const currentVariant = product?.variants.find(v => v.id === selectedVariant);
-  const finalPrice = currentVariant
-    ? Number(product?.base_price) + Number(currentVariant.price_modifier)
-    : Number(product?.base_price || 0);
 
-  // Fake original price for discount display
-  const originalPrice = finalPrice * 1.4;
+  // Price Logic:
+  // Priority: actual_price > discounted_price > (base_price + price_modifier)
+  // 1. If variant has actual_price set, use that as the regular price
+  // 2. If variant has discounted_price, that becomes the selling price
+  // 3. Otherwise calculate from base_price + price_modifier
+
+  const basePrice = Number(product?.base_price || 0);
+  const modifier = Number(currentVariant?.price_modifier || 0);
+
+  // Regular price is actual_price if set, otherwise base + modifier
+  const regularPrice = currentVariant?.actual_price
+    ? Number(currentVariant.actual_price)
+    : basePrice + modifier;
+
+  // Selling Price is discounted_price if set, else regularPrice
+  const sellingPrice = currentVariant?.discounted_price
+    ? Number(currentVariant.discounted_price)
+    : regularPrice;
+
+  // Render "Original Price" only if sellingPrice < regularPrice
+  const hasDiscount = sellingPrice < regularPrice;
+  const originalPrice = regularPrice;
 
   const images = product?.images || [];
   const mainImage = Array.isArray(images) ? images[selectedImageIndex] || images[0] : images || "/placeholder.svg";
 
-  const handleAddToCart = () => {
-    if (!product) return;
+  const handleAddToCart = async () => {
+    if (!product || !currentVariant) return;
 
     if (!selectedSize || !selectedColor) {
       setSizeError(true);
@@ -120,19 +140,33 @@ const ProductDetail = () => {
       return;
     }
 
+    // Validate quantity against stock
+    if (quantity > currentVariant.stock) {
+      toast.error(`Only ${currentVariant.stock} items available`, {
+        description: `You selected ${quantity} but only ${currentVariant.stock} in stock for ${selectedSize} - ${selectedColor}`
+      });
+      setQuantity(currentVariant.stock);
+      return;
+    }
+
     const imageUrl = Array.isArray(images) ? images[0] : images || "/placeholder.svg";
 
-    addItem({
-      id: currentVariant.id,
-      variant_id: currentVariant.id,
-      name: `${product.name} - ${selectedSize} - ${selectedColor}`,
-      price: finalPrice,
-      image: imageUrl,
-      size: selectedSize,
-      quantity: quantity
-    });
-
-    toast.success("Added to cart!");
+    setIsAdding(true);
+    try {
+      await addItem({
+        id: currentVariant.id,
+        variant_id: currentVariant.id,
+        name: `${product.name} - ${selectedSize} - ${selectedColor}`,
+        price: sellingPrice,
+        image: imageUrl,
+        size: selectedSize,
+        quantity: quantity,
+        max_stock: currentVariant.stock
+      });
+      toast.success("Added to cart!");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleBuyNow = async () => {
@@ -163,10 +197,11 @@ const ProductDetail = () => {
       id: currentVariant.id,
       variant_id: currentVariant.id,
       name: `${product.name} - ${selectedSize} - ${selectedColor}`,
-      price: finalPrice,
+      price: sellingPrice,
       image: imageUrl,
       size: selectedSize,
-      quantity: quantity
+      quantity: quantity,
+      max_stock: currentVariant.stock
     });
 
     navigate("/checkout");
@@ -252,11 +287,15 @@ const ProductDetail = () => {
               </h1>
 
               <div className="flex flex-wrap items-center gap-2 md:gap-4">
-                <span className="text-xl md:text-2xl font-bold font-heading">₹{finalPrice.toLocaleString()}</span>
-                <span className="text-base md:text-lg text-muted-foreground line-through font-body">₹{originalPrice.toLocaleString()}</span>
-                <span className="bg-jager-red text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">
-                  Save 30%
-                </span>
+                <span className="text-xl md:text-2xl font-bold font-heading">₹{sellingPrice.toLocaleString()}</span>
+                {hasDiscount && (
+                  <>
+                    <span className="text-base md:text-lg text-muted-foreground line-through font-body">₹{originalPrice.toLocaleString()}</span>
+                    <span className="bg-jager-red text-white text-xs font-bold px-2 py-1 uppercase tracking-wider">
+                      Save {Math.round(((originalPrice - sellingPrice) / originalPrice) * 100)}%
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -275,8 +314,8 @@ const ProductDetail = () => {
                         key={color}
                         onClick={() => setSelectedColor(color)}
                         className={`w-12 h-12 border-2 transition-all relative group ${selectedColor === color
-                            ? 'border-jager-red ring-1 ring-jager-red ring-offset-2 scale-105'
-                            : 'border-border hover:border-foreground'
+                          ? 'border-jager-red ring-1 ring-jager-red ring-offset-2 scale-105'
+                          : 'border-border hover:border-foreground'
                           }`}
                         style={{ backgroundColor: color.toLowerCase() === 'white' ? '#fff' : color.toLowerCase() }}
                         title={color}
@@ -326,18 +365,36 @@ const ProductDetail = () => {
 
               {/* Quantity */}
               <div className="space-y-3">
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Quantity</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Quantity</span>
+                  {currentVariant && (
+                    <span className="text-xs text-muted-foreground">
+                      {currentVariant.stock} available
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center border border-foreground/20 h-12 px-4 gap-4 w-32 justify-between">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="hover:text-jager-red transition-colors"
+                    className="hover:text-jager-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    disabled={quantity <= 1}
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="font-bold font-heading">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="hover:text-jager-red transition-colors"
+                    onClick={() => {
+                      const maxStock = currentVariant?.stock || 999;
+                      if (quantity >= maxStock) {
+                        toast.error(`Only ${maxStock} items available`, {
+                          description: `Maximum stock for ${selectedSize} - ${selectedColor}`
+                        });
+                      } else {
+                        setQuantity(quantity + 1);
+                      }
+                    }}
+                    className="hover:text-jager-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    disabled={!currentVariant || quantity >= currentVariant.stock}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -349,11 +406,11 @@ const ProductDetail = () => {
                 <Button
                   id="main-add-to-cart-btn"
                   variant="hero"
-                  size="lg"
-                  className="flex-1 h-12 md:h-14 text-xs md:text-base tracking-widest px-2"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-bold uppercase tracking-wider h-14"
                   onClick={handleAddToCart}
+                  disabled={!selectedSize || !currentVariant || currentVariant.stock <= 0 || isAdding}
                 >
-                  ADD TO CART
+                  {isAdding ? "ADDING..." : currentVariant && currentVariant.stock <= 0 ? "OUT OF STOCK" : "ADD TO CART"}
                 </Button>
                 <Button
                   variant="outline"
@@ -434,7 +491,7 @@ const ProductDetail = () => {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <p className="font-heading font-bold uppercase text-sm truncate">{product.name}</p>
-            <p className="font-body text-sm">₹{finalPrice.toLocaleString()}</p>
+            <p className="font-body text-sm">₹{sellingPrice.toLocaleString()}</p>
           </div>
           <Button variant="hero" onClick={handleBuyNow} className="w-1/2">
             BUY NOW

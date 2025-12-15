@@ -55,10 +55,10 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/collection" element={<Collection />} />
               <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/custom-lab" element={<CustomLab />} />
+              {/* <Route path="/custom-lab" element={<CustomLab />} /> */}
               <Route path="/custom-design" element={<CustomDesign />} />
-              <Route path="/custom-lab/basic" element={<CustomLabBasic />} />
-              <Route path="/custom-lab/pro" element={<CustomLabPro />} />
+              {/* <Route path="/custom-lab/basic" element={<CustomLabBasic />} />
+              <Route path="/custom-lab/pro" element={<CustomLabPro />} /> */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -95,13 +95,6 @@ const App = () => (
                 <AdminProtectedRoute>
                   <AdminLayout>
                     <AdminCustomers />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/products" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminProducts />
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />

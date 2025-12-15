@@ -15,6 +15,7 @@ export interface CompanyInfo {
   account_number?: string;
   ifsc_code?: string;
   account_holder_name?: string;
+  upi_id?: string;
 }
 
 export interface OrderPDFData {
@@ -114,74 +115,53 @@ export const generatePackingSlip = async (
   // Header Section
   let yPos = margin + 15;
 
-  // Logo (Left) & Company Address (Right)
-  if (logo) {
-    const logoWidth = 35; // Decreased logo size (from 50)
-    const logoHeight = (logo.height / logo.width) * logoWidth;
-    doc.addImage(logo, 'PNG', margin + 10, yPos - 5, logoWidth, logoHeight);
-  } else {
-    doc.setFontSize(28);
-    doc.setFont("helvetica", "bold");
-    doc.text(companyInfo.name, margin + 10, yPos + 10);
-  }
+  // Header Layout: Address on LEFT, Logo on RIGHT
 
-  // Company Address Right Aligned
-  // "JAGER CLOTHING" Bold and Big
-  doc.setFontSize(14);
+  // 1. Company Address (Left Aligned)
+  doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  const addressX = pageWidth - margin - 10;
-  doc.text(companyInfo.name.toUpperCase(), addressX, yPos, { align: 'right' });
+  doc.text((companyInfo.name || "Jager Clothing").toUpperCase(), margin + 10, yPos);
 
-  // Address details
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...COLORS.lightText);
-  doc.text(companyInfo.address, addressX, yPos + 6, { align: 'right' });
-  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, addressX, yPos + 11, { align: 'right' });
+  doc.text(companyInfo.address, margin + 10, yPos + 6);
+  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, margin + 10, yPos + 11);
+
+  // 2. Logo (Right Aligned)
+  if (logo) {
+    const logoWidth = 35;
+    const logoHeight = (logo.height / logo.width) * logoWidth;
+    doc.addImage(logo, 'PNG', pageWidth - margin - logoWidth - 10, yPos - 5, logoWidth, logoHeight);
+  }
 
   yPos += 35;
 
-  // Billing (Left) & Shipping (Right) Addresses
-  const colWidth = contentWidth / 2;
+  // Shipping Address Only (Below Header)
+  // Removed Billing Address as requested
 
-  // Billing Address (Left)
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  doc.text("Billing Address:", margin + 10, yPos);
+  doc.text("Shipping Address:", margin + 10, yPos);
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   let addrY = yPos + 7;
-  // Fallback to customerAddress (shipping) if billingAddress not provided
-  const billAddr = orderData.billingAddress || orderData.customerAddress;
-  const billName = orderData.billingAddress ? orderData.customerName : orderData.customerName; // Using same name for now
 
-  doc.text(billName, margin + 10, addrY); addrY += 6;
-  doc.text(billAddr.street, margin + 10, addrY); addrY += 6;
-  doc.text(`${billAddr.city}, ${billAddr.state} ${billAddr.zip}`, margin + 10, addrY); addrY += 6;
-  doc.text(billAddr.phone, margin + 10, addrY);
-
-  // Shipping Address (Right)
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Shipping Address:", margin + 10 + colWidth, yPos);
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  addrY = yPos + 7;
-  doc.text(orderData.customerName, margin + 10 + colWidth, addrY); addrY += 6;
-  doc.text(orderData.customerAddress.street, margin + 10 + colWidth, addrY); addrY += 6;
-  doc.text(`${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`, margin + 10 + colWidth, addrY); addrY += 6;
-  doc.text(orderData.customerAddress.phone, margin + 10 + colWidth, addrY);
+  doc.text(orderData.customerName, margin + 10, addrY); addrY += 6;
+  doc.text(orderData.customerAddress.street, margin + 10, addrY); addrY += 6;
+  doc.text(`${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`, margin + 10, addrY); addrY += 6;
+  doc.text(orderData.customerAddress.phone, margin + 10, addrY);
 
   yPos = addrY + 25;
 
   // "Your Order of..." Banner
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text(`Your Order of ${new Date(orderData.orderDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })} (#${orderData.orderId.slice(0, 8).toUpperCase()})`, margin + 10, yPos);
+  const displayOrderId = orderData.orderId ? orderData.orderId.slice(0, 8).toUpperCase() : "UNKNOWN";
+  doc.text(`Your Order of ${new Date(orderData.orderDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })} (#${displayOrderId})`, margin + 10, yPos);
 
   doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.5);
@@ -337,13 +317,14 @@ export const generateInvoice = async (
       textColor: COLORS.text,
       fontStyle: 'bold',
       halign: 'left',
-      cellPadding: 8, // Reduced slightly
+      cellPadding: 4,
+      fontSize: 9,
     },
     styles: {
-      fontSize: 10,
+      fontSize: 9,
       textColor: COLORS.text,
-      cellPadding: 8, // Reduced slightly to allow more text space
-      valign: 'middle', // Vertically center for better look
+      cellPadding: 4,
+      valign: 'middle',
       lineColor: COLORS.border,
       lineWidth: { bottom: 0.1 },
     },
@@ -396,10 +377,10 @@ export const generateInvoice = async (
 
   addTotalRow("Total", formatINR(orderData.total), true);
 
-  // "Thank you!"
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "normal");
-  doc.text("Thank you!", margin, finalY + 15);
+  // // "Thank you!"
+  // doc.setFontSize(14);
+  // doc.setFont("helvetica", "normal");
+  // doc.text("Thank you!", margin, finalY + 15);
 
   // Payment Info
   const paymentY = pageHeight - margin - 35;
@@ -420,6 +401,9 @@ export const generateInvoice = async (
   }
   if (companyInfo?.ifsc_code) {
     doc.text(`IFSC: ${companyInfo.ifsc_code}`, margin, paymentY + 20);
+  }
+  if (companyInfo?.upi_id) {
+    doc.text(`UPI ID: ${companyInfo.upi_id}`, margin, paymentY + 25);
   }
 
   // Company Footer

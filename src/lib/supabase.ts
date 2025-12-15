@@ -25,6 +25,8 @@ export interface Product {
   images: string[] | null;
   featured: boolean;
   is_new: boolean;
+  is_archived?: boolean;
+  discounted_price?: number;
   created_at: string;
 }
 
@@ -35,6 +37,9 @@ export interface ProductVariant {
   color: string;
   stock: number;
   price_modifier: number;
+  actual_price?: number;
+  discounted_price?: number;
+  is_archived?: boolean;
   created_at: string;
 }
 

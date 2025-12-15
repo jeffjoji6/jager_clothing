@@ -58,13 +58,7 @@ const menuGroups = [
     label: "Store Management",
     items: [
       {
-        title: "Products",
-        icon: Package,
-        url: "/admin/products",
-        roles: ["admin", "staff"],
-      },
-      {
-        title: "Inventory",
+        title: "Inventory & Products",
         icon: Package,
         url: "/admin/inventory",
         roles: ["admin", "staff"],
