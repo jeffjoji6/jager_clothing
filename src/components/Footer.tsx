@@ -89,8 +89,8 @@ export const Footer = () => {
                         <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">SHOP</h3>
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
                             <li><Link to="/collection" className="hover:text-foreground transition-colors">Collection</Link></li>
-                            <li><Link to="/custom-lab" className="hover:text-foreground transition-colors">Custom Lab</Link></li>
-                            <li><Link to="/new-arrivals" className="hover:text-foreground transition-colors">New Arrivals</Link></li>
+                            <li><Link to="/custom-design" className="hover:text-foreground transition-colors">Custom Design</Link></li>
+                            {/* <li><Link to="/new-arrivals" className="hover:text-foreground transition-colors">New Arrivals</Link></li> */}
                         </ul>
                     </div>
                     <div>
@@ -123,9 +123,9 @@ export const Footer = () => {
                             <a href="#" className="text-foreground hover:text-jager-red transition-colors">
                                 <Facebook className="h-5 w-5" />
                             </a>
-                            <a href="#" className="text-foreground hover:text-jager-red transition-colors">
+                            {/* <a href="#" className="text-foreground hover:text-jager-red transition-colors">
                                 <Twitter className="h-5 w-5" />
-                            </a>
+                            </a> */}
                         </div>
                         <div className="flex gap-2">
                             <Input placeholder="Email address" className="h-10 bg-background" />

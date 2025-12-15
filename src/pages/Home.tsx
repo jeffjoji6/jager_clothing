@@ -45,7 +45,7 @@ const Home = () => {
                 </Link>
               </Button>
               <Button asChild variant="heroOutline" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest bg-black/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-black">
-                <Link to="/custom-lab">ENTER CUSTOM LAB</Link>
+                <Link to="/custom-design">ENTER CUSTOM DESIGN</Link>
               </Button>
             </div>
           </div>
@@ -129,7 +129,7 @@ const Home = () => {
                 Create custom designs or let our pros handle it. From single pieces to team orders, we bring your ideas to life.
               </p>
               <Button asChild variant="jagerRed" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest">
-                <Link to="/custom-lab">START CREATING</Link>
+                <Link to="/custom-design">START CREATING</Link>
               </Button>
             </div>
           </div>

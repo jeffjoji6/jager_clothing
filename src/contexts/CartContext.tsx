@@ -75,11 +75,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const cartItems: CartItem[] = (data || []).map((cart) => {
           const variant = cart.variant as any;
           const product = variant?.product;
+          const basePrice = Number(product?.base_price || 0);
+          const modifier = Number(variant?.price_modifier || 0);
+          const regularPrice = variant?.actual_price ? Number(variant.actual_price) : basePrice + modifier;
+          const finalPrice = variant?.discounted_price ? Number(variant.discounted_price) : regularPrice;
+
           return {
             id: variant?.id || cart.product_variant_id,
             variant_id: cart.product_variant_id,
             name: `${product?.name || ''} - ${variant?.size || ''} - ${variant?.color || ''}`,
-            price: Number(product?.base_price || 0) + Number(variant?.price_modifier || 0),
+            price: finalPrice,
             image: Array.isArray(product?.images) ? product.images[0] : product?.images || '/placeholder.svg',
             size: variant?.size || '',
             quantity: cart.quantity,

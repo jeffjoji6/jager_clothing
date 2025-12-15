@@ -17,7 +17,7 @@ import {
   Address
 } from "@/hooks/useAddresses";
 import { supabase } from "@/lib/supabase";
-import { openRazorpayCheckout } from "@/lib/razorpay";
+import { openRazorpayCheckout, createRazorpayOrder } from "@/lib/razorpay";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Edit } from "lucide-react";
 import {
@@ -223,7 +223,6 @@ const Checkout = () => {
 
       // Try to create Razorpay order via backend (optional)
       // If backend is not set up, checkout will work without order_id
-      const { createRazorpayOrder } = await import('@/lib/razorpay');
       let razorpayOrderId: string | null = null;
 
       try {
@@ -383,7 +382,14 @@ const Checkout = () => {
       );
     } catch (error: any) {
       setProcessingPayment(false);
-      toast.error("Failed to place order", { description: error.message });
+      console.error("Order placement error:", error);
+
+      let message = error.message || "Failed to place order";
+      if (message.includes("Failed to fetch") || message.includes("NetworkError")) {
+        message = "Network error. Please check your internet connection and try again.";
+      }
+
+      toast.error("Failed to place order", { description: message });
     }
   };
 
