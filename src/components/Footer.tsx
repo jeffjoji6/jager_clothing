@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Twitter, Mail } from "lucide-react";
+import { Instagram, Mail } from "lucide-react";
 import {
     Accordion,
     AccordionContent,
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SizeChartModal } from "@/components/SizeChartModal";
 
 export const Footer = () => {
     return (
@@ -28,8 +29,7 @@ export const Footer = () => {
                             <AccordionContent>
                                 <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
                                     <li><Link to="/collection" className="block hover:text-foreground transition-colors">Collection</Link></li>
-                                    <li><Link to="/custom-lab" className="block hover:text-foreground transition-colors">Custom Lab</Link></li>
-                                    <li><Link to="/new-arrivals" className="block hover:text-foreground transition-colors">New Arrivals</Link></li>
+                                    <li><Link to="/custom-design" className="block hover:text-foreground transition-colors">Custom Design</Link></li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
@@ -37,21 +37,23 @@ export const Footer = () => {
                             <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">SUPPORT</AccordionTrigger>
                             <AccordionContent>
                                 <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Shipping Info</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Returns & Exchange</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Size Guide</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">FAQ</Link></li>
+                                    <li><Link to="/contact" className="block hover:text-foreground transition-colors">Contact Us</Link></li>
+                                    <li><Link to="/refund-policy" className="block hover:text-foreground transition-colors">Returns & Exchange</Link></li>
+                                    <li>
+                                        <SizeChartModal>
+                                            <button className="block hover:text-foreground transition-colors text-left w-full">Size Guide</button>
+                                        </SizeChartModal>
+                                    </li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
-                        <AccordionItem value="company">
-                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">COMPANY</AccordionTrigger>
+                        <AccordionItem value="legal">
+                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">LEGAL</AccordionTrigger>
                             <AccordionContent>
                                 <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">About Us</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Contact</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Terms of Service</Link></li>
-                                    <li><Link to="#" className="block hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                                    <li><Link to="/terms-of-service" className="block hover:text-foreground transition-colors">Terms of Service</Link></li>
+                                    <li><Link to="/privacy-policy" className="block hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                                    <li><Link to="/cookie-policy" className="block hover:text-foreground transition-colors">Cookie Policy</Link></li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
@@ -62,12 +64,6 @@ export const Footer = () => {
                         <div className="flex justify-center gap-6">
                             <a href="#" className="p-2 rounded-full bg-secondary hover:bg-jager-red hover:text-white transition-colors">
                                 <Instagram className="h-5 w-5" />
-                            </a>
-                            <a href="#" className="p-2 rounded-full bg-secondary hover:bg-jager-red hover:text-white transition-colors">
-                                <Facebook className="h-5 w-5" />
-                            </a>
-                            <a href="#" className="p-2 rounded-full bg-secondary hover:bg-jager-red hover:text-white transition-colors">
-                                <Twitter className="h-5 w-5" />
                             </a>
                         </div>
 
@@ -90,25 +86,26 @@ export const Footer = () => {
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
                             <li><Link to="/collection" className="hover:text-foreground transition-colors">Collection</Link></li>
                             <li><Link to="/custom-design" className="hover:text-foreground transition-colors">Custom Design</Link></li>
-                            {/* <li><Link to="/new-arrivals" className="hover:text-foreground transition-colors">New Arrivals</Link></li> */}
                         </ul>
                     </div>
                     <div>
                         <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">SUPPORT</h3>
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Shipping Info</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Returns & Exchange</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Size Guide</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">FAQ</Link></li>
+                            <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+                            <li><Link to="/refund-policy" className="hover:text-foreground transition-colors">Returns & Exchange</Link></li>
+                            <li>
+                                <SizeChartModal>
+                                    <button className="hover:text-foreground transition-colors text-left">Size Guide</button>
+                                </SizeChartModal>
+                            </li>
                         </ul>
                     </div>
                     <div>
-                        <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">COMPANY</h3>
+                        <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">LEGAL</h3>
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
-                            <li><Link to="#" className="hover:text-foreground transition-colors">About Us</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Contact</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-                            <li><Link to="#" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/terms-of-service" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                            <li><Link to="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/cookie-policy" className="hover:text-foreground transition-colors">Cookie Policy</Link></li>
                         </ul>
                     </div>
                     <div>
@@ -120,12 +117,6 @@ export const Footer = () => {
                             <a href="#" className="text-foreground hover:text-jager-red transition-colors">
                                 <Instagram className="h-5 w-5" />
                             </a>
-                            <a href="#" className="text-foreground hover:text-jager-red transition-colors">
-                                <Facebook className="h-5 w-5" />
-                            </a>
-                            {/* <a href="#" className="text-foreground hover:text-jager-red transition-colors">
-                                <Twitter className="h-5 w-5" />
-                            </a> */}
                         </div>
                         <div className="flex gap-2">
                             <Input placeholder="Email address" className="h-10 bg-background" />

@@ -16,7 +16,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   // OTP State
-  const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
+  const [loginMethod, setLoginMethod] = useState<"password" | "otp">("otp");
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [timer, setTimer] = useState(60);

@@ -41,6 +41,14 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 import { Analytics } from "@vercel/analytics/react";
+import { CookieConsent } from "@/components/CookieConsent";
+import CookiePolicy from "./pages/CookiePolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import RefundPolicy from "./pages/RefundPolicy";
+import Contact from "./pages/Contact";
+
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -51,8 +59,15 @@ const App = () => (
           <Sonner />
           <Analytics />
           <BrowserRouter>
+            <ScrollToTop />
+            <CookieConsent />
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/collection" element={<Collection />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               {/* <Route path="/custom-lab" element={<CustomLab />} /> */}

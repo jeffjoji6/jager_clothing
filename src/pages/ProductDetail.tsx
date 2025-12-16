@@ -4,6 +4,13 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useProduct } from "@/hooks/useProducts";
+import { SizeChartModal } from "@/components/SizeChartModal";
+// ... (keep surrounding imports if not removing entire block, but here I'm replacing the Dialog usage)
+
+// In the component body:
+<SizeChartModal>
+  <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
+</SizeChartModal>
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Loader2, Minus, Plus, Heart, Truck, ShieldCheck, Zap, Eye, ArrowRight } from "lucide-react";
@@ -57,8 +64,13 @@ const ProductDetail = () => {
     });
   }, [product?.variants, selectedSize, selectedColor]);
 
-  // Auto-select variant and reset quantity when variant changes
+  // Auto-select variant, color and reset quantity
   useEffect(() => {
+    // Auto-select color if only one available
+    if (availableColors.length === 1 && !selectedColor) {
+      setSelectedColor(availableColors[0]);
+    }
+
     if (availableVariants.length > 0) {
       const isCurrentVariantAvailable = selectedVariant && availableVariants.find(v => v.id === selectedVariant);
       if (!isCurrentVariantAvailable) {
@@ -67,7 +79,8 @@ const ProductDetail = () => {
     }
     // Reset quantity to 1 when variant changes
     setQuantity(1);
-  }, [availableVariants, selectedVariant, selectedSize, selectedColor]);
+  }, [availableVariants, selectedVariant, availableColors]);
+
 
   // Intersection Observer for Sticky Bar
   useEffect(() => {
@@ -331,7 +344,14 @@ const ProductDetail = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Size: <span className="text-foreground">{selectedSize || 'Select'}</span></span>
-                  <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl bg-white p-0 overflow-hidden">
+                      <img src="/size-chart.png" alt="Size Chart" className="w-full h-auto" />
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {availableSizes.map((size) => {
