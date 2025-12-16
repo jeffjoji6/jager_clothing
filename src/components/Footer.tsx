@@ -38,6 +38,7 @@ export const Footer = () => {
                             <AccordionContent>
                                 <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
                                     <li><Link to="/contact" className="block hover:text-foreground transition-colors">Contact Us</Link></li>
+                                    <li><Link to="/shipping-policy" className="block hover:text-foreground transition-colors">Shipping Policy</Link></li>
                                     <li><Link to="/refund-policy" className="block hover:text-foreground transition-colors">Returns & Exchange</Link></li>
                                     <li>
                                         <SizeChartModal>
@@ -92,6 +93,7 @@ export const Footer = () => {
                         <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">SUPPORT</h3>
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
                             <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+                            <li><Link to="/shipping-policy" className="hover:text-foreground transition-colors">Shipping Policy</Link></li>
                             <li><Link to="/refund-policy" className="hover:text-foreground transition-colors">Returns & Exchange</Link></li>
                             <li>
                                 <SizeChartModal>

@@ -46,6 +46,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import RefundPolicy from "./pages/RefundPolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
 import Contact from "./pages/Contact";
 
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/collection" element={<Collection />} />
               <Route path="/product/:id" element={<ProductDetail />} />
