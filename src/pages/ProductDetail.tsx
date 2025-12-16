@@ -344,14 +344,9 @@ const ProductDetail = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Size: <span className="text-foreground">{selectedSize || 'Select'}</span></span>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl bg-white p-0 overflow-hidden">
-                      <img src="/size-chart.png" alt="Size Chart" className="w-full h-auto" />
-                    </DialogContent>
-                  </Dialog>
+                  <SizeChartModal>
+                    <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
+                  </SizeChartModal>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {availableSizes.map((size) => {
