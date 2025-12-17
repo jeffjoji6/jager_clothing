@@ -17,9 +17,8 @@ export const Footer = () => {
                 {/* Mobile: Accordion Layout */}
                 <div className="md:hidden mb-12">
                     <div className="mb-8 text-center">
-                        <Link to="/" className="inline-flex items-center gap-2">
-                            <img src="/jager_logo.png" alt="Jager" className="h-8 w-auto" />
-                            <span className="text-2xl font-heading font-bold uppercase tracking-tighter">JÄGER</span>
+                        <Link to="/" className="inline-flex items-center">
+                            <img src="/jager_logo_v2.png" alt="Jager" className="h-10 w-auto" />
                         </Link>
                     </div>
 
@@ -132,7 +131,7 @@ export const Footer = () => {
                         © 2025 Jager Clothing. All rights reserved.
                     </p>
                     <div className="flex gap-6 mt-4 md:mt-0">
-                        <img src="/jager_logo.png" alt="Jager" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
+                        <img src="/jager_logo_v2.png" alt="Jager" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
                     </div>
                 </div>
             </div>

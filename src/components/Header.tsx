@@ -97,11 +97,8 @@ export const Header = () => {
 
           {/* Desktop: Logo Left */}
           <div className="hidden md:block">
-            <Link to="/" className="flex items-center gap-3 pl-6">
-              <img src="/jager_logo.png" alt="Jager Logo" className="h-8 w-auto scale-150" />
-              <span className="text-3xl font-heading font-semibold uppercase tracking-tighter">
-                JÄGER
-              </span>
+            <Link to="/" className="flex items-center pl-6">
+              <img src="/jager_logo_v2.png" alt="Jager Logo" className="h-10 w-auto" />
             </Link>
             {/* <Link to="/" className="flex items-center gap-3">
               <img src="/test.PNG" alt="Jager Logo" className="h-8 w-auto scale-150 pl-12" />
@@ -110,9 +107,8 @@ export const Header = () => {
           </div>
 
           {/* Mobile: Center Logo */}
-          <Link to="/" className="text-2xl md:hidden font-heading font-bold uppercase tracking-tighter absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-            <img src="/jager_logo.png" alt="Jager Logo" className="h-7 w-auto" />
-            <span className="text-2xl">JÄGER</span>
+          <Link to="/" className="md:hidden absolute left-1/2 transform -translate-x-1/2 flex items-center">
+            <img src="/jager_logo_v2.png" alt="Jager Logo" className="h-8 w-auto" />
           </Link>
 
           {/* Desktop: Center Navigation */}
