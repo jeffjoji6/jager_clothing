@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Package, Truck, CheckCircle, Trash2 } from "lucide-react";
+import { X, Package, Truck, CheckCircle, Trash2, Bell } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
