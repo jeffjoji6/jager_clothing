@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -64,7 +63,6 @@ const Orders = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -75,8 +73,7 @@ const Orders = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        <Header />
-        
+
         <div className="container mx-auto px-4 py-8 md:py-12">
           <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight mb-8">
             MY ORDERS

@@ -8,35 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminProtectedRoute } from "@/components/AdminProtectedRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import Home from "./pages/Home";
-import Collection from "./pages/Collection";
-import ProductDetail from "./pages/ProductDetail";
-import CustomLab from "./pages/CustomLab";
-import CustomDesign from "./pages/CustomDesign";
-import CustomLabBasic from "./pages/CustomLabBasic";
-import CustomLabPro from "./pages/CustomLabPro";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import AuthCallback from "./pages/AuthCallback";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import Orders from "./pages/Orders";
-import Profile from "./pages/Profile";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminOrders from "./pages/admin/Orders";
-import AdminOrderDetail from "./pages/admin/OrderDetail";
-import AdminCustomers from "./pages/admin/Customers";
-import AdminProducts from "./pages/admin/Products";
-import AdminInventory from "./pages/admin/Inventory";
-import AdminCustomProducts from "./pages/admin/CustomProducts";
-import AdminJagerPro from "./pages/admin/JagerPro";
-import AdminDesignRequests from "./pages/admin/DesignRequests";
-import AdminReports from "./pages/admin/Reports";
-import AdminSettings from "./pages/admin/Settings";
-import AdminBilling from "./pages/admin/Billing";
-import NotFound from "./pages/NotFound";
+import { AnimatedRoutes } from "@/components/AnimatedRoutes";
+
 
 const queryClient = new QueryClient();
 
@@ -62,112 +35,7 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <CookieConsent />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/refund-policy" element={<RefundPolicy />} />
-              <Route path="/shipping-policy" element={<ShippingPolicy />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/collection" element={<Collection />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              {/* <Route path="/custom-lab" element={<CustomLab />} /> */}
-              <Route path="/custom-design" element={<CustomDesign />} />
-              {/* <Route path="/custom-lab/basic" element={<CustomLabBasic />} />
-              <Route path="/custom-lab/pro" element={<CustomLabPro />} /> */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/profile" element={<Profile />} />
-
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminDashboard />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/orders" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminOrders />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/orders/:id" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminOrderDetail />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/customers" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminCustomers />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/inventory" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminInventory />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/custom-products" element={
-                <AdminProtectedRoute>
-                  <AdminLayout>
-                    <AdminCustomProducts />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/jager-pro" element={
-                <AdminProtectedRoute requiredRole="designer">
-                  <AdminLayout>
-                    <AdminJagerPro />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/design-requests" element={
-                <AdminProtectedRoute requiredRole="designer">
-                  <AdminLayout>
-                    <AdminDesignRequests />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/reports" element={
-                <AdminProtectedRoute requiredRole="admin">
-                  <AdminLayout>
-                    <AdminReports />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <AdminProtectedRoute requiredRole="admin">
-                  <AdminLayout>
-                    <AdminSettings />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-              <Route path="/admin/billing" element={
-                <AdminProtectedRoute requiredRole="admin">
-                  <AdminLayout>
-                    <AdminBilling />
-                  </AdminLayout>
-                </AdminProtectedRoute>
-              } />
-
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AnimatedRoutes />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>

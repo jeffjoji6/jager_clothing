@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,7 +98,6 @@ const ResetPassword = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
 
         <div className="container mx-auto px-4 py-12 md:py-16">
           <div className="max-w-md mx-auto text-center">
@@ -121,7 +119,6 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="max-w-md mx-auto">

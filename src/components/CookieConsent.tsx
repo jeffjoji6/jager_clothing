@@ -21,6 +21,11 @@ export const CookieConsent = () => {
         setIsVisible(false);
     };
 
+    const handleDismiss = () => {
+        localStorage.setItem('jager_cookie_consent', 'dismissed');
+        setIsVisible(false);
+    };
+
     return (
         <AnimatePresence>
             {isVisible && (
@@ -49,7 +54,7 @@ export const CookieConsent = () => {
                                     I Accept
                                 </Button>
                                 <button
-                                    onClick={() => setIsVisible(false)}
+                                    onClick={handleDismiss}
                                     className="p-2 text-gray-400 hover:text-white md:hidden absolute top-2 right-2"
                                 >
                                     <X size={20} />

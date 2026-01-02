@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useProduct } from "@/hooks/useProducts";
@@ -236,7 +235,6 @@ const ProductDetail = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -247,7 +245,6 @@ const ProductDetail = () => {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12 text-center">
           <p className="text-grey-text">Product not found</p>
         </div>
@@ -257,7 +254,6 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <Header />
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16">

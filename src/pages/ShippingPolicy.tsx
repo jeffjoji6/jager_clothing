@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 
@@ -9,8 +8,6 @@ export default function ShippingPolicy() {
                 <title>Shipping Policy | Jager Clothing</title>
                 <meta name="description" content="Read our Shipping Policy. Orders dispatched next day and delivered within 3-6 days." />
             </Helmet>
-
-            <Header />
 
             <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
                 <h1 className="text-4xl md:text-6xl font-heading font-bold uppercase mb-8 md:mb-12">Shipping Policy</h1>
@@ -33,6 +30,6 @@ export default function ShippingPolicy() {
             </main>
 
             <Footer />
-        </div>
+        </div >
     );
 }

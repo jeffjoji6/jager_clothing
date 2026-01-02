@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,7 +71,12 @@ const Login = () => {
     });
 
     if (error) {
-      toast.error("Failed to send OTP", { description: error.message });
+      if (error.message.includes("Signups not allowed")) {
+        toast.info("Account not found. Redirecting to signup...", { duration: 2000 });
+        navigate("/signup");
+      } else {
+        toast.error("Failed to send OTP", { description: error.message });
+      }
     } else {
       setOtpSent(true);
       setTimer(60);
@@ -127,7 +131,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="max-w-md mx-auto">

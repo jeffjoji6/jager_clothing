@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Cart } from "./Cart";
 import { useAuth } from "@/contexts/AuthContext";
+import { LiquidGlassSlider } from "./LiquidGlassSlider";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,7 +25,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b border-foreground">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-foreground/10 supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Mobile: Hamburger */}
@@ -112,15 +113,9 @@ export const Header = () => {
           </Link>
 
           {/* Desktop: Center Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link to="/collection" className="text-sm font-heading font-bold uppercase tracking-wide hover:text-jager-red transition-colors">
-              COLLECTION
-            </Link>
-            <span className="text-grey-text">|</span>
-            <Link to="/custom-design" className="text-sm font-heading font-bold uppercase tracking-wide hover:text-jager-red transition-colors">
-              CUSTOM DESIGN
-            </Link>
-          </nav>
+          <div className="hidden md:block">
+            <LiquidGlassSlider />
+          </div>
 
           {/* Right: Icons */}
           <div className="flex items-center gap-4">

@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 
@@ -9,8 +8,6 @@ export default function CookiePolicy() {
                 <title>Cookie Policy | Jager Clothing</title>
                 <meta name="description" content="Read our Cookie Policy to understand how Jager Clothing uses cookies to improve your experience." />
             </Helmet>
-
-            <Header />
 
             <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
                 <h1 className="text-4xl md:text-6xl font-heading font-bold uppercase mb-8">Cookie Policy</h1>
@@ -40,6 +37,6 @@ export default function CookiePolicy() {
             </main>
 
             <Footer />
-        </div>
+        </div >
     );
 }

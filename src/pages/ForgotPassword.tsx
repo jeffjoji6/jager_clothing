@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,7 +54,6 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="max-w-md mx-auto">

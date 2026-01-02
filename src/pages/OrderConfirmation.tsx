@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -146,7 +145,6 @@ const OrderConfirmation = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -157,7 +155,6 @@ const OrderConfirmation = () => {
   if (!order) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12">
           <p className="text-center">Order not found</p>
         </div>
@@ -168,7 +165,7 @@ const OrderConfirmation = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        <Header />
+
 
         <div className="container mx-auto px-4 py-8 md:py-12">
           <div className="max-w-3xl mx-auto text-center space-y-8">

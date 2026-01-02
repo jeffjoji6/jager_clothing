@@ -36,13 +36,10 @@ serve(async (req) => {
             throw new Error("Missing required fields: to/recipients, subject, html");
         }
 
-        const sender = from || "Jager Clothing <onboarding@resend.dev>";
+        // Use custom domain email if verified, otherwise use default
+        const sender = from || "Jager Clothing <support@jagerclothing.in>";
 
         // Send emails in parallel
-        // Note: Resend has rate limits. For very large batches (e.g. >100), 
-        // we should probably batch this or use Resend's batch API if available in this SDK version.
-        // For this implementation, we'll map promises.
-
         const results = await Promise.allSettled(targets.map(email =>
             resend.emails.send({
                 from: sender,

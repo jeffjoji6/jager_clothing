@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
-import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SlidersHorizontal } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { Loader2 } from "lucide-react";
 
 const Collection = () => {
@@ -85,79 +85,84 @@ const Collection = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
-            COLLECTION
-          </h1>
+        <ScrollReveal>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+              COLLECTION
+            </h1>
 
-          {/* Mobile: Filter Button */}
-          <div className="md:hidden">
-            <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  FILTER
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-[400px] overflow-y-auto">
-                <div className="py-6">
-                  <h3 className="text-xl font-heading font-bold uppercase mb-8">FILTERS</h3>
-                  <FilterContent
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    selectedSizes={selectedSizes}
-                    setSelectedSizes={setSelectedSizes}
-                    selectedColors={selectedColors}
-                    setSelectedColors={setSelectedColors}
-                    availableCategories={availableCategories}
-                  />
-                  <div className="mt-8 pt-6 border-t border-border">
-                    <Button className="w-full" onClick={() => setFilterOpen(false)}>
-                      SHOW RESULTS
-                    </Button>
+            {/* Mobile: Filter Button */}
+            <div className="md:hidden">
+              <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    FILTER
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[85vw] sm:w-[400px] overflow-y-auto bg-background/80 backdrop-blur-xl border-r border-white/10">
+                  <div className="py-6">
+                    <h3 className="text-xl font-heading font-bold uppercase mb-8">FILTERS</h3>
+                    <FilterContent
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                      selectedSizes={selectedSizes}
+                      setSelectedSizes={setSelectedSizes}
+                      selectedColors={selectedColors}
+                      setSelectedColors={setSelectedColors}
+                      availableCategories={availableCategories}
+                    />
+                    <div className="mt-8 pt-6 border-t border-border">
+                      <Button className="w-full" onClick={() => setFilterOpen(false)}>
+                        SHOW RESULTS
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-4 gap-8">
           {/* Desktop: Sidebar Filters */}
           <aside className="hidden md:block">
             <div className="sticky top-24 space-y-8">
-              <FilterContent
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                selectedSizes={selectedSizes}
-                setSelectedSizes={setSelectedSizes}
-                selectedColors={selectedColors}
-                setSelectedColors={setSelectedColors}
-                availableCategories={availableCategories}
-              />
+              <div className="p-6 rounded-lg bg-black/5 backdrop-blur-sm border border-black/5">
+                <FilterContent
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  selectedSizes={selectedSizes}
+                  setSelectedSizes={setSelectedSizes}
+                  selectedColors={selectedColors}
+                  setSelectedColors={setSelectedColors}
+                  availableCategories={availableCategories}
+                />
+              </div>
             </div>
           </aside>
 
           {/* Product Grid */}
           <div className="md:col-span-3">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-grey-text font-body">
-                {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
-              </p>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-sm font-heading uppercase border-b border-foreground bg-transparent py-1 focus:outline-none"
-              >
-                <option>FEATURED</option>
-                <option>PRICE: LOW TO HIGH</option>
-                <option>PRICE: HIGH TO LOW</option>
-                <option>NEWEST</option>
-              </select>
-            </div>
+            <ScrollReveal>
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-sm text-grey-text font-body">
+                  {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
+                </p>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-sm font-heading uppercase border-b border-foreground bg-transparent py-1 focus:outline-none"
+                >
+                  <option>FEATURED</option>
+                  <option>PRICE: LOW TO HIGH</option>
+                  <option>PRICE: HIGH TO LOW</option>
+                  <option>NEWEST</option>
+                </select>
+              </div>
+            </ScrollReveal>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -173,7 +178,7 @@ const Collection = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map((product) => {
+                {filteredProducts.map((product, index) => {
                   // Calculate if product is out of stock based on active filters
                   const isOutOfStock = product.variants
                     .filter(v => {
@@ -184,15 +189,16 @@ const Collection = () => {
                     .every(v => v.stock <= 0);
 
                   return (
-                    <ProductCard
-                      key={product.id}
-                      id={product.id}
-                      name={product.name}
-                      price={Number(product.base_price)}
-                      image={product.images}
-                      isNew={product.is_new}
-                      isOutOfStock={isOutOfStock}
-                    />
+                    <ScrollReveal key={product.id} delay={index * 0.05} variant="fade-up">
+                      <ProductCard
+                        id={product.id}
+                        name={product.name}
+                        price={Number(product.base_price)}
+                        image={product.images}
+                        isNew={product.is_new}
+                        isOutOfStock={isOutOfStock}
+                      />
+                    </ScrollReveal>
                   );
                 })}
               </div>
@@ -251,7 +257,7 @@ const FilterContent = ({
                 name="category"
                 checked={selectedCategory === cat}
                 onChange={() => setSelectedCategory(cat)}
-                className="w-4 h-4 border-2 border-foreground"
+                className="w-4 h-4 border-2 border-foreground accent-jager-red"
               />
               <span className="text-sm font-body group-hover:text-jager-red transition-colors">{cat}</span>
             </label>
@@ -274,7 +280,7 @@ const FilterContent = ({
                     setSelectedSizes(selectedSizes.filter(s => s !== size));
                   }
                 }}
-                className="w-4 h-4 border-2 border-foreground"
+                className="w-4 h-4 border-2 border-foreground accent-jager-red"
               />
               <span className="text-sm font-body group-hover:text-jager-red transition-colors">{size}</span>
             </label>
@@ -287,7 +293,7 @@ const FilterContent = ({
         <div className="flex flex-wrap gap-3">
           {[
             { name: "BLACK", bg: "bg-foreground" },
-            { name: "WHITE", bg: "bg-background border-2 border-foreground" },
+            { name: "WHITE", bg: "bg-background" },
             { name: "GREY", bg: "bg-grey-bg" },
           ].map((color) => (
             <button
@@ -299,7 +305,7 @@ const FilterContent = ({
                   setSelectedColors([...selectedColors, color.name]);
                 }
               }}
-              className={`w-8 h-8 ${color.bg} hover:ring-2 hover:ring-jager-red transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-jager-red' : ''
+              className={`w-8 h-8 ${color.bg} border border-foreground/20 hover:border-jager-red transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-jager-red ring-offset-2' : ''
                 }`}
               title={color.name}
             />

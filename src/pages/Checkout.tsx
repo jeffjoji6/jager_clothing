@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -396,7 +395,6 @@ const Checkout = () => {
   if (cartLoading || addressesLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -407,7 +405,6 @@ const Checkout = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        <Header />
 
         <div className="container mx-auto px-4 py-8 md:py-12">
           <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight mb-8">

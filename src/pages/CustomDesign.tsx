@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { ThreeDTiltCard } from "@/components/ThreeDTiltCard";
 
 export default function CustomDesign() {
     const [loading, setLoading] = useState(false);
@@ -162,95 +163,91 @@ export default function CustomDesign() {
                 <link rel="canonical" href="https://jagerclothing.com/custom-design" />
             </Helmet>
 
-            <Header />
-
             {/* Hero Section - Matching Reference Image */}
-            <motion.section
-                initial="hidden"
-                animate="visible"
-                variants={containerVariants}
+            <ScrollReveal
                 className="relative py-16 md:py-24 px-4 overflow-hidden"
             >
                 <div className="container mx-auto max-w-4xl text-center relative z-10">
 
                     {/* Badge - Re-added per reference image */}
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-50 text-red-600 mb-8 border border-red-100">
+                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-50 text-red-600 mb-8 border border-red-100">
                         <Sparkles className="w-4 h-4" />
                         <span className="text-xs font-bold uppercase tracking-widest">Premium Custom Lab</span>
-                    </motion.div>
+                    </div>
 
                     {/* Heading - Split Colors per reference image */}
-                    <motion.h1 variants={itemVariants} className="text-5xl xs:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 leading-[0.9]">
-                        <span className="text-foreground">Create Your</span> <span className="text-[#C41E3A]">Masterpiece</span>
-                    </motion.h1>
+                    <h1 className="text-5xl xs:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 leading-[0.9]">
+                        <span className="text-foreground">Create Your</span> <span className="text-[#AF2018]">Masterpiece</span>
+                    </h1>
 
-                    <motion.p variants={itemVariants} className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-normal leading-relaxed px-2">
+                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-normal leading-relaxed px-2">
                         From bulk orders to unique one-offs. Bring your vision to life with our premium custom clothing service. Direct consultation. No limits.
-                    </motion.p>
+                    </p>
 
-                    <motion.div variants={itemVariants}>
+                    <div>
                         <Button
-                            className="rounded-full px-10 py-7 text-lg bg-[#C41E3A] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95"
+                            className="rounded-full px-10 py-7 text-lg bg-[#AF2018] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
                         >
                             Start Your Design
                         </Button>
-                    </motion.div>
+                    </div>
                 </div>
-            </motion.section>
+            </ScrollReveal>
 
             {/* Process Steps - Clean Layout (No Borders) */}
             <section className="py-12 md:py-20 relative z-10">
                 <div className="container mx-auto px-4 max-w-6xl">
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                        variants={containerVariants}
+                    <ScrollReveal
                         className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-12 text-center"
                     >
-                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
-                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                <PencilRuler className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                        <ThreeDTiltCard className="rounded-3xl h-full">
+                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
+                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                    <PencilRuler className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">1. Brief</h3>
+                                <p className="text-sm text-muted-foreground">Share your idea, quantity, and budget. Simple form, instant connection.</p>
                             </div>
-                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">1. Brief</h3>
-                            <p className="text-sm text-muted-foreground">Share your idea, quantity, and budget. Simple form, instant connection.</p>
-                        </motion.div>
+                        </ThreeDTiltCard>
 
-                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
-                            {/* Connector line for desktop */}
-                            <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
+                        <ThreeDTiltCard className="rounded-3xl h-full">
+                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
+                                {/* Connector line for desktop */}
+                                <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
 
-                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                    <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">2. Consult</h3>
+                                <p className="text-sm text-muted-foreground">Chat directly with our design team on WhatsApp to finalize details.</p>
                             </div>
-                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">2. Consult</h3>
-                            <p className="text-sm text-muted-foreground">Chat directly with our design team on WhatsApp to finalize details.</p>
-                        </motion.div>
+                        </ThreeDTiltCard>
 
-                        <motion.div variants={itemVariants} className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300">
-                            {/* Connector line for desktop */}
-                            <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
+                        <ThreeDTiltCard className="rounded-3xl h-full">
+                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
+                                {/* Connector line for desktop */}
+                                <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
 
-                            <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                <Shirt className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
+                                    <Shirt className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">3. Create</h3>
+                                <p className="text-sm text-muted-foreground">We produce your premium custom gear and ship it to your door.</p>
                             </div>
-                            <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">3. Create</h3>
-                            <p className="text-sm text-muted-foreground">We produce your premium custom gear and ship it to your door.</p>
-                        </motion.div>
-                    </motion.div>
+                        </ThreeDTiltCard>
+                    </ScrollReveal>
                 </div>
             </section>
 
-            {/* Main Form Section - Simplified Card */}
-            <section id="brief-form" className="py-8 md:py-20 px-0 md:px-4 relative z-10">
+            {/* Main Form Section - Liquid Glass UI */}
+            <section id="brief-form" className="py-8 md:py-20 px-0 md:px-4 relative z-10 transition-colors duration-500">
+                {/* Ambient Background Glow for Glass Effect */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-5xl max-h-[800px] bg-jager-red/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
+
                 <div className="container mx-auto max-w-4xl">
-                    <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, type: "spring" }}
-                        className="bg-card border border-border md:rounded-3xl p-6 md:p-12 relative overflow-hidden"
+                    <ScrollReveal
+                        className="bg-background/40 backdrop-blur-xl border border-white/10 md:rounded-3xl p-6 md:p-12 relative overflow-hidden shadow-2xl"
                     >
                         <div className="text-center mb-8 md:mb-10 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Project Brief</h2>
@@ -402,6 +399,7 @@ export default function CustomDesign() {
                                                 </>
                                             )}
                                         </div>
+
                                     </Label>
                                 </div>
                             </div>
@@ -435,11 +433,11 @@ export default function CustomDesign() {
                                 By clicking "Start Chat", you agree to be contacted via WhatsApp regarding your request.
                             </p>
                         </form>
-                    </motion.div>
+                    </ScrollReveal>
                 </div>
-            </section>
+            </section >
 
             <Footer />
-        </div>
+        </div >
     );
 }

@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 
@@ -10,7 +9,7 @@ export default function TermsOfService() {
                 <meta name="description" content="Read our Terms of Service to understand the rules and regulations for using the Jager Clothing website." />
             </Helmet>
 
-            <Header />
+
 
             <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
                 <h1 className="text-4xl md:text-6xl font-heading font-bold uppercase mb-8 md:mb-12">Terms of Service</h1>
@@ -158,6 +157,6 @@ export default function TermsOfService() {
             </main>
 
             <Footer />
-        </div>
+        </div >
     );
 }

@@ -1,4 +1,3 @@
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 
@@ -9,8 +8,6 @@ export default function RefundPolicy() {
                 <title>Refund Policy | Jager Clothing</title>
                 <meta name="description" content="Read our Refund and Exchange Policy. Jager Clothing offers exchanges for defects and cancellations within 24 hours." />
             </Helmet>
-
-            <Header />
 
             <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
                 <h1 className="text-4xl md:text-6xl font-heading font-bold uppercase mb-8 md:mb-12">Refund Policy</h1>
@@ -62,6 +59,6 @@ export default function RefundPolicy() {
             </main>
 
             <Footer />
-        </div>
+        </div >
     );
 }

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
 import { Ticker } from "@/components/Ticker";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,14 @@ import heroImage from "@/assets/hero-jager.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
 import { Footer } from "@/components/Footer";
 import { CategoryScroll } from "@/components/CategoryScroll";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const { data: featuredProducts, isLoading } = useFeaturedProducts();
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <Header />
       <Ticker />
 
       {/* Hero Section */}
@@ -57,21 +57,23 @@ const Home = () => {
         <CategoryScroll />
       </div>
 
-      {/* Collection Grid */}
+      {/* Featured Collection Grid */}
       <section className="container mx-auto px-4 py-16 md:py-32">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 view-transition-name:section-title text-center md:text-left">
-          <div className="w-full text-center md:text-left">
-            <h2 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
-              LATEST DROP
-            </h2>
+        <ScrollReveal>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 text-center md:text-left">
+            <div className="w-full text-center md:text-left">
+              <h2 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+                LATEST DROP
+              </h2>
+            </div>
+            <Button asChild variant="link" className="text-foreground hidden md:flex group">
+              <Link to="/collection">
+                VIEW ALL
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
           </div>
-          <Button asChild variant="link" className="text-foreground hidden md:flex group">
-            <Link to="/collection">
-              VIEW ALL
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
-        </div>
+        </ScrollReveal>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -80,19 +82,21 @@ const Home = () => {
         ) : featuredProducts && featuredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {featuredProducts.slice(0, 4).map((product, index) => (
-              <div
+              <ScrollReveal
                 key={product.id}
-                className="animate-in fade-in slide-in-from-bottom-8 duration-700"
-                style={{ animationDelay: `${index * 100}ms` }}
+                delay={index * 0.1}
+                variant="fade-up"
               >
-                <ProductCard
-                  id={product.id}
-                  name={product.name}
-                  price={Number(product.base_price)}
-                  image={product.images}
-                  isNew={product.is_new}
-                />
-              </div>
+                <div className="h-full">
+                  <ProductCard
+                    id={product.id}
+                    name={product.name}
+                    price={Number(product.base_price)}
+                    image={product.images}
+                    isNew={product.is_new}
+                  />
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         ) : (
@@ -112,15 +116,15 @@ const Home = () => {
       <section className="relative bg-foreground text-background py-16 md:py-32 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-center">
-            <div className="order-2 md:order-1 relative group">
+            <ScrollReveal variant="slide-in" className="order-2 md:order-1 relative group">
               <div className="absolute -inset-4 bg-jager-red/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <img
                 src={customLabTeaser}
                 alt="Custom Lab"
                 className="w-full aspect-[4/5] md:aspect-[4/3] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 relative z-10"
               />
-            </div>
-            <div className="text-center md:text-left space-y-6 md:space-y-8 order-1 md:order-2">
+            </ScrollReveal>
+            <ScrollReveal className="text-center md:text-left space-y-6 md:space-y-8 order-1 md:order-2">
               <span className="text-xs md:text-sm font-bold text-jager-red uppercase tracking-widest">Jäger Custom Lab</span>
               <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.9]">
                 YOUR VISION.<br />OUR QUALITY.
@@ -131,7 +135,7 @@ const Home = () => {
               <Button asChild variant="jagerRed" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest">
                 <Link to="/custom-design">START CREATING</Link>
               </Button>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
