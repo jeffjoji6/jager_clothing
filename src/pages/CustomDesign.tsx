@@ -163,30 +163,31 @@ export default function CustomDesign() {
                 <link rel="canonical" href="https://jagerclothing.com/custom-design" />
             </Helmet>
 
-            {/* Hero Section - Matching Reference Image */}
+            {/* Hero Section - Mobile Optimized */}
             <ScrollReveal
-                className="relative py-16 md:py-24 px-4 overflow-hidden"
+                className="relative py-10 md:py-24 px-4 overflow-hidden"
             >
                 <div className="container mx-auto max-w-4xl text-center relative z-10">
 
-                    {/* Badge - Re-added per reference image */}
-                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-50 text-red-600 mb-8 border border-red-100">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-secondary/30 text-jager-red mb-6 md:mb-8 border border-white/10">
                         <Sparkles className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-widest">Premium Custom Lab</span>
+                        <span className="text-sm font-bold uppercase tracking-widest">Premium Custom Lab</span>
                     </div>
 
-                    {/* Heading - Split Colors per reference image */}
-                    <h1 className="text-5xl xs:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 leading-[0.9]">
-                        <span className="text-foreground">Create Your</span> <span className="text-[#AF2018]">Masterpiece</span>
+                    {/* Heading - Larger on mobile */}
+                    <h1 className="text-4xl sm:text-5xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-4 md:mb-6 leading-[0.95]">
+                        <span className="text-foreground">Create Your</span><br className="md:hidden" />
+                        <span className="text-[#AF2018]"> Masterpiece</span>
                     </h1>
 
-                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-normal leading-relaxed px-2">
-                        From bulk orders to unique one-offs. Bring your vision to life with our premium custom clothing service. Direct consultation. No limits.
+                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 md:mb-10 font-normal leading-relaxed">
+                        From bulk orders to unique one-offs. Direct consultation. No limits.
                     </p>
 
                     <div>
                         <Button
-                            className="rounded-full px-10 py-7 text-lg bg-[#AF2018] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95"
+                            className="rounded-xl md:rounded-full px-8 py-6 md:px-10 md:py-7 text-base md:text-lg bg-[#AF2018] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95 w-full md:w-auto"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
                         >
                             Start Your Design
@@ -195,59 +196,68 @@ export default function CustomDesign() {
                 </div>
             </ScrollReveal>
 
-            {/* Process Steps - Clean Layout (No Borders) */}
-            <section className="py-12 md:py-20 relative z-10">
-                <div className="container mx-auto px-4 max-w-6xl">
+            {/* Process Steps - Footer-Style Cards */}
+            <section className="py-8 md:py-20 relative z-10 px-4">
+                <div className="container mx-auto max-w-6xl">
+
+                    {/* Section Header for Mobile */}
+                    <div className="text-center mb-8 md:hidden">
+                        <h2 className="text-lg font-heading font-bold uppercase tracking-widest">How It Works</h2>
+                    </div>
+
                     <ScrollReveal
-                        className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-12 text-center"
+                        className="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-12"
                     >
-                        <ThreeDTiltCard className="rounded-3xl h-full">
-                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
-                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                    <PencilRuler className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                        {/* Step 1 - Brief */}
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                            <div className="flex items-center gap-4 md:flex-col md:text-center">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                    <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
-                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">1. Brief</h3>
-                                <p className="text-sm text-muted-foreground">Share your idea, quantity, and budget. Simple form, instant connection.</p>
-                            </div>
-                        </ThreeDTiltCard>
-
-                        <ThreeDTiltCard className="rounded-3xl h-full">
-                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
-                                {/* Connector line for desktop */}
-                                <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
-
-                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                    <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                                <div className="flex-1">
+                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">1. Brief</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Share your idea, quantity, and budget.</p>
                                 </div>
-                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">2. Consult</h3>
-                                <p className="text-sm text-muted-foreground">Chat directly with our design team on WhatsApp to finalize details.</p>
                             </div>
-                        </ThreeDTiltCard>
+                        </div>
 
-                        <ThreeDTiltCard className="rounded-3xl h-full">
-                            <div className="space-y-3 relative p-6 rounded-3xl hover:bg-jager-red/5 transition-colors duration-300 bg-background/50 border border-white/5 h-full">
-                                {/* Connector line for desktop */}
-                                <div className="hidden md:block absolute top-1/2 -left-6 w-12 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10 opacity-30" />
-
-                                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-primary/5 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-300">
-                                    <Shirt className="w-6 h-6 md:w-8 md:h-8 text-jager-red" />
+                        {/* Step 2 - Consult */}
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                            <div className="flex items-center gap-4 md:flex-col md:text-center">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                    <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
-                                <h3 className="font-heading text-lg md:text-2xl font-bold uppercase">3. Create</h3>
-                                <p className="text-sm text-muted-foreground">We produce your premium custom gear and ship it to your door.</p>
+                                <div className="flex-1">
+                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">2. Consult</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Chat directly on WhatsApp to finalize details.</p>
+                                </div>
                             </div>
-                        </ThreeDTiltCard>
+                        </div>
+
+                        {/* Step 3 - Create */}
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                            <div className="flex items-center gap-4 md:flex-col md:text-center">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                    <Shirt className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">3. Create</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">We produce and ship your custom gear.</p>
+                                </div>
+                            </div>
+                        </div>
                     </ScrollReveal>
                 </div>
             </section>
 
             {/* Main Form Section - Liquid Glass UI */}
-            <section id="brief-form" className="py-8 md:py-20 px-0 md:px-4 relative z-10 transition-colors duration-500">
+            <section id="brief-form" className="py-8 md:py-20 px-4 relative z-10 transition-colors duration-500">
                 {/* Ambient Background Glow for Glass Effect */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-5xl max-h-[800px] bg-jager-red/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
                 <div className="container mx-auto max-w-4xl">
                     <ScrollReveal
-                        className="bg-background/40 backdrop-blur-xl border border-white/10 md:rounded-3xl p-6 md:p-12 relative overflow-hidden shadow-2xl"
+                        className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-3xl p-4 md:p-12 relative overflow-hidden shadow-2xl"
                     >
                         <div className="text-center mb-8 md:mb-10 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Project Brief</h2>
@@ -336,7 +346,7 @@ export default function CustomDesign() {
                                     />
                                     <Label
                                         htmlFor="image-upload"
-                                        className={`flex flex-col items-center justify-center w-full h-24 md:h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:scale-105 ${formData.image_url
+                                        className={`flex flex-col items-center justify-center w-full h-20 md:h-32 border-2 border-dashed rounded-lg md:rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:scale-[1.02] ${formData.image_url
                                             ? "border-green-500 bg-green-500/10"
                                             : "border-input"
                                             }`}

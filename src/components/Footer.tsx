@@ -14,65 +14,69 @@ export const Footer = () => {
     return (
         <footer className="bg-background border-t border-foreground pt-12 md:pt-20 pb-8 md:pb-10">
             <div className="container mx-auto px-4">
-                {/* Mobile: Accordion Layout */}
-                <div className="md:hidden mb-12">
-                    <div className="mb-8 text-center">
+                {/* Mobile: Accordion Layout - Redesigned */}
+                <div className="md:hidden mb-8">
+                    {/* Logo Section */}
+                    <div className="mb-10 text-center">
                         <Link to="/" className="inline-flex items-center">
-                            <img src="/jager_logo_v2.png" alt="Jager" className="h-10 w-auto" />
+                            <img src="/jager_logo_v2.png" alt="Jager" className="h-12 w-auto" />
                         </Link>
+                        <p className="text-sm text-muted-foreground mt-3">Premium Streetwear</p>
                     </div>
 
-                    <Accordion type="single" collapsible className="w-full mb-8">
-                        <AccordionItem value="shop">
-                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">SHOP</AccordionTrigger>
+                    {/* Accordion Navigation */}
+                    <Accordion type="single" collapsible className="w-full mb-10 space-y-2">
+                        <AccordionItem value="shop" className="border-b-0 bg-secondary/30 rounded-xl px-4">
+                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-base py-4">SHOP</AccordionTrigger>
                             <AccordionContent>
-                                <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
-                                    <li><Link to="/collection" className="block hover:text-foreground transition-colors">Collection</Link></li>
-                                    <li><Link to="/custom-design" className="block hover:text-foreground transition-colors">Custom Design</Link></li>
+                                <ul className="space-y-4 text-base font-body text-muted-foreground pb-4">
+                                    <li><Link to="/collection" className="block hover:text-foreground transition-colors py-1">Collection</Link></li>
+                                    <li><Link to="/custom-design" className="block hover:text-foreground transition-colors py-1">Custom Design</Link></li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
-                        <AccordionItem value="support">
-                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">SUPPORT</AccordionTrigger>
+                        <AccordionItem value="support" className="border-b-0 bg-secondary/30 rounded-xl px-4">
+                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-base py-4">SUPPORT</AccordionTrigger>
                             <AccordionContent>
-                                <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
-                                    <li><Link to="/contact" className="block hover:text-foreground transition-colors">Contact Us</Link></li>
-                                    <li><Link to="/shipping-policy" className="block hover:text-foreground transition-colors">Shipping Policy</Link></li>
-                                    <li><Link to="/refund-policy" className="block hover:text-foreground transition-colors">Returns & Exchange</Link></li>
+                                <ul className="space-y-4 text-base font-body text-muted-foreground pb-4">
+                                    <li><Link to="/contact" className="block hover:text-foreground transition-colors py-1">Contact Us</Link></li>
+                                    <li><Link to="/shipping-policy" className="block hover:text-foreground transition-colors py-1">Shipping Policy</Link></li>
+                                    <li><Link to="/refund-policy" className="block hover:text-foreground transition-colors py-1">Returns & Exchange</Link></li>
                                     <li>
                                         <SizeChartModal>
-                                            <button className="block hover:text-foreground transition-colors text-left w-full">Size Guide</button>
+                                            <button className="block hover:text-foreground transition-colors text-left w-full py-1">Size Guide</button>
                                         </SizeChartModal>
                                     </li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
-                        <AccordionItem value="legal">
-                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-sm">LEGAL</AccordionTrigger>
+                        <AccordionItem value="legal" className="border-b-0 bg-secondary/30 rounded-xl px-4">
+                            <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-base py-4">LEGAL</AccordionTrigger>
                             <AccordionContent>
-                                <ul className="space-y-4 text-sm font-body text-muted-foreground pt-2 pb-4">
-                                    <li><Link to="/terms-of-service" className="block hover:text-foreground transition-colors">Terms of Service</Link></li>
-                                    <li><Link to="/privacy-policy" className="block hover:text-foreground transition-colors">Privacy Policy</Link></li>
-                                    <li><Link to="/cookie-policy" className="block hover:text-foreground transition-colors">Cookie Policy</Link></li>
+                                <ul className="space-y-4 text-base font-body text-muted-foreground pb-4">
+                                    <li><Link to="/terms-of-service" className="block hover:text-foreground transition-colors py-1">Terms of Service</Link></li>
+                                    <li><Link to="/privacy-policy" className="block hover:text-foreground transition-colors py-1">Privacy Policy</Link></li>
+                                    <li><Link to="/cookie-policy" className="block hover:text-foreground transition-colors py-1">Cookie Policy</Link></li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
 
-                    <div className="space-y-6 text-center">
-                        <h3 className="text-sm font-heading font-bold uppercase tracking-widest">STAY CONNECTED</h3>
-                        <div className="flex justify-center gap-6">
-                            <a href="#" className="p-2 rounded-full bg-secondary hover:bg-jager-red hover:text-white transition-colors">
-                                <Instagram className="h-5 w-5" />
+                    {/* Stay Connected Section */}
+                    <div className="space-y-6 text-center bg-secondary/20 rounded-2xl p-6">
+                        <h3 className="text-lg font-heading font-bold uppercase tracking-widest">STAY CONNECTED</h3>
+                        <div className="flex justify-center gap-4">
+                            <a href="https://instagram.com/jagerclothing" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-background border border-border hover:bg-jager-red hover:border-jager-red hover:text-white transition-all">
+                                <Instagram className="h-6 w-6" />
                             </a>
                         </div>
 
-                        <div className="pt-6 border-t border-border">
-                            <p className="text-sm text-muted-foreground mb-4">Subscribe for exclusive drops.</p>
-                            <div className="flex gap-2 max-w-xs mx-auto">
-                                <Input placeholder="Enter your email" className="h-10 bg-background" />
-                                <Button size="sm" variant="default" className="h-10 px-4">
-                                    <Mail className="h-4 w-4" />
+                        <div className="pt-4">
+                            <p className="text-base text-muted-foreground mb-4">Subscribe for exclusive drops & updates</p>
+                            <div className="flex gap-2">
+                                <Input placeholder="Your email" className="h-12 bg-background text-base rounded-xl" />
+                                <Button size="lg" className="h-12 px-6 rounded-xl font-bold">
+                                    <Mail className="h-5 w-5" />
                                 </Button>
                             </div>
                         </div>

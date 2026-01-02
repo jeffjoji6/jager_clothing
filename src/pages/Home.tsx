@@ -7,7 +7,6 @@ import { Loader2, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-jager.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
 import { Footer } from "@/components/Footer";
-import { CategoryScroll } from "@/components/CategoryScroll";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { motion } from "framer-motion";
 
@@ -18,33 +17,33 @@ const Home = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Ticker />
 
-      {/* Hero Section */}
-      <section className="relative h-[85vh] md:h-[95vh] overflow-hidden">
+      {/* Hero Section - Mobile Optimized */}
+      <section className="relative h-[75vh] md:h-[95vh] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={heroImage}
             alt="Jager Hero"
             className="w-full h-full object-cover scale-105 animate-slow-zoom"
           />
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/50" />
         </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-4xl">
+          <div className="space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-4xl">
             <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black uppercase tracking-tighter text-white leading-[0.9] md:leading-[0.85]">
               CHASE.<br />CONQUER.<br />CREATE.
             </h1>
-            <p className="text-white/90 text-base sm:text-lg md:text-xl font-body max-w-xs sm:max-w-xl mx-auto tracking-wide leading-relaxed">
+            <p className="text-white/90 text-base md:text-xl font-body max-w-md mx-auto tracking-wide leading-relaxed">
               Premium streetwear for the relentless.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full justify-center items-center pt-6 md:pt-8 px-4 sm:px-0">
-              <Button asChild variant="hero" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest group">
+            <div className="flex flex-col gap-3 w-full justify-center items-center pt-4 md:pt-8 px-4 max-w-md mx-auto">
+              <Button asChild variant="hero" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest group rounded-xl md:rounded-full">
                 <Link to="/collection">
                   SHOP THE DROP
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="heroOutline" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest bg-black/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-black">
+              <Button asChild variant="heroOutline" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest bg-black/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-black rounded-xl md:rounded-full">
                 <Link to="/custom-design">ENTER CUSTOM DESIGN</Link>
               </Button>
             </div>
@@ -52,19 +51,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Category Scroll (Mobile Only) */}
-      <div className="md:hidden">
-        <CategoryScroll />
-      </div>
-
-      {/* Featured Collection Grid */}
+      {/* Featured Collection Grid - Mobile Optimized */}
       <section className="container mx-auto px-4 py-16 md:py-32">
         <ScrollReveal>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 text-center md:text-left">
             <div className="w-full text-center md:text-left">
-              <h2 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+              <h2 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
                 LATEST DROP
               </h2>
+              <p className="text-sm md:text-base text-muted-foreground mt-2">Fresh styles, limited quantities</p>
             </div>
             <Button asChild variant="link" className="text-foreground hidden md:flex group">
               <Link to="/collection">
@@ -105,34 +100,34 @@ const Home = () => {
           </div>
         )}
 
-        <div className="mt-8 md:hidden text-center">
-          <Button asChild variant="outline" className="w-full">
+        <div className="mt-8 md:mt-8 text-center">
+          <Button asChild variant="outline" className="w-full md:w-auto rounded-xl px-8 h-12 text-base font-bold">
             <Link to="/collection">VIEW ALL PRODUCTS</Link>
           </Button>
         </div>
       </section>
 
-      {/* Custom Lab Teaser */}
-      <section className="relative bg-foreground text-background py-16 md:py-32 overflow-hidden">
+      {/* Custom Lab Teaser - Mobile Optimized */}
+      <section className="relative bg-foreground text-background py-12 md:py-32 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-center">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-20 items-center">
             <ScrollReveal variant="slide-in" className="order-2 md:order-1 relative group">
               <div className="absolute -inset-4 bg-jager-red/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <img
                 src={customLabTeaser}
                 alt="Custom Lab"
-                className="w-full aspect-[4/5] md:aspect-[4/3] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 relative z-10"
+                className="w-full aspect-[4/5] md:aspect-[4/3] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 relative z-10 rounded-xl md:rounded-none"
               />
             </ScrollReveal>
-            <ScrollReveal className="text-center md:text-left space-y-6 md:space-y-8 order-1 md:order-2">
-              <span className="text-xs md:text-sm font-bold text-jager-red uppercase tracking-widest">Jäger Custom Lab</span>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.9]">
+            <ScrollReveal className="text-center md:text-left space-y-4 md:space-y-8 order-1 md:order-2">
+              <span className="text-sm font-bold text-jager-red uppercase tracking-widest">Jäger Custom Design</span>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.95]">
                 YOUR VISION.<br />OUR QUALITY.
               </h2>
               <p className="text-base md:text-xl font-body text-background/80 max-w-md mx-auto md:mx-0 leading-relaxed">
-                Create custom designs or let our pros handle it. From single pieces to team orders, we bring your ideas to life.
+                Create custom designs or let our pros handle it. From single pieces to team orders.
               </p>
-              <Button asChild variant="jagerRed" size="xl" className="w-full sm:w-auto min-w-[200px] h-14 text-base tracking-widest">
+              <Button asChild variant="jagerRed" size="xl" className="w-full md:w-auto min-w-[200px] h-12 md:h-14 text-base tracking-widest rounded-xl md:rounded-full">
                 <Link to="/custom-design">START CREATING</Link>
               </Button>
             </ScrollReveal>
