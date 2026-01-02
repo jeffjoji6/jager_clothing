@@ -13,6 +13,7 @@ import {
 import { Cart } from "./Cart";
 import { useAuth } from "@/contexts/AuthContext";
 import { LiquidGlassSlider } from "./LiquidGlassSlider";
+import { NotificationButton } from "@/components/NotificationButton";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -164,6 +165,7 @@ export const Header = () => {
                 <User className="h-5 w-5" />
               </Link>
             )}
+            <NotificationButton />
             <Cart />
           </div>
         </div>

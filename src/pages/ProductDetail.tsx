@@ -496,16 +496,24 @@ const ProductDetail = () => {
 
       {/* Sticky Bottom Bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-40 transition-transform duration-300 md:hidden ${showStickyBar ? "translate-y-0" : "translate-y-full"
+        className={`fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border p-4 z-40 transition-transform duration-300 md:hidden ${showStickyBar ? "translate-y-0" : "translate-y-full"
           }`}
       >
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <p className="font-heading font-bold uppercase text-sm truncate">{product.name}</p>
-            <p className="font-body text-sm">₹{sellingPrice.toLocaleString()}</p>
-          </div>
-          <Button variant="hero" onClick={handleBuyNow} className="w-1/2">
-            BUY NOW
+        <div className="flex items-center gap-3">
+          <Button
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-bold uppercase tracking-wider h-12 text-sm"
+            onClick={handleAddToCart}
+            disabled={!selectedSize || !currentVariant || currentVariant.stock <= 0 || isAdding}
+          >
+            {isAdding ? "Adding..." : currentVariant && currentVariant.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 h-12 text-sm font-bold uppercase tracking-widest border-foreground hover:bg-foreground hover:text-background transition-colors"
+            onClick={handleBuyNow}
+            disabled={!currentVariant || currentVariant.stock <= 0}
+          >
+            Buy Now
           </Button>
         </div>
       </div>

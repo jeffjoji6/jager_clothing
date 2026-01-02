@@ -93,6 +93,23 @@ export default function CustomDesign() {
                 console.log("DB INSERT SUCCESS:", insertedData);
                 setSubmitStatus({ type: 'success', message: "Request saved securely to database!" });
                 toast.success("Request saved to database!");
+
+                // Send email notification to admin
+                try {
+                    const { sendCustomDesignNotificationEmail } = await import('@/lib/emailService');
+                    await sendCustomDesignNotificationEmail({
+                        customerName: formData.name,
+                        customerEmail: formData.email,
+                        brief: formData.brief,
+                        quantity: formData.quantity,
+                        budget: formData.budget || '',
+                        imageUrl: formData.image_url,
+                    });
+                    console.log("Email notification sent successfully");
+                } catch (emailError) {
+                    console.error("Error sending email notification:", emailError);
+                    // Don't fail the submission, just log
+                }
             }
 
             // 2. Format WhatsApp Message
@@ -165,29 +182,36 @@ export default function CustomDesign() {
 
             {/* Hero Section - Mobile Optimized */}
             <ScrollReveal
-                className="relative py-10 md:py-24 px-4 overflow-hidden"
+                className="relative py-12 md:py-24 px-4 overflow-hidden bg-secondary/5"
             >
+                {/* Abstract Background Elements */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-jager-red/5 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-10%] left-[-20%] w-[400px] h-[400px] bg-foreground/5 rounded-full blur-[80px]" />
+                </div>
+
                 <div className="container mx-auto max-w-4xl text-center relative z-10">
 
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-secondary/30 text-jager-red mb-6 md:mb-8 border border-white/10">
-                        <Sparkles className="w-4 h-4" />
-                        <span className="text-sm font-bold uppercase tracking-widest">Premium Custom Lab</span>
+                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-background border border-border shadow-sm text-jager-red mb-8 md:mb-10">
+                        <Sparkles className="w-4 h-4 animate-pulse" />
+                        <span className="text-xs md:text-sm font-bold uppercase tracking-[0.2em]">Premium Custom Lab</span>
                     </div>
 
                     {/* Heading - Larger on mobile */}
-                    <h1 className="text-4xl sm:text-5xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-4 md:mb-6 leading-[0.95]">
-                        <span className="text-foreground">Create Your</span><br className="md:hidden" />
-                        <span className="text-[#AF2018]"> Masterpiece</span>
+                    <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
+                        <span className="text-foreground">Create Your</span><br />
+                        <span className="text-jager-red">Masterpiece</span>
                     </h1>
 
-                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 md:mb-10 font-normal leading-relaxed">
-                        From bulk orders to unique one-offs. Direct consultation. No limits.
+                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 md:mb-12 font-medium leading-relaxed px-4">
+                        From bulk orders to unique one-offs. Direct consultation. <br className="hidden md:block" />
+                        Using the finest fabrics and premium prints.
                     </p>
 
-                    <div>
+                    <div className="pb-8">
                         <Button
-                            className="rounded-xl md:rounded-full px-8 py-6 md:px-10 md:py-7 text-base md:text-lg bg-[#AF2018] hover:bg-red-700 text-white font-bold uppercase tracking-wider shadow-xl shadow-red-900/10 transition-transform active:scale-95 w-full md:w-auto"
+                            className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-jager-red hover:bg-red-700 text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-red-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
                         >
                             Start Your Design
@@ -251,13 +275,13 @@ export default function CustomDesign() {
             </section>
 
             {/* Main Form Section - Liquid Glass UI */}
-            <section id="brief-form" className="py-8 md:py-20 px-4 relative z-10 transition-colors duration-500">
+            <section id="brief-form" className="py-4 md:py-20 px-2 md:px-4 relative z-10 transition-colors duration-500">
                 {/* Ambient Background Glow for Glass Effect */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-5xl max-h-[800px] bg-jager-red/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
-                <div className="container mx-auto max-w-4xl">
+                <div className="container mx-auto max-w-4xl p-0 md:p-4">
                     <ScrollReveal
-                        className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-3xl p-4 md:p-12 relative overflow-hidden shadow-2xl"
+                        className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
                     >
                         <div className="text-center mb-8 md:mb-10 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Project Brief</h2>
@@ -283,7 +307,7 @@ export default function CustomDesign() {
                                         required
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        className="h-12 md:h-14 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base px-4"
                                         placeholder="Enter your name"
                                     />
                                 </div>
@@ -294,7 +318,7 @@ export default function CustomDesign() {
                                         type="tel"
                                         value={formData.phone}
                                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        className="h-12 md:h-14 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base px-4"
                                         placeholder="Enter phone number"
                                     />
                                 </div>

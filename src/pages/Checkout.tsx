@@ -318,6 +318,39 @@ const Checkout = () => {
               // Don't fail the order, just log
             }
 
+            // Send order notification email to admin
+            try {
+              const { sendOrderNotificationEmail } = await import('@/lib/emailService');
+              await sendOrderNotificationEmail({
+                orderId: order.id,
+                customerEmail: user?.email || '',
+                customerName: address.full_name,
+                items: items.map(item => ({
+                  name: item.name,
+                  size: item.size,
+                  color: item.name.split(' - ')[2] || '',
+                  quantity: item.quantity,
+                  price: item.price,
+                })),
+                shippingAddress: {
+                  full_name: address.full_name,
+                  street: address.street,
+                  city: address.city,
+                  state: address.state,
+                  zip: address.zip,
+                  phone: address.phone,
+                },
+                subtotal: totalPrice,
+                shipping: shippingCharge,
+                tax: tax,
+                total: finalTotal,
+                paymentId: paymentResponse.razorpay_payment_id,
+              });
+            } catch (emailError) {
+              console.error('Error sending order notification email:', emailError);
+              // Don't fail the order, just log
+            }
+
             // Clear cart
             await clearCart();
 
