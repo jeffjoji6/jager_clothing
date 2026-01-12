@@ -95,7 +95,7 @@ export const Footer = () => {
                     <div className="space-y-6 text-center bg-secondary/20 rounded-2xl p-6">
                         <h3 className="text-lg font-heading font-bold uppercase tracking-widest">STAY CONNECTED</h3>
                         <div className="flex justify-center gap-4">
-                            <a href="https://instagram.com/jagerclothing" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-background border border-border hover:bg-jager-red hover:border-jager-red hover:text-white transition-all">
+                            <a href="https://www.instagram.com/jagerclothing.store" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-background border border-border hover:bg-jager-red hover:border-jager-red hover:text-white transition-all">
                                 <Instagram className="h-6 w-6" />
                             </a>
                         </div>
@@ -159,7 +159,7 @@ export const Footer = () => {
                             Join the movement. Follow us on social media for the latest drops.
                         </p>
                         <div className="flex gap-4 mb-6">
-                            <a href="#" className="text-foreground hover:text-jager-red transition-colors">
+                            <a href="https://www.instagram.com/jagerclothing.store" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-jager-red transition-colors">
                                 <Instagram className="h-5 w-5" />
                             </a>
                         </div>

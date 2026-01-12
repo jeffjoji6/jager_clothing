@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
                             <h3 className="text-lg font-bold text-foreground">How do I withdraw my consent?</h3>
                             <p>If after you opt-in, you change your mind, you may withdraw your consent for us to contact you, for the continued collection, use or disclosure of your information, at anytime, by contacting us at <a href="mailto:jagerclothing.store@gmail.com" className="text-jager-red hover:underline">jagerclothing.store@gmail.com</a> or mailing us at:</p>
                             <address className="not-italic bg-accent/20 p-4 rounded-md">
-                                Korappath Ln, Chembukkav, Kuriachira,<br />
+                                Korappath Ln, Kuriachira,<br />
                                 Thrissur, Kerala - 680006
                             </address>
                         </div>
@@ -98,7 +98,7 @@ export default function PrivacyPolicy() {
                         <div className="font-bold text-foreground">
                             <a href="mailto:support@jagerclothing.in" className="text-jager-red hover:underline block mb-2">support@jagerclothing.in</a>
                             <address className="not-italic">
-                                Korappath Ln, Chembukkav, Kuriachira,<br />
+                                Korappath Ln, Kuriachira,<br />
                                 Thrissur, Kerala - 680006
                             </address>
                         </div>
