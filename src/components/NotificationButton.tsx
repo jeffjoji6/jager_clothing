@@ -1,34 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useAuth } from "@/contexts/AuthContext";
-import { getUnreadCount } from "@/lib/notificationService";
+import { useNotificationCount } from "@/hooks/useNotificationCount";
 
 export const NotificationButton = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
     const { user } = useAuth();
-
-    useEffect(() => {
-        if (user) {
-            loadUnreadCount();
-
-            // Poll for new notifications every 30 seconds
-            const interval = setInterval(loadUnreadCount, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [user]);
-
-    const loadUnreadCount = async () => {
-        if (user) {
-            const count = await getUnreadCount(user.id);
-            setUnreadCount(count);
-        }
-    };
+    const { unreadCount, refreshCount } = useNotificationCount();
 
     const handleNotificationUpdate = () => {
-        loadUnreadCount();
+        refreshCount();
     };
 
     if (!user) return null;
@@ -39,15 +22,16 @@ export const NotificationButton = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(true)}
-                className="relative"
                 aria-label="Notifications"
             >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-jager-red text-white text-xs flex items-center justify-center font-bold">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                )}
+                <div className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-jager-red text-white text-[10px] flex items-center justify-center font-bold leading-none pointer-events-none">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
+                </div>
             </Button>
             <NotificationCenter
                 isOpen={isOpen}

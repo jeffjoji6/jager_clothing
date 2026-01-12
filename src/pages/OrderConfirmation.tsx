@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Loader2, CheckCircle2, Package, Truck, Home } from "lucide-react";
+import { Loader2, CheckCircle2, Package, Truck, Home, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -136,11 +136,7 @@ const OrderConfirmation = () => {
     enabled: !!id && !!order,
   });
 
-  useEffect(() => {
-    if (order && order.status === 'cancelled') {
-      navigate('/orders');
-    }
-  }, [order, navigate]);
+  // Removed redirect for cancelled orders to allow viewing details
 
   if (isLoading) {
     return (
@@ -170,13 +166,27 @@ const OrderConfirmation = () => {
         <div className="container mx-auto px-4 py-8 md:py-12">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <div className="space-y-4">
-              <CheckCircle2 className="h-20 w-20 text-jager-red mx-auto animate-bounce" />
-              <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
-                ORDER CONFIRMED!
-              </h1>
-              <p className="text-grey-text text-lg max-w-md mx-auto">
-                Thank you for your purchase. Your order has been received and is being processed.
-              </p>
+              {order.status === 'cancelled' ? (
+                <>
+                  <X className="h-20 w-20 text-red-600 mx-auto" />
+                  <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight text-red-600">
+                    ORDER CANCELLED
+                  </h1>
+                  <p className="text-grey-text text-lg max-w-md mx-auto">
+                    This order has been cancelled.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-20 w-20 text-jager-red mx-auto animate-bounce" />
+                  <h1 className="text-3xl md:text-5xl font-heading font-bold uppercase tracking-tight">
+                    ORDER CONFIRMED!
+                  </h1>
+                  <p className="text-grey-text text-lg max-w-md mx-auto">
+                    Thank you for your purchase. Your order has been received and is being processed.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Order Tracker */}

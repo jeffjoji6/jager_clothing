@@ -32,14 +32,16 @@ export const Cart = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="relative">
-          <ShoppingBag className="w-5 h-5" />
-          {totalItems > 0 && (
-            <span className="absolute -top-2 -right-2 w-5 h-5 bg-jager-red text-background text-xs font-heading font-bold flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </button>
+        <Button variant="ghost" size="icon" aria-label="Cart">
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-jager-red text-white text-[10px] font-heading font-bold flex items-center justify-center leading-none pointer-events-none">
+                {totalItems}
+              </span>
+            )}
+          </div>
+        </Button>
       </SheetTrigger>
       <SheetContent className="w-[90vw] sm:max-w-lg flex flex-col h-full">
         <SheetHeader>

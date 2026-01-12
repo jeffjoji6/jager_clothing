@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Mail } from "lucide-react";
+import { useState } from "react";
 import {
     Accordion,
     AccordionContent,
@@ -9,19 +10,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SizeChartModal } from "@/components/SizeChartModal";
+import { subscribeToNewsletter } from "@/lib/notificationService";
+import { toast } from "sonner";
 
 export const Footer = () => {
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubscribe = async () => {
+        if (!email || !email.includes("@")) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await subscribeToNewsletter(email);
+            if (result.success) {
+                toast.success(result.message);
+                setEmail("");
+            } else {
+                toast.error("Something went wrong. Please try again.");
+            }
+        } catch (error) {
+            console.error("Subscription error:", error);
+            toast.error("Failed to subscribe. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <footer className="bg-background border-t border-foreground pt-12 md:pt-20 pb-8 md:pb-10">
             <div className="container mx-auto px-4">
                 {/* Mobile: Accordion Layout - Redesigned */}
                 <div className="md:hidden mb-8">
                     {/* Logo Section */}
-                    <div className="mb-10 text-center">
+                    <div className="mb-6 text-center">
                         <Link to="/" className="inline-flex items-center">
-                            <img src="/jager_logo_v2.png" alt="Jager" className="h-12 w-auto" />
+                            <img src="/jager_logo_v2.png" alt="Jager" className="h-9 w-auto" />
                         </Link>
-                        <p className="text-sm text-muted-foreground mt-3">Premium Streetwear</p>
+                        <p className="text-sm text-muted-foreground mt-2">Premium Streetwear</p>
                     </div>
 
                     {/* Accordion Navigation */}
@@ -74,8 +103,19 @@ export const Footer = () => {
                         <div className="pt-4">
                             <p className="text-base text-muted-foreground mb-4">Subscribe for exclusive drops & updates</p>
                             <div className="flex gap-2">
-                                <Input placeholder="Your email" className="h-12 bg-background text-base rounded-xl" />
-                                <Button size="lg" className="h-12 px-6 rounded-xl font-bold">
+                                <Input
+                                    placeholder="Your email"
+                                    className="h-12 bg-background text-base rounded-xl"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={loading}
+                                />
+                                <Button
+                                    size="lg"
+                                    className="h-12 px-6 rounded-xl font-bold bg-jager-red hover:bg-black text-white hover:text-white border-none"
+                                    onClick={handleSubscribe}
+                                    disabled={loading}
+                                >
                                     <Mail className="h-5 w-5" />
                                 </Button>
                             </div>
@@ -124,8 +164,21 @@ export const Footer = () => {
                             </a>
                         </div>
                         <div className="flex gap-2">
-                            <Input placeholder="Email address" className="h-10 bg-background" />
-                            <Button size="sm">SUBSCRIBE</Button>
+                            <Input
+                                placeholder="Email address"
+                                className="h-10 bg-background"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
+                            />
+                            <Button
+                                size="sm"
+                                onClick={handleSubscribe}
+                                disabled={loading}
+                                className="bg-jager-red hover:bg-black text-white"
+                            >
+                                {loading ? "..." : "SUBSCRIBE"}
+                            </Button>
                         </div>
                     </div>
                 </div>

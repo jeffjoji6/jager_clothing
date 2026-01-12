@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import ReactMarkdown from 'react-markdown';
 import { useProduct } from "@/hooks/useProducts";
 import { SizeChartModal } from "@/components/SizeChartModal";
 // ... (keep surrounding imports if not removing entire block, but here I'm replacing the Dialog usage)
@@ -80,6 +81,16 @@ const ProductDetail = () => {
     setQuantity(1);
   }, [availableVariants, selectedVariant, availableColors]);
 
+  // Effect: Switch main image if variant has specific image
+  useEffect(() => {
+    if (activeVariant?.image_url && product?.images) {
+      const idx = product.images.indexOf(activeVariant.image_url);
+      if (idx !== -1) {
+        setSelectedImageIndex(idx);
+      }
+    }
+  }, [selectedVariant, product?.images]);
+
 
   // Intersection Observer for Sticky Bar
   useEffect(() => {
@@ -90,7 +101,7 @@ const ProductDetail = () => {
       { threshold: 0 }
     );
 
-    const element = document.getElementById("main-add-to-cart-btn");
+    const element = document.getElementById("action-buttons-container");
     if (element) {
       observer.observe(element);
     }
@@ -102,7 +113,8 @@ const ProductDetail = () => {
     };
   }, [product]);
 
-  const currentVariant = product?.variants.find(v => v.id === selectedVariant);
+  const activeVariant = product?.variants.find(v => v.id === selectedVariant);
+  const currentVariant = activeVariant; // Alias for existing code compatibility
 
   // Price Logic:
   // Priority: actual_price > discounted_price > (base_price + price_modifier)
@@ -376,15 +388,10 @@ const ProductDetail = () => {
 
               {/* Quantity */}
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Quantity</span>
-                  {currentVariant && (
-                    <span className="text-xs text-muted-foreground">
-                      {currentVariant.stock} available
-                    </span>
-                  )}
                 </div>
-                <div className="flex items-center border border-foreground/20 h-12 px-4 gap-4 w-32 justify-between">
+                <div className="flex items-center gap-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="hover:text-jager-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -413,11 +420,10 @@ const ProductDetail = () => {
               </div>
 
               {/* Buttons */}
-              <div className="flex flex-row gap-3 pt-4 border-t border-foreground/10">
+              <div id="action-buttons-container" className="flex flex-row gap-3 pt-4 border-t border-foreground/10">
                 <Button
-                  id="main-add-to-cart-btn"
                   variant="hero"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-bold uppercase tracking-wider h-14"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-bold uppercase tracking-wider h-12 md:h-14"
                   onClick={handleAddToCart}
                   disabled={!selectedSize || !currentVariant || currentVariant.stock <= 0 || isAdding}
                 >
@@ -461,7 +467,21 @@ const ProductDetail = () => {
                   Description
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground font-body leading-relaxed">
-                  {product.description || "Premium quality product from Jager Clothing. Designed for the modern streetwear enthusiast."}
+                  {product.description ? (
+                    <div className="prose prose-sm max-w-none text-muted-foreground prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-foreground prose-strong:font-bold">
+                      <ReactMarkdown
+                        components={{
+                          ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-1" {...props} />,
+                          li: ({ node, ...props }) => <li {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />
+                        }}
+                      >
+                        {product.description}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p>Premium quality product from Jager Clothing. Designed for the modern streetwear enthusiast.</p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="shipping" className="border-b border-foreground/10">

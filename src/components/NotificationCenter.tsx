@@ -49,7 +49,7 @@ export const NotificationCenter = ({ isOpen, onClose, onUpdate }: NotificationCe
         onUpdate();
 
         // Navigate to order details
-        navigate(`/orders/${notification.order_id}`);
+        navigate(`/order-confirmation/${notification.order_id}`);
         onClose();
     };
 

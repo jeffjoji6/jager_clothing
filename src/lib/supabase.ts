@@ -39,6 +39,7 @@ export interface ProductVariant {
   price_modifier: number;
   actual_price?: number;
   discounted_price?: number;
+  image_url?: string;
   is_archived?: boolean;
   created_at: string;
 }

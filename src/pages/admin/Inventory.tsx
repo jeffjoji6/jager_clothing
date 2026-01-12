@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Edit, Trash2, Package, Upload, X, Link as LinkIcon, History, AlertTriangle, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ interface ProductVariant {
     discounted_price: number | null;
     barcode: string | null;
     is_archived?: boolean;
+    image_url?: string;
 }
 
 interface ProductWithStock extends Product {
@@ -138,6 +140,7 @@ const Inventory = () => {
         actual_price: "",
         discounted_price: "",
         price_modifier: "0",
+        image_url: "",
     });
 
     const queryClient = useQueryClient();
@@ -294,11 +297,12 @@ const Inventory = () => {
             price_modifier: Number(newVariant.price_modifier) || 0,
             actual_price: newVariant.actual_price ? Number(newVariant.actual_price) : Number(productForm.base_price),
             discounted_price: newVariant.discounted_price ? Number(newVariant.discounted_price) : (productForm.discounted_price ? Number(productForm.discounted_price) : null),
+            image_url: newVariant.image_url || undefined,
             barcode: null,
         };
 
         setVariants([...variants, variant]);
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0" });
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", image_url: "" });
     };
 
     const handleRemoveVariant = (variantId: string) => {
@@ -416,6 +420,7 @@ const Inventory = () => {
                     // We still send actual_price/discounted_price if DB has them, but modifier is key for Storefront
                     actual_price: v.actual_price ? Number(v.actual_price) : null,
                     discounted_price: v.discounted_price ? Number(v.discounted_price) : null,
+                    image_url: v.image_url,
                     is_archived: false
                 };
 
@@ -553,7 +558,7 @@ const Inventory = () => {
         });
         setVariants([]);
         setVariantsToDelete([]);
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0" });
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", image_url: "" });
         setActiveTab("basic");
     };
 
@@ -681,14 +686,13 @@ const Inventory = () => {
                     {/* Render Form Logic Here (Simplified/Merged from Products.tsx) */}
                     <form onSubmit={(e) => { e.preventDefault(); editingProduct ? updateProduct.mutate() : createProduct.mutate() }} className="space-y-6">
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="grid w-full grid-cols-3">
+                            <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                                 <TabsTrigger value="variants">Variants</TabsTrigger>
-                                <TabsTrigger value="details">Details</TabsTrigger>
                             </TabsList>
                             <TabsContent value="basic" className="space-y-4">
                                 <div><Label>Name *</Label><Input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></div>
-                                <div><Label>Description</Label><Textarea value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })} /></div>
+                                <div><Label>Description</Label><MarkdownEditor value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })} placeholder="Enter description... use toolbar for formatting." /></div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <Label>Category</Label>
@@ -753,11 +757,6 @@ const Inventory = () => {
                                     </Table>
                                 </div>
                             </TabsContent>
-
-                            <TabsContent value="details" className="space-y-4">
-                                <div><Label>Material</Label><Input value={productForm.material || ''} onChange={e => setProductForm({ ...productForm, material: e.target.value })} /></div>
-                                <div><Label>Care Instructions</Label><Textarea value={productForm.care_instructions || ''} onChange={e => setProductForm({ ...productForm, care_instructions: e.target.value })} /></div>
-                            </TabsContent>
                         </Tabs>
 
                         <div className="flex gap-2">
@@ -784,6 +783,23 @@ const Inventory = () => {
                             <div><Label className="text-xs uppercase font-bold">Initial Stock</Label><Input type="number" className="w-24 bg-background" value={newVariant.stock} onChange={e => setNewVariant({ ...newVariant, stock: e.target.value })} /></div>
                             <div><Label className="text-xs uppercase font-bold">Price Override</Label><Input type="number" className="w-28 bg-background" value={newVariant.actual_price} onChange={e => setNewVariant({ ...newVariant, actual_price: e.target.value })} placeholder="Inherit" /></div>
                             <div><Label className="text-xs uppercase font-bold">Discount Price</Label><Input type="number" className="w-28 bg-background" value={newVariant.discounted_price} onChange={e => setNewVariant({ ...newVariant, discounted_price: e.target.value })} placeholder="Optional" /></div>
+                            <div>
+                                <Label className="text-xs uppercase font-bold">Image</Label>
+                                <Select value={newVariant.image_url || "no-image"} onValueChange={v => setNewVariant({ ...newVariant, image_url: v === "no-image" ? "" : v })}>
+                                    <SelectTrigger className="w-32 bg-background"><SelectValue placeholder="None" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="no-image">No Image</SelectItem>
+                                        {selectedProductForVariants?.images?.map((url, i) => (
+                                            <SelectItem key={i} value={url}>
+                                                <div className="flex items-center gap-2">
+                                                    <img src={url} className="w-6 h-6 object-cover rounded" />
+                                                    <span className="truncate max-w-[100px]">Image {i + 1}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <Button onClick={handleAddVariant} disabled={!newVariant.size || !newVariant.color}><Plus className="h-4 w-4 mr-2" /> Add Variant</Button>
                         </div>
 
@@ -796,47 +812,55 @@ const Inventory = () => {
                                         <TableHead>Color</TableHead>
                                         <TableHead className="text-right">Price</TableHead>
                                         <TableHead className="text-right">Discount</TableHead>
+                                        <TableHead>Image (Opt)</TableHead>
                                         <TableHead className="text-center">Stock Level</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {variants.map((variant) => (
-                                        <TableRow key={variant.id}>
-                                            <TableCell className="font-bold">{variant.size}</TableCell>
-                                            <TableCell>{variant.color}</TableCell>
-                                            <TableCell className="text-right">
+                                    {variants.map((v, idx) => (
+                                        <TableRow key={v.id || idx}>
+                                            <TableCell className="font-bold">{v.size}</TableCell>
+                                            <TableCell>{v.color}</TableCell>
+                                            <TableCell className="text-right text-muted-foreground">{v.actual_price ? `₹${v.actual_price}` : 'Inherited'}</TableCell>
+                                            <TableCell className="text-right text-muted-foreground">{v.discounted_price ? `₹${v.discounted_price}` : '-'}</TableCell>
+                                            <TableCell>
+                                                {v.image_url ? (
+                                                    <img src={v.image_url} alt="Variant" className="w-8 h-8 object-cover rounded border" />
+                                                ) : <span className="text-muted-foreground text-xs">-</span>}
+                                            </TableCell>
+                                            <TableCell className="text-center">
                                                 <Input
                                                     type="number"
                                                     className="w-24 text-right inline-block h-8"
-                                                    value={variant.actual_price || ''}
-                                                    onChange={e => handleUpdateVariant(variant.id, 'actual_price', e.target.value)}
+                                                    value={v.actual_price || ''}
+                                                    onChange={e => handleUpdateVariant(v.id, 'actual_price', e.target.value)}
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Input
                                                     type="number"
                                                     className="w-24 text-right inline-block h-8"
-                                                    value={variant.discounted_price || ''}
-                                                    onChange={e => handleUpdateVariant(variant.id, 'discounted_price', e.target.value)}
+                                                    value={v.discounted_price || ''}
+                                                    onChange={e => handleUpdateVariant(v.id, 'discounted_price', e.target.value)}
                                                 />
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <span className={`font-mono font-bold ${variant.stock < 5 ? 'text-red-500' : 'text-green-600'}`}>{variant.stock}</span>
-                                                    {!variant.id.startsWith('temp-') && (
-                                                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => handleOpenAdjustStock(variant)}>Adjust</Button>
+                                                    <span className={`font-mono font-bold ${v.stock < 5 ? 'text-red-500' : 'text-green-600'}`}>{v.stock}</span>
+                                                    {!v.id.startsWith('temp-') && (
+                                                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => handleOpenAdjustStock(v)}>Adjust</Button>
                                                     )}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    {!variant.id.startsWith('temp-') && (
-                                                        <Button variant="ghost" size="sm" onClick={() => { setSelectedVariantForHistory(variant); setHistoryDialogOpen(true); }}>
+                                                    {!v.id.startsWith('temp-') && (
+                                                        <Button variant="ghost" size="sm" onClick={() => { setSelectedVariantForHistory(v); setHistoryDialogOpen(true); }}>
                                                             <History className="h-4 w-4" />
                                                         </Button>
                                                     )}
-                                                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (confirm("Remove variant?")) handleRemoveVariant(variant.id); }}>
+                                                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (confirm("Remove variant?")) handleRemoveVariant(v.id); }}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>

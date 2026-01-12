@@ -101,3 +101,36 @@ export const clearAllNotifications = async (userId: string) => {
 
     return true;
 };
+
+export const subscribeToNewsletter = async (email: string) => {
+    // 1. Check if already subscribed
+    const { data: existing } = await supabase
+        .from("notification_subscriptions")
+        .select("id, is_active")
+        .eq("email", email.toLowerCase())
+        .single();
+
+    if (existing) {
+        if (existing.is_active) {
+            return { success: true, message: "You're already subscribed!" };
+        } else {
+            // Reactivate
+            const { error } = await supabase
+                .from("notification_subscriptions")
+                .update({ is_active: true })
+                .eq("email", email.toLowerCase());
+
+            if (error) throw error;
+            return { success: true, message: "Welcome back! subscription reactivated." };
+        }
+    }
+
+    // 2. New subscription
+    const { error } = await supabase
+        .from("notification_subscriptions")
+        .insert([{ email: email.toLowerCase() }]);
+
+    if (error) throw error;
+
+    return { success: true, message: "Successfully subscribed!" };
+};
