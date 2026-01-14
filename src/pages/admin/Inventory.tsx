@@ -269,7 +269,12 @@ const Inventory = () => {
                         setProductForm(prev => ({ ...prev, images: [...prev.images, url] }));
                     }
                 } else {
-                    setNewVariant(prev => ({ ...prev, images: [...prev.images, url] }));
+                    console.log('Adding variant image. Current count:', newVariant.images.length);
+                    setNewVariant(prev => {
+                        const updated = { ...prev, images: [...prev.images, url] };
+                        console.log('New count:', updated.images.length);
+                        return updated;
+                    });
                 }
                 toast.success("Image uploaded successfully!");
             } else {
@@ -360,7 +365,7 @@ const Inventory = () => {
             actual_price: variant.actual_price?.toString() || "",
             discounted_price: variant.discounted_price?.toString() || "",
             price_modifier: variant.price_modifier.toString(),
-            images: variant.images || [],
+            images: (variant.images && variant.images.length > 0) ? variant.images : (variant.image_url ? [variant.image_url] : []),
             color_code: variant.color_code || ""
         });
     };
