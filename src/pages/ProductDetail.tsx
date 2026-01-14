@@ -185,7 +185,7 @@ const ProductDetail = () => {
       return;
     }
 
-    const imageUrl = Array.isArray(images) ? images[0] : images || "/placeholder.svg";
+    const imageUrl = mainImage;
 
     setIsAdding(true);
     try {
@@ -227,7 +227,7 @@ const ProductDetail = () => {
       return;
     }
 
-    const imageUrl = Array.isArray(images) ? images[0] : images || "/placeholder.svg";
+    const imageUrl = mainImage;
 
     await addItem({
       id: currentVariant.id,

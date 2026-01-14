@@ -25,7 +25,7 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
           {/* Main Image */}
           <div className={`w-full h-full transition-all duration-300 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}>
             <img
-              src={mainImage}
+              src={optimizeCloudinaryUrl(mainImage, 600)}
               alt={name}
               loading="lazy"
               className={`w-full h-full object-cover transition-opacity duration-700 ${images.length > 1 && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
@@ -33,7 +33,7 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
             {/* Hover Image - Only show if not out of stock */}
             {images.length > 1 && !isOutOfStock && (
               <img
-                src={hoverImage}
+                src={optimizeCloudinaryUrl(hoverImage, 600)}
                 alt={`${name} hover`}
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700"
