@@ -33,7 +33,8 @@ export async function getCroppedImg(
     pixelCrop: { x: number; y: number; width: number; height: number },
     rotation = 0,
     flip = { horizontal: false, vertical: false },
-    quality = 0.8
+    quality = 0.8,
+    filters = { brightness: 100, contrast: 100, saturation: 100 }
 ): Promise<Blob | null> {
     const image = await createImage(imageSrc)
     const canvas = document.createElement('canvas')
@@ -60,7 +61,16 @@ export async function getCroppedImg(
     ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
     ctx.rotate(rotRad)
     ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
+
+    // Fill white background (avoids black bars when rotating/zooming out)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(-bBoxWidth, -bBoxHeight, bBoxWidth * 2, bBoxHeight * 2)
+
+    // Translate to center of image position
     ctx.translate(-image.width / 2, -image.height / 2)
+
+    // Apply filters
+    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
 
     // draw rotated image
     ctx.drawImage(image, 0, 0)
