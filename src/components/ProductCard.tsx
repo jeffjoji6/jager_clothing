@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Plus, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 
 interface ProductCardProps {
   id: string;
@@ -26,6 +27,7 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
             <img
               src={mainImage}
               alt={name}
+              loading="lazy"
               className={`w-full h-full object-cover transition-opacity duration-700 ${images.length > 1 && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
             />
             {/* Hover Image - Only show if not out of stock */}
@@ -33,6 +35,7 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
               <img
                 src={hoverImage}
                 alt={`${name} hover`}
+                loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700"
               />
             )}
@@ -57,20 +60,6 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
           </div>
         )}
 
-        {/* Quick Add Button (Bottom Left) - Hide if out of stock */}
-        {!isOutOfStock && (
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute bottom-2 left-2 h-8 w-8 rounded-none bg-white/90 hover:bg-white text-black shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            onClick={(e) => {
-              e.preventDefault();
-              // Add to cart logic would go here
-            }}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       {/* Product Info */}
