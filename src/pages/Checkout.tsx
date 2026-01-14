@@ -18,7 +18,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { openRazorpayCheckout, createRazorpayOrder } from "@/lib/razorpay";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Edit } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Tag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +52,13 @@ const Checkout = () => {
     is_default: false,
   });
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; type: string; value: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showPromoInput, setShowPromoInput] = useState(false);
+
   // Fetch shipping and tax settings
   const { data: companySettings } = useQuery({
     queryKey: ['checkout-settings'],
@@ -68,17 +75,21 @@ const Checkout = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+
   const standardShippingRate = companySettings?.shipping_rate ?? 100;
   const freeShippingThreshold = companySettings?.free_shipping_threshold ?? 499;
   const taxRate = companySettings?.default_tax_rate ?? 18;
 
-  const shippingCharge = totalPrice > freeShippingThreshold ? 0 : standardShippingRate;
+  // Calculate discounted subtotal
+  const discountedSubtotal = Math.max(0, totalPrice - discountAmount);
+
+  const shippingCharge = discountedSubtotal > freeShippingThreshold ? 0 : standardShippingRate;
 
   // Tax is inclusive of the product price
-  // We extract the tax amount for display/database purposes but don't add it to the total again.
-  const tax = Math.round(totalPrice - (totalPrice / (1 + (taxRate / 100))));
+  // We extract the tax amount from the discounted subtotal
+  const tax = Math.round(discountedSubtotal - (discountedSubtotal / (1 + (taxRate / 100))));
 
-  const finalTotal = totalPrice + shippingCharge;
+  const finalTotal = Math.round(discountedSubtotal + shippingCharge);
 
   // Set default address when addresses load
   useEffect(() => {
@@ -158,6 +169,45 @@ const Checkout = () => {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('validate_coupon', {
+        code_input: couponCode,
+        cart_total: totalPrice
+      });
+
+      if (error) throw error;
+
+      if (data.valid) {
+        setDiscountAmount(data.discount);
+        setAppliedCoupon({
+          code: data.code,
+          type: data.type,
+          value: data.discount
+        });
+        toast.success(data.message);
+      } else {
+        setDiscountAmount(0);
+        setAppliedCoupon(null);
+        toast.error(data.message);
+      }
+    } catch (err: any) {
+      toast.error('Failed to validate coupon');
+      console.error(err);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode("");
+    setDiscountAmount(0);
+    setAppliedCoupon(null);
+    toast.info("Coupon removed");
+  };
+
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
       toast.error("Your cart is empty");
@@ -189,6 +239,8 @@ const Checkout = () => {
           subtotal: totalPrice,
           shipping: shippingCharge,
           tax: tax,
+          coupon_code: appliedCoupon ? appliedCoupon.code : null,
+          discount_amount: discountAmount,
           shipping_address: {
             full_name: address.full_name,
             street: address.street,
@@ -202,6 +254,11 @@ const Checkout = () => {
         .single();
 
       if (orderError) throw orderError;
+
+      // If coupon used, increment usage
+      if (appliedCoupon) {
+        await supabase.rpc('increment_coupon_usage', { code_input: appliedCoupon.code });
+      }
 
       // Create order items
       const orderItems = items.map(item => ({
@@ -648,11 +705,66 @@ const Checkout = () => {
             <div className="md:col-span-1">
               <div className="sticky top-24 space-y-4 border border-foreground p-6">
                 <h2 className="text-lg font-heading font-bold uppercase">ORDER TOTAL</h2>
+
+                {/* Promo Code Input */}
+                <div className="space-y-2 pt-2">
+                  {!appliedCoupon && !showPromoInput ? (
+                    <button
+                      onClick={() => setShowPromoInput(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground underline decoration-dashed underline-offset-4 transition-colors"
+                    >
+                      Have a promo code?
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="PROMO CODE"
+                          value={couponCode}
+                          onChange={e => setCouponCode(e.target.value)}
+                          disabled={!!appliedCoupon || couponLoading}
+                          className="uppercase h-8 text-xs bg-background"
+                        />
+                        {appliedCoupon ? (
+                          <Button variant="outline" size="icon" onClick={() => { handleRemoveCoupon(); setShowPromoInput(false); }} className="h-8 w-8">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button onClick={handleApplyCoupon} disabled={couponLoading || !couponCode} className="h-8 px-3 text-xs">
+                            {couponLoading ? <Loader2 className="animate-spin h-3 w-3" /> : "APPLY"}
+                          </Button>
+                        )}
+                      </div>
+                      {/* Cancel button if open but no coupon */}
+                      {!appliedCoupon && (
+                        <button
+                          onClick={() => setShowPromoInput(false)}
+                          className="text-[10px] text-muted-foreground hover:text-red-500"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {appliedCoupon && (
+                    <div className="text-green-600 text-xs font-bold flex items-center gap-1 bg-green-50 p-2 rounded border border-green-100">
+                      <Tag className="h-3 w-3" /> Coupon {appliedCoupon.code} applied!
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-grey-text">Subtotal</span>
                     <span>₹{totalPrice.toLocaleString()}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600 font-bold">
+                      <span>Discount</span>
+                      <span>-₹{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-grey-text">Shipping</span>
                     <span>

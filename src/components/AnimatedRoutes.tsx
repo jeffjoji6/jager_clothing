@@ -31,6 +31,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminOrders from "@/pages/admin/Orders";
 import AdminOrderDetail from "@/pages/admin/OrderDetail";
 import AdminCustomers from "@/pages/admin/Customers";
+import AdminCoupons from "@/pages/admin/Coupons";
 // import AdminProducts from "@/pages/admin/Products"; // File not found
 import AdminInventory from "@/pages/admin/Inventory";
 import AdminCustomProducts from "@/pages/admin/CustomProducts";
@@ -113,6 +114,13 @@ export const AnimatedRoutes = () => {
                         <AdminProtectedRoute>
                             <AdminLayout>
                                 <AdminCustomers />
+                            </AdminLayout>
+                        </AdminProtectedRoute>
+                    } />
+                    <Route path="/admin/coupons" element={
+                        <AdminProtectedRoute>
+                            <AdminLayout>
+                                <AdminCoupons />
                             </AdminLayout>
                         </AdminProtectedRoute>
                     } />

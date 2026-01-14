@@ -34,9 +34,7 @@ const ProductDetail = () => {
   const [sizeError, setSizeError] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
-  // Mock data for social proof
-  const viewersCount = Math.floor(Math.random() * (50 - 20 + 1)) + 20;
-  const stockLeft = Math.floor(Math.random() * (5 - 1 + 1)) + 1;
+
 
   // Get unique sizes and colors
   const availableSizes = useMemo(() => {
@@ -178,9 +176,7 @@ const ProductDetail = () => {
 
     // Validate quantity against stock
     if (quantity > currentVariant.stock) {
-      toast.error(`Only ${currentVariant.stock} items available`, {
-        description: `You selected ${quantity} but only ${currentVariant.stock} in stock for ${selectedSize} - ${selectedColor}`
-      });
+      toast.error(`Only ${currentVariant.stock} item${currentVariant.stock !== 1 ? 's' : ''} left in stock!`);
       setQuantity(currentVariant.stock);
       return;
     }
@@ -414,11 +410,9 @@ const ProductDetail = () => {
                   <span className="font-bold font-heading">{quantity}</span>
                   <button
                     onClick={() => {
-                      const maxStock = currentVariant?.stock || 999;
+                      const maxStock = currentVariant?.stock || 0;
                       if (quantity >= maxStock) {
-                        toast.error(`Only ${maxStock} items available`, {
-                          description: `Maximum stock for ${selectedSize} - ${selectedColor}`
-                        });
+                        toast.error(`Only ${maxStock} item${maxStock !== 1 ? 's' : ''} left in stock!`);
                       } else {
                         setQuantity(quantity + 1);
                       }

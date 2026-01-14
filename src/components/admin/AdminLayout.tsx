@@ -25,6 +25,8 @@ import {
   Palette,
   LogOut,
   Menu,
+  Tag,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,6 +63,12 @@ const menuGroups = [
         title: "Inventory & Products",
         icon: Package,
         url: "/admin/inventory",
+        roles: ["admin", "staff"],
+      },
+      {
+        title: "Coupons",
+        icon: Tag,
+        url: "/admin/coupons",
         roles: ["admin", "staff"],
       },
       {
