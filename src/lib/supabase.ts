@@ -35,11 +35,14 @@ export interface ProductVariant {
   product_id: string;
   size: string;
   color: string;
+  color_code?: string; // Hex code for custom colors
   stock: number;
   price_modifier: number;
   actual_price?: number;
   discounted_price?: number;
-  image_url?: string;
+  image_url?: string; // Legacy single image (kept for backward compatibility)
+  images?: string[]; // New: Multiple images per color
+  barcode?: string | null;
   is_archived?: boolean;
   created_at: string;
 }

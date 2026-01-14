@@ -50,8 +50,18 @@ const ProductDetail = () => {
 
   const availableColors = useMemo(() => {
     if (!product?.variants) return [];
-    const colors = new Set(product.variants.map(v => v.color));
-    return Array.from(colors).sort();
+    const colorMap = new Map<string, string | undefined>();
+    product.variants.forEach(v => {
+      if (!colorMap.has(v.color)) {
+        colorMap.set(v.color, v.color_code);
+      } else if (v.color_code && !colorMap.get(v.color)) {
+        colorMap.set(v.color, v.color_code);
+      }
+    });
+    return Array.from(colorMap.keys()).sort().map(name => ({
+      name,
+      code: colorMap.get(name)
+    }));
   }, [product?.variants]);
 
   // Get available variants
@@ -68,7 +78,7 @@ const ProductDetail = () => {
   useEffect(() => {
     // Auto-select color if only one available
     if (availableColors.length === 1 && !selectedColor) {
-      setSelectedColor(availableColors[0]);
+      setSelectedColor(availableColors[0].name);
     }
 
     if (availableVariants.length > 0) {
@@ -80,16 +90,6 @@ const ProductDetail = () => {
     // Reset quantity to 1 when variant changes
     setQuantity(1);
   }, [availableVariants, selectedVariant, availableColors]);
-
-  // Effect: Switch main image if variant has specific image
-  useEffect(() => {
-    if (activeVariant?.image_url && product?.images) {
-      const idx = product.images.indexOf(activeVariant.image_url);
-      if (idx !== -1) {
-        setSelectedImageIndex(idx);
-      }
-    }
-  }, [selectedVariant, product?.images]);
 
 
   // Intersection Observer for Sticky Bar
@@ -139,8 +139,20 @@ const ProductDetail = () => {
   const hasDiscount = sellingPrice < regularPrice;
   const originalPrice = regularPrice;
 
-  const images = product?.images || [];
-  const mainImage = Array.isArray(images) ? images[selectedImageIndex] || images[0] : images || "/placeholder.svg";
+  // Get all images for the selected color
+  // Priority: 1. Images from any variant of the selected color  2. Product images
+  const colorVariant = useMemo(() => {
+    if (!product?.variants || !selectedColor) return null;
+    return product.variants.find(v => v.color === selectedColor);
+  }, [product?.variants, selectedColor]);
+
+  const colorImages = colorVariant?.images && colorVariant.images.length > 0
+    ? colorVariant.images
+    : (product?.images || []);
+
+  const mainImage = Array.isArray(colorImages)
+    ? colorImages[selectedImageIndex] || colorImages[0] || "/placeholder.svg"
+    : colorImages || "/placeholder.svg";
 
   const handleAddToCart = async () => {
     if (!product || !currentVariant) return;
@@ -273,9 +285,9 @@ const ProductDetail = () => {
           {/* Left Column: Gallery */}
           <div className="md:col-span-7 flex flex-col-reverse md:flex-row gap-4">
             {/* Thumbnails */}
-            {Array.isArray(images) && images.length > 1 && (
+            {Array.isArray(colorImages) && colorImages.length > 1 && (
               <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto md:h-[600px] scrollbar-hide">
-                {images.map((img, i) => (
+                {colorImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImageIndex(i)}
@@ -330,16 +342,16 @@ const ProductDetail = () => {
                     Color: <span className="text-foreground">{selectedColor || 'Select'}</span>
                   </span>
                   <div className="flex flex-wrap gap-3">
-                    {availableColors.map((color) => (
+                    {availableColors.map((colorObj) => (
                       <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-12 h-12 border-2 transition-all relative group ${selectedColor === color
-                          ? 'border-jager-red ring-1 ring-jager-red ring-offset-2 scale-105'
+                        key={colorObj.name}
+                        onClick={() => setSelectedColor(colorObj.name)}
+                        className={`w-12 h-12 border transition-all relative group ${selectedColor === colorObj.name
+                          ? 'border-jager-red ring-1 ring-jager-red ring-offset-1 scale-105'
                           : 'border-border hover:border-foreground'
                           }`}
-                        style={{ backgroundColor: color.toLowerCase() === 'white' ? '#fff' : color.toLowerCase() }}
-                        title={color}
+                        style={{ backgroundColor: colorObj.code || (colorObj.name.toLowerCase() === 'white' ? '#fff' : colorObj.name.toLowerCase()) }}
+                        title={colorObj.name}
                       >
                         {/* Selection Indicator for accessibility/clarity if needed, mostly handled by border */}
                       </button>

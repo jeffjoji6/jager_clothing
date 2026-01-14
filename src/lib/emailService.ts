@@ -67,7 +67,7 @@ export const sendCustomDesignNotificationEmail = async (data: {
     brief: string;
     quantity: string;
     budget: string;
-    imageUrl?: string;
+    imageUrls?: string[];
 }) => {
     try {
         const { data: { session } } = await supabase.auth.getSession();

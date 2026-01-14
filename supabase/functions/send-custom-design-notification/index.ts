@@ -3,11 +3,21 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const ADMIN_EMAIL = 'jagerclothing.store@gmail.com'
 
-serve(async (req) => {
-    try {
-        const { customerName, customerEmail, brief, quantity, budget, imageUrl } = await req.json()
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-        const emailHtml = `
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { customerName, customerEmail, brief, quantity, budget, imageUrls = [] } = await req.json()
+
+    const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -49,13 +59,17 @@ serve(async (req) => {
                       ${brief.replace(/\n/g, '<br/>')}
                     </div>
                     
-                    ${imageUrl ? `
-                    <h3 style="color: #333; margin: 30px 0 15px 0; font-size: 18px;">Reference Image</h3>
+                    ${imageUrls && imageUrls.length > 0 ? `
+                    <h3 style="color: #333; margin: 30px 0 15px 0; font-size: 18px;">Reference Images (${imageUrls.length})</h3>
                     <div style="background-color: #f8f8f8; padding: 15px; border-radius: 4px; text-align: center;">
-                      <img src="${imageUrl}" alt="Reference" style="max-width: 100%; height: auto; border-radius: 4px;"/>
-                      <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
-                        <a href="${imageUrl}" style="color: #AF2018;">View Full Image</a>
-                      </p>
+                      ${imageUrls.map((url: string) => `
+                        <div style="margin-bottom: 15px;">
+                          <img src="${url}" alt="Reference" style="max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto;"/>
+                          <p style="margin: 5px 0 10px 0; font-size: 12px; color: #666;">
+                            <a href="${url}" style="color: #AF2018;">View Original</a>
+                          </p>
+                        </div>
+                      `).join('')}
                     </div>
                     ` : ''}
                     
@@ -82,30 +96,30 @@ serve(async (req) => {
       </html>
     `
 
-        const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-                from: 'Jager Clothing <support@jagerclothing.in>',
-                to: [ADMIN_EMAIL],
-                subject: `New Custom Design Request from ${customerName}`,
-                html: emailHtml,
-            }),
-        })
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'Jager Clothing <support@jagerclothing.in>',
+        to: [ADMIN_EMAIL],
+        subject: `New Custom Design Request from ${customerName}`,
+        html: emailHtml,
+      }),
+    })
 
-        const data = await res.json()
+    const data = await res.json()
 
-        return new Response(JSON.stringify(data), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        })
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        })
-    }
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 })

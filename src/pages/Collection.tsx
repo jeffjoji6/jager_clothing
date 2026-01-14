@@ -36,6 +36,31 @@ const Collection = () => {
     return Array.from(categories);
   }, [products]);
 
+  // Derive unique colors from products
+  const availableColors = useMemo(() => {
+    if (!products || products.length === 0) return [];
+
+    const colorMap = new Map<string, string>(); // name -> code
+
+    // Add default colors just in case? Or rely on products.
+    // Let's rely on products to show only what's available.
+
+    products.forEach(p => {
+      p.variants.forEach(v => {
+        if (!colorMap.has(v.color.toUpperCase())) {
+          colorMap.set(v.color.toUpperCase(), v.color_code || '');
+        } else if (v.color_code && !colorMap.get(v.color.toUpperCase())) {
+          colorMap.set(v.color.toUpperCase(), v.color_code);
+        }
+      });
+    });
+
+    return Array.from(colorMap.keys()).sort().map(name => ({
+      name,
+      code: colorMap.get(name)
+    }));
+  }, [products]);
+
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -112,7 +137,10 @@ const Collection = () => {
                       setSelectedSizes={setSelectedSizes}
                       selectedColors={selectedColors}
                       setSelectedColors={setSelectedColors}
+                      selectedColors={selectedColors}
+                      setSelectedColors={setSelectedColors}
                       availableCategories={availableCategories}
+                      availableColors={availableColors}
                     />
                     <div className="mt-8 pt-6 border-t border-border">
                       <Button className="w-full" onClick={() => setFilterOpen(false)}>
@@ -138,7 +166,10 @@ const Collection = () => {
                   setSelectedSizes={setSelectedSizes}
                   selectedColors={selectedColors}
                   setSelectedColors={setSelectedColors}
+                  selectedColors={selectedColors}
+                  setSelectedColors={setSelectedColors}
                   availableCategories={availableCategories}
+                  availableColors={availableColors}
                 />
               </div>
             </div>
@@ -218,6 +249,7 @@ const FilterContent = ({
   selectedColors,
   setSelectedColors,
   availableCategories,
+  availableColors,
 }: {
   selectedCategory: string;
   setSelectedCategory: (cat: string) => void;
@@ -226,6 +258,7 @@ const FilterContent = ({
   selectedColors: string[];
   setSelectedColors: (colors: string[] | ((prev: string[]) => string[])) => void;
   availableCategories: string[];
+  availableColors: { name: string; code?: string }[];
 }) => {
   const hasActiveFilters = selectedCategory !== "ALL" || selectedSizes.length > 0 || selectedColors.length > 0;
 
@@ -291,11 +324,7 @@ const FilterContent = ({
       <div>
         <h4 className="text-sm font-heading font-bold uppercase mb-4">COLOR</h4>
         <div className="flex flex-wrap gap-3">
-          {[
-            { name: "BLACK", bg: "bg-foreground" },
-            { name: "WHITE", bg: "bg-background" },
-            { name: "GREY", bg: "bg-grey-bg" },
-          ].map((color) => (
+          {availableColors.map((color) => (
             <button
               key={color.name}
               onClick={() => {
@@ -305,8 +334,9 @@ const FilterContent = ({
                   setSelectedColors([...selectedColors, color.name]);
                 }
               }}
-              className={`w-8 h-8 ${color.bg} border border-foreground/20 hover:border-jager-red transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-jager-red ring-offset-2' : ''
+              className={`w-8 h-8 rounded-full border border-jager-red transition-all hover:scale-110 ${selectedColors.includes(color.name) ? 'ring-2 ring-jager-red ring-offset-2' : ''
                 }`}
+              style={{ backgroundColor: color.code || (color.name === 'WHITE' ? '#fff' : (color.name === 'BLACK' ? '#000' : color.name.toLowerCase())) }}
               title={color.name}
             />
           ))}

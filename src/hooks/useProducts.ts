@@ -23,7 +23,8 @@ export const useProducts = () => {
           const { data: variants, error: variantsError } = await supabase
             .from('product_variants')
             .select('*')
-            .eq('product_id', product.id);
+            .eq('product_id', product.id)
+            .eq('is_archived', false);
 
           if (variantsError) throw variantsError;
 
@@ -55,7 +56,8 @@ export const useProduct = (id: string) => {
       const { data: variants, error: variantsError } = await supabase
         .from('product_variants')
         .select('*')
-        .eq('product_id', id);
+        .eq('product_id', id)
+        .eq('is_archived', false);
 
       if (variantsError) throw variantsError;
 
@@ -87,7 +89,8 @@ export const useProductsByCategory = (category: string | null) => {
           const { data: variants } = await supabase
             .from('product_variants')
             .select('*')
-            .eq('product_id', product.id);
+            .eq('product_id', product.id)
+            .eq('is_archived', false);
 
           return {
             ...product,
@@ -121,7 +124,8 @@ export const useFeaturedProducts = () => {
           const { data: variants } = await supabase
             .from('product_variants')
             .select('*')
-            .eq('product_id', product.id);
+            .eq('product_id', product.id)
+            .eq('is_archived', false);
 
           return {
             ...product,

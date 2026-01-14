@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Edit, Trash2, Package, Upload, X, Link as LinkIcon, History, AlertTriangle, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Package, Upload, X, Link as LinkIcon, History, AlertTriangle, Minus, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -62,6 +62,7 @@ interface ProductVariant {
     barcode: string | null;
     is_archived?: boolean;
     image_url?: string;
+    images?: string[];
 }
 
 interface ProductWithStock extends Product {
@@ -133,6 +134,7 @@ const Inventory = () => {
     });
     const [variants, setVariants] = useState<ProductVariant[]>([]);
     const [variantsToDelete, setVariantsToDelete] = useState<string[]>([]);
+    const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
     const [newVariant, setNewVariant] = useState({
         size: "",
         color: "",
@@ -140,7 +142,8 @@ const Inventory = () => {
         actual_price: "",
         discounted_price: "",
         price_modifier: "0",
-        image_url: "",
+        images: [] as string[], // Changed from image_url to images array
+        color_code: "",
     });
 
     const queryClient = useQueryClient();
@@ -276,20 +279,26 @@ const Inventory = () => {
         setProductForm({ ...productForm, images: newImages });
     };
 
+    // Auto-fill images when selecting a color that already exists in variants
+    useEffect(() => {
+        if (newVariant.color && !editingVariantId && newVariant.images.length === 0) {
+            const existingVariant = variants.find(v => v.color === newVariant.color && v.images && v.images.length > 0);
+            if (existingVariant && existingVariant.images) {
+                setNewVariant(prev => ({ ...prev, images: existingVariant.images || [] }));
+                toast.info(`Auto-filled images from existing ${newVariant.color} variant`);
+            }
+        }
+    }, [newVariant.color, editingVariantId, variants]);
+
     // Variant Logic (Frontend)
     const handleAddVariant = () => {
         if (!newVariant.size || !newVariant.color) {
             toast.error("Please select size and color");
             return;
         }
-        const exists = variants.some(v => v.size === newVariant.size && v.color === newVariant.color);
-        if (exists) {
-            toast.error("This size/color combination already exists");
-            return;
-        }
 
         const variant: ProductVariant = {
-            id: `temp-${Date.now()}`,
+            id: editingVariantId || `temp-${Date.now()}`,
             product_id: editingProduct?.id || selectedProductForVariants?.id || '',
             size: newVariant.size,
             color: newVariant.color,
@@ -297,12 +306,37 @@ const Inventory = () => {
             price_modifier: Number(newVariant.price_modifier) || 0,
             actual_price: newVariant.actual_price ? Number(newVariant.actual_price) : Number(productForm.base_price),
             discounted_price: newVariant.discounted_price ? Number(newVariant.discounted_price) : (productForm.discounted_price ? Number(productForm.discounted_price) : null),
-            image_url: newVariant.image_url || undefined,
+            images: newVariant.images.length > 0 ? newVariant.images : undefined,
+            color_code: newVariant.color_code || undefined,
             barcode: null,
+            // Preserve is_archived if editing existing variant
+            is_archived: editingVariantId ? variants.find(v => v.id === editingVariantId)?.is_archived : undefined
         };
 
-        setVariants([...variants, variant]);
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", image_url: "" });
+        if (editingVariantId) {
+            setVariants(variants.map(v => v.id === editingVariantId ? variant : v));
+            setEditingVariantId(null);
+            toast.success("Variant updated");
+        } else {
+            setVariants([...variants, variant]);
+            toast.success("Variant added");
+        }
+
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "" });
+    };
+
+    const handleEditVariantClick = (variant: ProductVariant) => {
+        setEditingVariantId(variant.id);
+        setNewVariant({
+            size: variant.size,
+            color: variant.color,
+            stock: variant.stock.toString(),
+            actual_price: variant.actual_price?.toString() || "",
+            discounted_price: variant.discounted_price?.toString() || "",
+            price_modifier: variant.price_modifier.toString(),
+            images: variant.images || [],
+            color_code: variant.color_code || ""
+        });
     };
 
     const handleRemoveVariant = (variantId: string) => {
@@ -353,6 +387,8 @@ const Inventory = () => {
                     price_modifier: v.price_modifier,
                     actual_price: v.actual_price,
                     discounted_price: v.discounted_price,
+                    images: v.images || [],
+                    color_code: v.color_code,
                 }));
 
                 const { error: variantsError } = await supabase.from('product_variants').insert(variantData);
@@ -558,7 +594,7 @@ const Inventory = () => {
         });
         setVariants([]);
         setVariantsToDelete([]);
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", image_url: "" });
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "" });
         setActiveTab("basic");
     };
 
@@ -657,11 +693,11 @@ const Inventory = () => {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleOpenManageVariants(product)}>
-                                                        <Package className="h-4 w-4 mr-1" /> Variants
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(product)}>
-                                                        <Edit className="h-4 w-4" />
+                                                    <Button variant="outline" size="sm" onClick={() => {
+                                                        handleOpenEdit(product);
+                                                        setManageVariantsOpen(false);
+                                                    }}>
+                                                        <Edit className="h-4 w-4 mr-1" /> Manage Product
                                                     </Button>
                                                     <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => { if (confirm("Delete product?")) deleteProduct.mutate(product.id) }}>
                                                         <Trash2 className="h-4 w-4" />
@@ -678,17 +714,26 @@ const Inventory = () => {
             )}
 
             {/* Dialog: Add/Edit Product (Metadata only mostly, but can add variants initially) */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) {
+                    // Reset form when dialog closes
+                    resetForm();
+                    setEditingProduct(null);
+                }
+            }}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="font-heading font-bold uppercase">{editingProduct ? "Edit Product Details" : "Add New Product"}</DialogTitle>
+                        <DialogTitle className="font-heading font-bold uppercase">{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                        <DialogDescription className="hidden">Manage product details and variants</DialogDescription>
+                        <p className="text-sm text-muted-foreground">Edit product details, manage variants, and upload images</p>
                     </DialogHeader>
                     {/* Render Form Logic Here (Simplified/Merged from Products.tsx) */}
                     <form onSubmit={(e) => { e.preventDefault(); editingProduct ? updateProduct.mutate() : createProduct.mutate() }} className="space-y-6">
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                                <TabsTrigger value="variants">Variants</TabsTrigger>
+                                <TabsTrigger value="basic">Product Details</TabsTrigger>
+                                <TabsTrigger value="variants">Variants & Images</TabsTrigger>
                             </TabsList>
                             <TabsContent value="basic" className="space-y-4">
                                 <div><Label>Name *</Label><Input value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} required /></div>
@@ -730,31 +775,181 @@ const Inventory = () => {
                             </TabsContent>
 
                             <TabsContent value="variants" className="space-y-4">
-                                <AlertTriangle className="h-4 w-4 inline mr-2 text-yellow-500" />
-                                <span className="text-sm text-muted-foreground">Use "Manage Variants" from the main list for advanced stock control later.</span>
-
-                                <div className="flex flex-wrap gap-2 items-end border p-2 rounded">
-                                    <div><Label className="text-xs">Size</Label><Select value={newVariant.size} onValueChange={v => setNewVariant({ ...newVariant, size: v })}><SelectTrigger className="w-20"><SelectValue /></SelectTrigger><SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
-                                    <div><Label className="text-xs">Color</Label><Select value={newVariant.color} onValueChange={v => setNewVariant({ ...newVariant, color: v })}><SelectTrigger className="w-24"><SelectValue /></SelectTrigger><SelectContent>{COLORS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
-                                    <div><Label className="text-xs">Stock</Label><Input type="number" className="w-20" value={newVariant.stock} onChange={e => setNewVariant({ ...newVariant, stock: e.target.value })} /></div>
-                                    <div><Label className="text-xs">Price</Label><Input type="number" className="w-24" value={newVariant.actual_price} onChange={e => setNewVariant({ ...newVariant, actual_price: e.target.value })} placeholder={productForm.base_price?.toString()} /></div>
-                                    <Button type="button" size="sm" onClick={handleAddVariant}><Plus className="h-4 w-4" /></Button>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                    <span className="text-sm text-muted-foreground">Manage variants and images.</span>
                                 </div>
-                                <div className="max-h-60 overflow-y-auto border rounded">
-                                    <Table>
-                                        <TableHeader><TableRow><TableHead>Size</TableHead><TableHead>Color</TableHead><TableHead>Stock</TableHead><TableHead>Price</TableHead><TableHead></TableHead></TableRow></TableHeader>
-                                        <TableBody>
-                                            {variants.map((v, idx) => (
-                                                <TableRow key={v.id || idx}>
-                                                    <TableCell>{v.size}</TableCell>
-                                                    <TableCell>{v.color}</TableCell>
-                                                    <TableCell>{v.stock}</TableCell>
-                                                    <TableCell>{v.actual_price}</TableCell>
-                                                    <TableCell><Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVariant(v.id)}><X className="h-4 w-4" /></Button></TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                                    {/* Left Panel: Add/Edit Form */}
+                                    <div className="md:col-span-2 space-y-4 border p-4 rounded-lg bg-muted/20">
+                                        <h3 className="font-semibold text-sm mb-2">{editingVariantId ? "Edit Variant" : "Add New Variant"}</h3>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-xs mb-1 block">Size</Label>
+                                                <Select value={newVariant.size} onValueChange={v => setNewVariant({ ...newVariant, size: v })}>
+                                                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                                                    <SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs mb-1 block">Color</Label>
+                                                <Select
+                                                    value={COLORS.includes(newVariant.color) ? newVariant.color : "Custom"}
+                                                    onValueChange={v => {
+                                                        if (v === "Custom") {
+                                                            setNewVariant({ ...newVariant, color: "", color_code: "" });
+                                                        } else {
+                                                            setNewVariant({ ...newVariant, color: v, color_code: "" });
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {COLORS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                                        <SelectItem value="Custom">Custom</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {(!COLORS.includes(newVariant.color) || newVariant.color === "") && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <Input
+                                                    className="w-full"
+                                                    placeholder="Color Name"
+                                                    value={newVariant.color}
+                                                    onChange={e => setNewVariant({ ...newVariant, color: e.target.value })}
+                                                />
+                                                <Input
+                                                    className="w-full font-mono text-xs"
+                                                    placeholder="#HEX"
+                                                    value={newVariant.color_code || ''}
+                                                    onChange={e => setNewVariant({ ...newVariant, color_code: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><Label className="text-xs mb-1 block">Stock</Label><Input type="number" value={newVariant.stock} onChange={e => setNewVariant({ ...newVariant, stock: e.target.value })} /></div>
+                                            <div><Label className="text-xs mb-1 block">Price</Label><Input type="number" value={newVariant.actual_price} onChange={e => setNewVariant({ ...newVariant, actual_price: e.target.value })} placeholder={productForm.base_price?.toString()} /></div>
+                                        </div>
+
+                                        <div className="border-t pt-4">
+                                            <Label className="text-xs mb-2 block">Color Images (Used for all {newVariant.color || 'color'} sizes)</Label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {newVariant.images.map((url, idx) => (
+                                                    <div key={idx} className="relative w-14 h-14 border rounded group">
+                                                        <img src={url} className="w-full h-full object-cover rounded" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newImages = newVariant.images.filter((_, i) => i !== idx);
+                                                                setNewVariant({ ...newVariant, images: newImages });
+                                                            }}
+                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <label className="w-14 h-14 border-2 border-dashed flex items-center justify-center cursor-pointer hover:bg-muted rounded transition-colors">
+                                                    {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={async (e) => {
+                                                            const files = e.target.files;
+                                                            if (!files || files.length === 0) return;
+                                                            setUploadingImages(true);
+                                                            try {
+                                                                const uploadPromises = Array.from(files).map(file => uploadImage(file));
+                                                                const urls = await Promise.all(uploadPromises);
+                                                                // Use functional update to avoid stale closure state
+                                                                setNewVariant(prev => ({ ...prev, images: [...prev.images, ...urls] }));
+                                                                toast.success(`${urls.length} image(s) uploaded!`);
+                                                            } catch (error: any) {
+                                                                toast.error(`Failed to upload: ${error.message}`);
+                                                            } finally {
+                                                                setUploadingImages(false);
+                                                                e.target.value = '';
+                                                            }
+                                                        }}
+                                                        disabled={uploadingImages}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <Button type="button" className="w-full" onClick={handleAddVariant} disabled={uploadingImages}>
+                                            {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : (editingVariantId ? <RefreshCw className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />)}
+                                            {editingVariantId ? "Update Variant" : "Add Variant"}
+                                        </Button>
+                                    </div>
+
+                                    {/* Right Panel: Existing Variants Table */}
+                                    <div className="md:col-span-3 border rounded-lg overflow-hidden flex flex-col">
+                                        <div className="bg-muted px-4 py-2 border-b">
+                                            <h3 className="font-semibold text-sm">Existing Variants</h3>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto min-h-[300px] max-h-[500px]">
+                                            <Table>
+                                                <TableHeader><TableRow><TableHead>Image</TableHead><TableHead>Size</TableHead><TableHead>Color</TableHead><TableHead>Stock</TableHead><TableHead className="text-right">Price</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                                                <TableBody>
+                                                    {variants.length === 0 ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                                                No variants added yet.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : variants.map((v, idx) => (
+                                                        <TableRow key={v.id || idx}>
+                                                            <TableCell>
+                                                                {v.images && v.images.length > 0 ? (
+                                                                    <div className="flex -space-x-2 hover:space-x-1 transition-all">
+                                                                        {v.images.slice(0, 3).map((url, i) => (
+                                                                            <img key={i} src={url} className="w-8 h-8 object-cover rounded-full border-2 border-white bg-white" />
+                                                                        ))}
+                                                                        {v.images.length > 3 && (
+                                                                            <div className="w-8 h-8 rounded-full border-2 border-white bg-muted flex items-center justify-center text-[10px] font-medium z-10">
+                                                                                +{v.images.length - 3}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="w-8 h-8 bg-muted rounded border flex items-center justify-center">
+                                                                        <span className="text-[10px] text-muted-foreground">--</span>
+                                                                    </div>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="font-medium">{v.size}</TableCell>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="w-3 h-3 rounded-full border shadow-sm" style={{ backgroundColor: v.color_code || v.color.toLowerCase() }}></span>
+                                                                    {v.color}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>{v.stock}</TableCell>
+                                                            <TableCell className="text-right">{v.actual_price}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <div className="flex justify-end gap-1">
+                                                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleEditVariantClick(v)}>
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleRemoveVariant(v.id)}>
+                                                                        <X className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </div>
                                 </div>
                             </TabsContent>
                         </Tabs>

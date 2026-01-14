@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { scanStorage, deleteUnusedFiles, resetDatabase } from "@/lib/cleanup";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Mail, Shield, Plus, Trash2, Building2, Save } from "lucide-react";
+import { Loader2, Users, Mail, Shield, Plus, Trash2, Building2, Save, AlertTriangle, HardDrive, CheckCircle, Radiation } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -15,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -227,6 +229,7 @@ const Settings = () => {
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="email">Email Templates</TabsTrigger>
           <TabsTrigger value="shipping">Shipping</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         {/* Company Info */}
@@ -643,10 +646,236 @@ const Settings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* System Maintenance */}
+        <TabsContent value="maintenance">
+          <MaintenanceTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-export default Settings;
+// Sub-component for Maintenance Logic
 
+const MaintenanceTab = () => {
+  // Storage Cleanup State
+  const [stats, setStats] = useState<{ unusedFiles: number; unusedSize: number; totalFiles: number; paths: string[] } | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Factory Reset State
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
+
+  const handleScan = async () => {
+    setScanning(true);
+    try {
+      const result = await scanStorage();
+      setStats({
+        unusedFiles: result.unusedFiles,
+        unusedSize: result.unusedSize,
+        totalFiles: result.totalFiles,
+        paths: result.unusedPaths
+      });
+      if (result.unusedFiles === 0) {
+        toast.success("System is clean! No unused images found.");
+      } else {
+        toast.info(`Found ${result.unusedFiles} unused images.`);
+      }
+    } catch (error: any) {
+      toast.error("Scan failed: " + error.message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (!stats || stats.unusedFiles === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${stats.unusedFiles} unused images? This cannot be undone.`)) return;
+
+    setDeleting(true);
+    try {
+      await deleteUnusedFiles(stats.paths);
+      toast.success("Cleanup complete!");
+      setStats(null); // Reset
+      handleScan(); // Re-scan to verify
+    } catch (error: any) {
+      toast.error("Deletion failed: " + error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleFactoryReset = async () => {
+    if (!resetPassword) {
+      toast.error("Please enter your password to confirm.");
+      return;
+    }
+
+    setResetting(true);
+    try {
+      // Get current user email for re-authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) {
+        throw new Error("Could not identify current user.");
+      }
+
+      await resetDatabase(resetPassword, user.email);
+
+      toast.success("Database has been reset successfully.");
+      setIsResetDialogOpen(false);
+      setResetPassword("");
+      // Optionally reload page to reflect empty state
+      setTimeout(() => window.location.reload(), 1500);
+
+    } catch (error: any) {
+      console.error("Reset failed", error);
+      toast.error("Reset Failed: " + (error.message || "Unknown error"));
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-heading font-bold uppercase flex items-center gap-2">
+          <HardDrive className="h-5 w-5" />
+          System Maintenance
+        </CardTitle>
+        <CardDescription>Optimize storage and system performance</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        {/* 1. Storage Cleanup Section */}
+        <div className="border rounded-lg p-4 bg-muted/20">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-sm uppercase flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                Storage Garbage Collection
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Scan for and remove "orphaned" images that are no longer linked to any product.
+                This frees up storage space.
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleScan} disabled={scanning || deleting || resetting}>
+              {scanning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <HardDrive className="h-4 w-4 mr-2" />}
+              {scanning ? "Scanning..." : "Scan Storage"}
+            </Button>
+          </div>
+
+          {stats && (
+            <div className="mt-4 p-4 border rounded bg-background animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-xs text-muted-foreground uppercase font-bold">Total Files</div>
+                  <div className="text-lg font-mono">{stats.totalFiles}</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-xs text-muted-foreground uppercase font-bold">Unused Files</div>
+                  <div className="text-lg font-mono text-amber-500">{stats.unusedFiles}</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-xs text-muted-foreground uppercase font-bold">Wasted Space</div>
+                  <div className="text-lg font-mono">{formatBytes(stats.unusedSize)}</div>
+                </div>
+                <div className="flex items-center justify-center">
+                  {stats.unusedFiles > 0 ? (
+                    <Button variant="destructive" size="sm" onClick={handleCleanup} disabled={deleting}>
+                      {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                      Delete Unused
+                    </Button>
+                  ) : (
+                    <div className="flex items-center text-green-600 gap-2 font-bold text-sm">
+                      <CheckCircle className="h-5 w-5" />
+                      System Clean
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2. Danger Zone Section */}
+        <div className="border border-red-200 rounded-lg p-4 bg-red-50/50">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-sm uppercase flex items-center gap-2 text-red-600">
+                <Radiation className="h-4 w-4" />
+                Danger Zone: Factory Reset
+              </h3>
+              <p className="text-sm text-red-800/80 mt-1 max-w-xl">
+                This will <strong>DELETE ALL</strong> Products, Variants, Inventory, Orders, and Product Images.
+                <br />
+                <span className="font-semibold underline">It will NOT delete:</span> Company Settings, Admin Accounts, or Customer Accounts.
+                <br />
+                This action is <strong>irreversible</strong>.
+              </p>
+            </div>
+
+            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive" disabled={scanning || deleting || resetting}>
+                  <Radiation className="h-4 w-4 mr-2" />
+                  Reset Database
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="text-red-600 font-bold uppercase flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Confirm Factory Reset
+                  </DialogTitle>
+                  <DialogDescription className="text-foreground">
+                    This action will permanently delete all store data (Products, Inventory, Orders).
+                    <br /><br />
+                    <strong>Are you absolutely sure?</strong>
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div>
+                    <Label>Enter your password to confirm:</Label>
+                    <Input
+                      type="password"
+                      value={resetPassword}
+                      onChange={(e) => setResetPassword(e.target.value)}
+                      placeholder="Your admin password"
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>Cancel</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleFactoryReset}
+                      disabled={resetting || !resetPassword}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {resetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Radiation className="h-4 w-4 mr-2" />}
+                      I Understand, Wipe Data
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default Settings;

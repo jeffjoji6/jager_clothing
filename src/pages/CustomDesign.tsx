@@ -8,15 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon, UploadCloud, X } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ThreeDTiltCard } from "@/components/ThreeDTiltCard";
+import { uploadImage } from "@/lib/imageUpload";
 
 export default function CustomDesign() {
     const [loading, setLoading] = useState(false);
     // Hardcoded WhatsApp Number as requested
     const adminPhone = "919633088122";
     const [uploading, setUploading] = useState(false);
+    // Store multiple image URLs
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -24,40 +28,43 @@ export default function CustomDesign() {
         quantity: "",
         budget: "",
         brief: "",
-        image_url: "",
     });
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) {
             return;
         }
+
+        /* REMOVED LIMIT CHECK */
         setUploading(true);
-        const file = e.target.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const files = Array.from(e.target.files);
 
         try {
-            const { error: uploadError } = await supabase.storage
-                .from('custom-designs')
-                .upload(filePath, file);
+            const uploadPromises = files.map(file => uploadImage(file, 'custom-designs'));
+            const results = await Promise.all(uploadPromises);
 
-            if (uploadError) {
-                throw uploadError;
+            // Filter out failures
+            const successfulUrls = results.filter((url): url is string => !!url);
+
+            if (successfulUrls.length > 0) {
+                setImageUrls(prev => [...prev, ...successfulUrls]);
+                toast.success(`${successfulUrls.length} image(s) uploaded successfully`);
+            } else {
+                throw new Error("Upload failed for all images");
             }
-
-            const { data } = supabase.storage
-                .from('custom-designs')
-                .getPublicUrl(filePath);
-
-            setFormData({ ...formData, image_url: data.publicUrl });
-            toast.success("Image uploaded successfully");
         } catch (error: any) {
             console.error('Error uploading image:', error);
-            toast.error('Error uploading image: ' + error.message);
+            toast.error('Error uploading images: ' + error.message);
         } finally {
             setUploading(false);
+            // Reset input so same files can be selected again if needed
+            e.target.value = '';
         }
+    };
+
+    // Remove image handler
+    const removeImage = (index: number) => {
+        setImageUrls(prev => prev.filter((_, i) => i !== index));
     };
 
 
@@ -67,6 +74,9 @@ export default function CustomDesign() {
         e.preventDefault();
         setLoading(true);
         setSubmitStatus(null);
+
+        // Join URLs for DB storage (comma separated)
+        const combinedImageUrls = imageUrls.join(',');
 
         try {
             // 1. Save Request to Database
@@ -81,9 +91,9 @@ export default function CustomDesign() {
                     brief: formData.brief,
                     quantity: parseInt(formData.quantity) || 0,
                     budget_range: formData.budget,
-                    image_url: formData.image_url,
+                    image_url: combinedImageUrls, // Store as comma-separated string
                 })
-                .select(); // Add .select() to get the inserted data back
+                .select();
 
             if (error) {
                 console.error("DB INSERT ERROR:", error);
@@ -103,16 +113,20 @@ export default function CustomDesign() {
                         brief: formData.brief,
                         quantity: formData.quantity,
                         budget: formData.budget || '',
-                        imageUrl: formData.image_url,
+                        imageUrls: imageUrls, // Pass ARRAY to email service
                     });
                     console.log("Email notification sent successfully");
                 } catch (emailError) {
                     console.error("Error sending email notification:", emailError);
-                    // Don't fail the submission, just log
                 }
             }
 
             // 2. Format WhatsApp Message
+            let imageLinks = "";
+            if (imageUrls.length > 0) {
+                imageLinks = "\n*Reference Images:*\n" + imageUrls.map((url, i) => `${i + 1}. ${url}`).join('\n') + "\n";
+            }
+
             const message = encodeURIComponent(
                 `*New Custom Design Request*\n\n` +
                 `*Name:* ${formData.name}\n` +
@@ -120,7 +134,7 @@ export default function CustomDesign() {
                 `*Qty:* ${formData.quantity}\n` +
                 `*Budget:* ${formData.budget}\n` +
                 `*Email:* ${formData.email}\n` +
-                (formData.image_url ? `*Ref Image:* ${formData.image_url}\n` : '') +
+                imageLinks +
                 `----------------\n` +
                 `ID: ${new Date().getTime().toString().slice(-6)}`
             );
@@ -358,83 +372,71 @@ export default function CustomDesign() {
                             </div>
 
                             <div className="space-y-3">
-                                <Label>Reference Image (Optional)</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="image-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        disabled={uploading}
-                                        className="hidden"
-                                    />
-                                    <Label
-                                        htmlFor="image-upload"
-                                        className={`flex flex-col items-center justify-center w-full h-20 md:h-32 border-2 border-dashed rounded-lg md:rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:scale-[1.02] ${formData.image_url
-                                            ? "border-green-500 bg-green-500/10"
-                                            : "border-input"
-                                            }`}
-                                    >
-                                        <div className="flex flex-row md:flex-col items-center justify-center gap-3 pt-2 pb-2 md:pt-5 md:pb-6 pointer-events-none relative z-10">
-                                            {uploading ? (
-                                                <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground animate-spin" />
-                                            ) : formData.image_url ? (
-                                                <>
-                                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg shrink-0">
-                                                        <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                                                    </div>
-                                                    <div className="text-left md:text-center">
-                                                        <p className="text-sm font-bold text-green-500">Image Attached!</p>
-                                                        <p className="text-xs text-muted-foreground">Click to change</p>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {/* Liquid Blob Icon Background - PRESERVED */}
-                                                    <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
-                                                        <motion.div
-                                                            className="absolute inset-0 bg-accent/80 opacity-50"
-                                                            animate={{
-                                                                borderRadius: [
-                                                                    "60% 40% 30% 70% / 60% 30% 70% 40%",
-                                                                    "30% 60% 70% 40% / 50% 60% 30% 60%",
-                                                                    "60% 40% 30% 70% / 60% 30% 70% 40%"
-                                                                ]
-                                                            }}
-                                                            transition={{
-                                                                duration: 4,
-                                                                repeat: Infinity,
-                                                                ease: "easeInOut"
-                                                            }}
-                                                        />
-                                                        <motion.div
-                                                            className="absolute inset-0 bg-accent/50"
-                                                            animate={{
-                                                                borderRadius: [
-                                                                    "40% 60% 70% 30% / 40% 50% 60% 50%",
-                                                                    "60% 30% 50% 70% / 60% 40% 50% 60%",
-                                                                    "40% 60% 70% 30% / 40% 50% 60% 50%"
-                                                                ],
-                                                                rotate: [0, 180, 360]
-                                                            }}
-                                                            transition={{
-                                                                duration: 7,
-                                                                repeat: Infinity,
-                                                                ease: "linear"
-                                                            }}
-                                                        />
-                                                        <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-foreground/80 relative z-10" />
-                                                    </div>
+                                <Label>Reference Images</Label>
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Input
+                                            id="image-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageUpload}
+                                            disabled={uploading}
+                                            className="hidden"
+                                        />
+                                        <Label
+                                            htmlFor="image-upload"
+                                            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:scale-[1.01] ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-500/50 hover:bg-green-500/5'
+                                                } border-input`}
+                                        >
+                                            <div className="flex flex-col items-center justify-center gap-3 py-4">
+                                                {uploading ? (
+                                                    <>
+                                                        <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+                                                        <p className="text-sm text-muted-foreground font-medium">Uploading...</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="relative w-12 h-12 flex items-center justify-center shrink-0 mb-2">
+                                                            <motion.div
+                                                                className="absolute inset-0 bg-green-500/20"
+                                                                animate={{
+                                                                    borderRadius: ["30% 70% 70% 30% / 30% 30% 70% 70%", "60% 40% 30% 70% / 60% 30% 70% 40%", "30% 70% 70% 30% / 30% 30% 70% 70%"],
+                                                                }}
+                                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                                            />
+                                                            <UploadCloud className="w-6 h-6 text-green-600 relative z-10" />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-sm font-bold text-foreground">Upload Reference Photos</p>
+                                                            <p className="text-xs text-muted-foreground mt-1">Select multiple images</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </Label>
+                                    </div>
 
-                                                    <div className="text-left md:text-center">
-                                                        <p className="text-sm font-medium">Upload Reference</p>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">Click or drag image</p>
-                                                    </div>
-                                                </>
-                                            )}
+                                    {/* Thumbnail Grid */}
+                                    {imageUrls.length > 0 && (
+                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                                            {imageUrls.map((url, index) => (
+                                                <div key={index} className="relative aspect-square rounded-lg overflow-hidden border bg-background group shadow-sm">
+                                                    <img src={url} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            removeImage(index);
+                                                        }}
+                                                        className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white p-1 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 scale-90 active:scale-95"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
-
-                                    </Label>
+                                    )}
                                 </div>
                             </div>
 
