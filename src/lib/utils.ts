@@ -13,5 +13,9 @@ export function optimizeCloudinaryUrl(url: string, width: number = 800) {
   const parts = url.split('/upload/');
   if (parts.length !== 2) return url;
 
-  return `${parts[0]}/upload/f_auto,q_auto,w_${width}/${parts[1]}`;
+  // f_auto: auto format, q_auto: auto quality
+  // w_${width}: resize to width
+  // c_fill: resize to fill dimensions (cropping if needed) vs c_pad (adding bars)
+  // b_white: if padding happens (shouldn't with fill), make it white
+  return `${parts[0]}/upload/f_auto,q_auto,w_${width},c_fill,g_auto/${parts[1]}`;
 }

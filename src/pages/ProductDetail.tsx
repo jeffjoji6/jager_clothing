@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ReactMarkdown from 'react-markdown';
@@ -290,7 +291,7 @@ const ProductDetail = () => {
                     className={`relative flex-shrink-0 w-20 h-24 md:w-20 md:h-24 border transition-all ${selectedImageIndex === i ? 'border-foreground' : 'border-transparent hover:border-gray-300'
                       }`}
                   >
-                    <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={optimizeCloudinaryUrl(img, 200)} alt={`View ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -299,8 +300,9 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="flex-1 bg-grey-bg aspect-[3/4] md:aspect-[4/5] md:h-[700px] relative group overflow-hidden">
               <img
-                src={mainImage}
+                src={optimizeCloudinaryUrl(mainImage, 1200)}
                 alt={product.name}
+                fetchPriority="high"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
