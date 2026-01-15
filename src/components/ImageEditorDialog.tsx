@@ -38,7 +38,7 @@ export const ImageEditorDialog = ({
     const [brightness, setBrightness] = useState(100);
     const [contrast, setContrast] = useState(100);
     const [saturation, setSaturation] = useState(100);
-    const [quality, setQuality] = useState(80); // 0-100
+    const [quality, setQuality] = useState(100); // 0-100
 
     const [processing, setProcessing] = useState(false);
 
@@ -142,14 +142,7 @@ export const ImageEditorDialog = ({
                                         <Ratio className="w-3 h-3" /> Aspect Ratio
                                     </Label>
                                     <div className="flex flex-wrap gap-2">
-                                        <Button
-                                            variant={currentAspect === undefined ? "secondary" : "outline"}
-                                            size="sm"
-                                            onClick={() => setCurrentAspect(undefined)}
-                                            className="text-xs"
-                                        >
-                                            Free Style
-                                        </Button>
+
                                         <Button
                                             variant={currentAspect === 1 ? "secondary" : "outline"}
                                             size="sm"

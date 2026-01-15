@@ -23,6 +23,7 @@ const Home = () => {
           <img
             src={heroImage}
             alt="Jager Hero"
+            fetchPriority="high"
             className="w-full h-full object-cover scale-105 animate-slow-zoom"
           />
           <div className="absolute inset-0 bg-black/50" />

@@ -20,7 +20,7 @@ export const ProductCard = ({ id, name, price, image, isNew, isOutOfStock }: Pro
 
   return (
     <div className="group block space-y-3">
-      <div className="relative aspect-[3/4] bg-grey-bg overflow-hidden">
+      <div className="relative aspect-[3/4] bg-white overflow-hidden">
         <Link to={`/product/${id}`} className={isOutOfStock ? "pointer-events-none" : ""}>
           {/* Main Image */}
           <div className={`w-full h-full transition-all duration-300 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}>

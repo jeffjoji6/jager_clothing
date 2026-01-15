@@ -137,8 +137,7 @@ const Collection = () => {
                       setSelectedSizes={setSelectedSizes}
                       selectedColors={selectedColors}
                       setSelectedColors={setSelectedColors}
-                      selectedColors={selectedColors}
-                      setSelectedColors={setSelectedColors}
+
                       availableCategories={availableCategories}
                       availableColors={availableColors}
                     />
@@ -166,8 +165,7 @@ const Collection = () => {
                   setSelectedSizes={setSelectedSizes}
                   selectedColors={selectedColors}
                   setSelectedColors={setSelectedColors}
-                  selectedColors={selectedColors}
-                  setSelectedColors={setSelectedColors}
+
                   availableCategories={availableCategories}
                   availableColors={availableColors}
                 />
