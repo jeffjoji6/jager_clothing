@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { scanStorage, deleteUnusedFiles, resetDatabase } from "@/lib/cleanup";
+import { scanStorage, deleteUnusedFiles } from "@/lib/cleanup";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -664,10 +664,7 @@ const MaintenanceTab = () => {
   const [scanning, setScanning] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Factory Reset State
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetting, setResetting] = useState(false);
+
 
   const handleScan = async () => {
     setScanning(true);
@@ -708,35 +705,7 @@ const MaintenanceTab = () => {
     }
   };
 
-  const handleFactoryReset = async () => {
-    if (!resetPassword) {
-      toast.error("Please enter your password to confirm.");
-      return;
-    }
 
-    setResetting(true);
-    try {
-      // Get current user email for re-authentication
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !user.email) {
-        throw new Error("Could not identify current user.");
-      }
-
-      await resetDatabase(resetPassword, user.email);
-
-      toast.success("Database has been reset successfully.");
-      setIsResetDialogOpen(false);
-      setResetPassword("");
-      // Optionally reload page to reflect empty state
-      setTimeout(() => window.location.reload(), 1500);
-
-    } catch (error: any) {
-      console.error("Reset failed", error);
-      toast.error("Reset Failed: " + (error.message || "Unknown error"));
-    } finally {
-      setResetting(false);
-    }
-  };
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -769,7 +738,7 @@ const MaintenanceTab = () => {
                 This frees up storage space.
               </p>
             </div>
-            <Button variant="outline" onClick={handleScan} disabled={scanning || deleting || resetting}>
+            <Button variant="outline" onClick={handleScan} disabled={scanning || deleting}>
               {scanning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <HardDrive className="h-4 w-4 mr-2" />}
               {scanning ? "Scanning..." : "Scan Storage"}
             </Button>
@@ -808,71 +777,7 @@ const MaintenanceTab = () => {
           )}
         </div>
 
-        {/* 2. Danger Zone Section */}
-        <div className="border border-red-200 rounded-lg p-4 bg-red-50/50">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-bold text-sm uppercase flex items-center gap-2 text-red-600">
-                <Radiation className="h-4 w-4" />
-                Danger Zone: Factory Reset
-              </h3>
-              <p className="text-sm text-red-800/80 mt-1 max-w-xl">
-                This will <strong>DELETE ALL</strong> Products, Variants, Inventory, Orders, and Product Images.
-                <br />
-                <span className="font-semibold underline">It will NOT delete:</span> Company Settings, Admin Accounts, or Customer Accounts.
-                <br />
-                This action is <strong>irreversible</strong>.
-              </p>
-            </div>
 
-            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="destructive" disabled={scanning || deleting || resetting}>
-                  <Radiation className="h-4 w-4 mr-2" />
-                  Reset Database
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="text-red-600 font-bold uppercase flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Confirm Factory Reset
-                  </DialogTitle>
-                  <DialogDescription className="text-foreground">
-                    This action will permanently delete all store data (Products, Inventory, Orders).
-                    <br /><br />
-                    <strong>Are you absolutely sure?</strong>
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <Label>Enter your password to confirm:</Label>
-                    <Input
-                      type="password"
-                      value={resetPassword}
-                      onChange={(e) => setResetPassword(e.target.value)}
-                      placeholder="Your admin password"
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>Cancel</Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleFactoryReset}
-                      disabled={resetting || !resetPassword}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      {resetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Radiation className="h-4 w-4 mr-2" />}
-                      I Understand, Wipe Data
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
