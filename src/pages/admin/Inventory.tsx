@@ -491,8 +491,8 @@ const Inventory = () => {
 
         setUploadingImages(true);
         try {
-            // Use uploadToSupabase for product images as requested for performance
-            const url = await uploadToSupabase(file);
+            // Use Cloudinary for product images (faster CDN)
+            const url = await uploadImage(file);
 
             if (url) {
                 if (editorContext.type === 'product') {
