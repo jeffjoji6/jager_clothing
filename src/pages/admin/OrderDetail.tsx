@@ -13,6 +13,7 @@ import { Loader2, ArrowLeft, FileText, Download, Package } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { generatePackingSlip, generateInvoice } from "@/lib/pdfGenerator";
+import { sendTrackingNotificationEmail } from "@/lib/emailService";
 
 interface Order {
   id: string;
@@ -178,10 +179,32 @@ const OrderDetail = () => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'order', id] });
       toast.success("Tracking number added");
       setShowTrackingDialog(false);
+
+      // Send tracking notification email to customer
+      if (order && trackingNumber) {
+        const customerEmail = order.shipping_address?.email;
+        const customerName = order.shipping_address?.full_name || 'Customer';
+
+        if (customerEmail) {
+          const emailResult = await sendTrackingNotificationEmail({
+            orderId: order.id,
+            customerEmail,
+            customerName,
+            trackingId: trackingNumber,
+            // trackingUrl: optional - add if you have it
+          });
+
+          if (emailResult.success) {
+            toast.success("Shipping notification sent to customer");
+          } else {
+            console.error("Failed to send tracking email:", emailResult.error);
+          }
+        }
+      }
     },
   });
 

@@ -97,3 +97,45 @@ export const sendCustomDesignNotificationEmail = async (data: {
         return { success: false, error: error.message };
     }
 };
+
+export const sendTrackingNotificationEmail = async (data: {
+    orderId: string;
+    customerEmail: string;
+    customerName: string;
+    trackingId?: string;
+    trackingUrl?: string;
+    carrierName?: string;
+}) => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            console.error("No session found for sending tracking notification");
+            return { success: false, error: "No session" };
+        }
+
+        const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-tracking-notification`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${session.access_token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.text();
+            console.error("Failed to send tracking notification:", error);
+            return { success: false, error };
+        }
+
+        const result = await response.json();
+        return { success: true, data: result };
+    } catch (error: any) {
+        console.error("Error sending tracking notification:", error);
+        return { success: false, error: error.message };
+    }
+};
