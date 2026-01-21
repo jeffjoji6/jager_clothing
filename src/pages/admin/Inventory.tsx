@@ -1167,7 +1167,7 @@ const Inventory = () => {
                                                                 No variants added yet.
                                                             </TableCell>
                                                         </TableRow>
-                                                    ) : variants.map((v, idx) => (
+                                                    ) : [...variants].sort((a, b) => a.color.localeCompare(b.color) || a.size.localeCompare(b.size)).map((v, idx) => (
                                                         <TableRow key={v.id || idx}>
                                                             <TableCell>
                                                                 <Badge variant={v.images && v.images.length > 0 ? "default" : "secondary"} className="text-xs font-mono">
