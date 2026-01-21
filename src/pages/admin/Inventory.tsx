@@ -1170,22 +1170,9 @@ const Inventory = () => {
                                                     ) : variants.map((v, idx) => (
                                                         <TableRow key={v.id || idx}>
                                                             <TableCell>
-                                                                {v.images && v.images.length > 0 ? (
-                                                                    <div className="flex -space-x-2">
-                                                                        {v.images.slice(0, 2).map((url, i) => (
-                                                                            <img key={i} src={url} loading="lazy" className="w-8 h-8 object-cover rounded-full border-2 border-white bg-white" />
-                                                                        ))}
-                                                                        {v.images.length > 2 && (
-                                                                            <div className="w-8 h-8 rounded-full border-2 border-white bg-muted flex items-center justify-center text-[10px] font-medium z-10">
-                                                                                +{v.images.length - 2}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="w-8 h-8 bg-muted rounded border flex items-center justify-center">
-                                                                        <span className="text-[10px] text-muted-foreground">--</span>
-                                                                    </div>
-                                                                )}
+                                                                <Badge variant={v.images && v.images.length > 0 ? "default" : "secondary"} className="text-xs font-mono">
+                                                                    {v.images?.length || 0}
+                                                                </Badge>
                                                             </TableCell>
                                                             <TableCell className="font-medium">{v.size}</TableCell>
                                                             <TableCell>
