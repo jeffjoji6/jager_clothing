@@ -202,7 +202,10 @@ const OrderDetail = () => {
             toast.success("Shipping notification sent to customer");
           } else {
             console.error("Failed to send tracking email:", emailResult.error);
+            toast.error("Tracking saved, but failed to send email: " + emailResult.error);
           }
+        } else {
+          toast.warning("Tracking saved, but no customer email found.");
         }
       }
     },

@@ -248,6 +248,7 @@ const Checkout = () => {
             state: address.state,
             zip: address.zip,
             phone: address.phone,
+            email: user?.email, // Save email for notifications
           },
         })
         .select()

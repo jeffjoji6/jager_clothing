@@ -1,52 +1,31 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { Resend } from "npm:resend@1.0.0";
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-interface TrackingData {
-    orderId: string;
-    customerEmail: string;
-    customerName: string;
-    trackingId?: string;
-    trackingUrl?: string;
-    carrierName?: string;
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-    try {
-        const { orderId, customerEmail, customerName, trackingId, trackingUrl, carrierName } = await req.json() as TrackingData
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
-        // Create Supabase client to fetch company settings
-        const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
+  try {
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not set");
+    }
 
-        // Fetch company name from settings
-        const { data: companySettings } = await supabase
-            .from('company_settings')
-            .select('name')
-            .single()
+    const resend = new Resend(resendApiKey);
+    const { orderId, customerEmail, customerName, trackingId, trackingUrl, carrierName } = await req.json();
 
-        const companyName = companySettings?.name || 'Jager Clothing'
+    if (!orderId || !customerEmail) {
+      throw new Error("Missing required fields: orderId, customerEmail");
+    }
 
-        // Build tracking section HTML
-        let trackingSection = ''
-        if (trackingId || trackingUrl) {
-            trackingSection = `
-                <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                    <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">📦 Tracking Information</h3>
-                    ${carrierName ? `<p style="margin: 0 0 10px 0; color: #666;">Carrier: <strong>${carrierName}</strong></p>` : ''}
-                    ${trackingId ? `<p style="margin: 0 0 15px 0; color: #333; font-family: monospace; font-size: 18px; font-weight: bold;">${trackingId}</p>` : ''}
-                    ${trackingUrl ? `
-                        <a href="${trackingUrl}" style="display: inline-block; background-color: #AF2018; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
-                            Track Your Package →
-                        </a>
-                    ` : ''}
-                </div>
-            `
-        }
-
-        const emailHtml = `
+    const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -61,8 +40,8 @@ serve(async (req) => {
                 <!-- Header -->
                 <tr>
                   <td style="background-color: #AF2018; padding: 30px; text-align: center;">
-                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">🚚 YOUR ORDER HAS SHIPPED!</h1>
-                    <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">Order #${orderId.substring(0, 8).toUpperCase()}</p>
+                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">ORDER SHIPPED! 🚚</h1>
+                    <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px;">Order #${orderId.substring(0, 8).toUpperCase()} is on its way</p>
                   </td>
                 </tr>
                 
@@ -73,19 +52,30 @@ serve(async (req) => {
                       Hi ${customerName},
                     </p>
                     <p style="font-size: 16px; color: #333; margin: 0 0 20px 0;">
-                      Great news! Your ${companyName} order is on its way to you.
+                      Great news! Your order has been shipped and is making its way to you.
                     </p>
                     
-                    ${trackingSection}
-                    
-                    <p style="font-size: 14px; color: #666; margin: 20px 0;">
-                      If you have any questions about your delivery, feel free to reply to this email.
+                    <!-- Tracking Info Box -->
+                    <div style="background-color: #f8f8f8; border-left: 4px solid #AF2018; padding: 20px; margin: 30px 0; border-radius: 4px;">
+                      ${carrierName ? `<p style="margin: 0 0 10px 0; color: #666; font-size: 14px; text-transform: uppercase; font-weight: bold;">Carrier: ${carrierName}</p>` : ''}
+                      ${trackingId ? `<h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px; font-family: monospace;">${trackingId}</h2>` : ''}
+                      
+                      ${trackingUrl ? `
+                      <div style="margin-top: 20px;">
+                        <a href="${trackingUrl}" style="display: inline-block; background-color: #333; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">
+                          Track Package
+                        </a>
+                      </div>
+                      ` : ''}
+                    </div>
+
+                    <p style="font-size: 14px; color: #666; margin: 0;">
+                      Note: It may take up to 24 hours for tracking information to update.
                     </p>
                     
-                    <!-- View Order Button -->
-                    <div style="text-align: center; margin: 30px 0;">
-                      <a href="https://jagerclothing.in/orders/${orderId}" style="display: inline-block; background-color: #333; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
-                        View Order Details
+                    <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+                      <a href="https://jagerclothing.in/orders/${orderId}" style="text-decoration: none; color: #AF2018; font-weight: bold;">
+                        View Order Details →
                       </a>
                     </div>
                   </td>
@@ -94,11 +84,8 @@ serve(async (req) => {
                 <!-- Footer -->
                 <tr>
                   <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-                    <p style="margin: 0 0 10px 0; color: #333; font-size: 16px; font-weight: bold;">
-                      Thank you for shopping with ${companyName}!
-                    </p>
                     <p style="margin: 0; color: #666; font-size: 14px;">
-                      Questions? Contact us at support@jagerclothing.in
+                      Jager Clothing
                     </p>
                   </td>
                 </tr>
@@ -108,32 +95,25 @@ serve(async (req) => {
         </table>
       </body>
       </html>
-    `
+    `;
 
-        const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-                from: 'Jager Clothing <support@jagerclothing.in>',
-                to: [customerEmail],
-                subject: `Your Order Has Shipped! 🚚 #${orderId.substring(0, 8).toUpperCase()}`,
-                html: emailHtml,
-            }),
-        })
+    const data = await resend.emails.send({
+      from: 'Jager Clothing <support@jagerclothing.in>',
+      to: [customerEmail],
+      subject: `Your Order Has Shipped! 🚚 #${orderId.substring(0, 8).toUpperCase()}`,
+      html: emailHtml,
+    });
 
-        const data = await res.json()
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
 
-        return new Response(JSON.stringify(data), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        })
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        })
-    }
-})
+  } catch (error: any) {
+    console.error("Error sending tracking email:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+});

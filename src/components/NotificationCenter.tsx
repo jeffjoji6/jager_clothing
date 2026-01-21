@@ -93,82 +93,87 @@ export const NotificationCenter = ({ isOpen, onClose, onUpdate }: NotificationCe
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0">
-                <DialogHeader className="px-6 py-4 border-b">
+            <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+                <DialogHeader className="px-6 py-4 border-b bg-background z-10">
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-xl font-heading uppercase">Notifications</DialogTitle>
+                        <DialogTitle className="text-xl font-heading uppercase tracking-tight">Notifications</DialogTitle>
                         {notifications.length > 0 && (
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                            <div className="flex gap-4">
+                                <button
                                     onClick={handleMarkAllRead}
-                                    className="text-xs"
+                                    className="text-xs font-medium hover:text-jager-red transition-colors uppercase tracking-wide"
                                 >
                                     Mark all read
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                </button>
+                                <button
                                     onClick={handleClearAll}
-                                    className="text-xs text-destructive hover:text-destructive"
+                                    className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors uppercase tracking-wide"
                                 >
                                     Clear all
-                                </Button>
+                                </button>
                             </div>
                         )}
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 px-6">
+                <ScrollArea className="flex-1">
                     {loading ? (
-                        <div className="flex items-center justify-center py-12">
+                        <div className="flex items-center justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jager-red"></div>
                         </div>
                     ) : notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                            <p className="text-lg font-medium text-muted-foreground">No notifications</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                You're all caught up!
+                        <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+                            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                                <Bell className="h-8 w-8 text-muted-foreground/50" />
+                            </div>
+                            <p className="text-lg font-bold font-heading uppercase mb-1">No notifications</p>
+                            <p className="text-sm text-muted-foreground">
+                                You're all caught up! Check back later for updates.
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2 py-4">
+                        <div className="divide-y">
                             {notifications.map((notification) => (
                                 <div
                                     key={notification.id}
                                     onClick={() => handleNotificationClick(notification)}
-                                    className={`group relative p-4 rounded-lg border cursor-pointer transition-all hover:bg-secondary/50 ${notification.is_read ? 'bg-background' : 'bg-secondary/20 border-jager-red/20'
+                                    className={`group relative px-6 py-5 cursor-pointer transition-colors hover:bg-muted/30 ${notification.is_read ? 'bg-background' : 'bg-jager-red/5'
                                         }`}
                                 >
-                                    <div className="flex gap-3">
-                                        <div className="shrink-0 mt-1">
+                                    <div className="flex gap-4">
+                                        <div className={`shrink-0 mt-1 h-10 w-10 rounded-full flex items-center justify-center ${notification.is_read ? 'bg-muted/50' : 'bg-white shadow-sm border'
+                                            }`}>
                                             {getNotificationIcon(notification.type)}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <h4 className="font-semibold text-sm">{notification.title}</h4>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                                    onClick={(e) => handleClear(notification.id, e)}
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
+                                        <div className="flex-1 min-w-0 pr-8">
+                                            <div className="flex flex-col gap-1">
+                                                <h4 className={`text-sm ${notification.is_read ? 'font-medium' : 'font-bold'}`}>
+                                                    {notification.title}
+                                                </h4>
+                                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                                                    {notification.message}
+                                                </p>
+                                                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mt-1 tracking-wide">
+                                                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                                </p>
                                             </div>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                {notification.message}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-2">
-                                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                                            </p>
                                         </div>
                                     </div>
-                                    {!notification.is_read && (
-                                        <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-jager-red"></div>
-                                    )}
+
+                                    {/* Action Buttons */}
+                                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                                        {!notification.is_read && (
+                                            <div className="h-2 w-2 rounded-full bg-jager-red self-end mb-1"></div>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                            onClick={(e) => handleClear(notification.id, e)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
