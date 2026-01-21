@@ -149,12 +149,52 @@ const VariantRow = React.memo(({ v, idx, onEdit, onRemove, onAdjust, onHistory }
         </tr>
     );
 }, (prev, next) => {
-    // Custom comparison to really avoid renders unless critical data changes
-    return prev.v === next.v && prev.idx === next.idx;
+    // Deep comparison on variant data that affects rendering
+    const pv = prev.v;
+    const nv = next.v;
+    return (
+        pv.id === nv.id &&
+        pv.size === nv.size &&
+        pv.color === nv.color &&
+        pv.actual_price === nv.actual_price &&
+        pv.discounted_price === nv.discounted_price &&
+        pv.stock === nv.stock &&
+        pv.image_url === nv.image_url &&
+        prev.onAdjust === next.onAdjust &&
+        prev.onRemove === next.onRemove &&
+        prev.onHistory === next.onHistory
+    );
 });
 
-// Memoized List Wrapper
+// Memoized List Wrapper with Pagination
 const VariantList = React.memo(({ variants, onEdit, onRemove, onUpdate, onHistory, onAdjustStock }: any) => {
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Calculate pagination
+    const totalPages = Math.ceil(variants.length / itemsPerPage);
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const paginatedVariants = useMemo(() => {
+        return variants.slice(startIdx, startIdx + itemsPerPage);
+    }, [variants, startIdx, itemsPerPage]);
+
+    // Reset to page 1 when variants change significantly
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(1);
+        }
+    }, [variants.length, totalPages, currentPage]);
+
+    // Create a stable callback for the VariantRow onAdjust prop
+    const handleAdjust = useCallback((variantOrId: any, field: string, val?: any) => {
+        if (field === 'stock_dialog') {
+            onAdjustStock(variantOrId);
+        } else {
+            onUpdate(variantOrId, field, val);
+        }
+    }, [onAdjustStock, onUpdate]);
+
     return (
         <div className="border rounded-md">
             <Table>
@@ -171,26 +211,107 @@ const VariantList = React.memo(({ variants, onEdit, onRemove, onUpdate, onHistor
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {variants.map((v: any, idx: number) => (
+                    {paginatedVariants.map((v: any, idx: number) => (
                         <VariantRow
-                            key={v.id || idx}
+                            key={v.id || (startIdx + idx)}
                             v={v}
-                            idx={idx}
+                            idx={startIdx + idx}
                             onEdit={onEdit}
                             onRemove={onRemove}
-                            onAdjust={(id: string, field: string, val: any) => {
-                                if (field === 'stock_dialog') onAdjustStock(id);
-                                else onUpdate(id, field, val);
-                            }}
+                            onAdjust={handleAdjust}
                             onHistory={onHistory}
                         />
                     ))}
                     {variants.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No variants found.</TableCell></TableRow>}
                 </TableBody>
             </Table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+                    <span className="text-xs text-muted-foreground">
+                        Showing {startIdx + 1}-{Math.min(startIdx + itemsPerPage, variants.length)} of {variants.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Prev
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                            {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 });
+
+
+// Helper function (module scope so ProductRow can use it)
+const getTotalStock = (product: ProductWithStock) => {
+    return product.product_variants?.reduce((sum, variant) => {
+        if (variant.is_archived) return sum;
+        return sum + Number(variant.stock || 0);
+    }, 0) || 0;
+};
+
+// Memoized ProductRow to prevent re-renders
+const ProductRow = React.memo(({ product, onManage, onDelete }: { product: ProductWithStock, onManage: (p: ProductWithStock) => void, onDelete: (id: string) => void }) => {
+    const totalStock = getTotalStock(product);
+
+    return (
+        <TableRow>
+            <TableCell>
+                {product.images?.[0] && (
+                    <img src={product.images[0]} alt={product.name} loading="lazy" className="w-12 h-12 object-cover rounded bg-muted" />
+                )}
+            </TableCell>
+            <TableCell>
+                <div className="font-medium">{product.name}</div>
+                <div className="text-xs text-muted-foreground">{product.sku}</div>
+            </TableCell>
+            <TableCell>{product.category}</TableCell>
+            <TableCell>
+                {product.discounted_price ? (
+                    <div className="flex flex-col">
+                        <span className="text-red-500 font-bold">₹{product.discounted_price}</span>
+                        <span className="line-through text-xs text-muted-foreground">₹{product.base_price}</span>
+                    </div>
+                ) : `₹${product.base_price}`}
+            </TableCell>
+            <TableCell>
+                <Badge variant="outline" className={totalStock === 0 ? "text-red-500 border-red-500" : totalStock < 10 ? "text-yellow-500 border-yellow-500" : "text-green-500 border-green-500"}>
+                    {totalStock}
+                </Badge>
+            </TableCell>
+            <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => onManage(product)}>
+                        <Edit className="h-4 w-4 mr-1" /> Manage Product
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => onDelete(product.id)}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            </TableCell>
+        </TableRow>
+    );
+}, (prev, next) => prev.product === next.product);
 
 
 const Inventory = () => {
@@ -251,6 +372,11 @@ const Inventory = () => {
         color_code: "",
     });
 
+
+
+    // Handlers for Row
+
+
     const queryClient = useQueryClient();
 
     // --- Queries ---
@@ -267,6 +393,23 @@ const Inventory = () => {
             return data as ProductWithStock[];
         },
     });
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Filtered & Paginated Products
+    const filteredProducts = useMemo(() => {
+        if (!products) return [];
+        let result = products;
+        return result;
+    }, [products]);
+
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const paginatedProducts = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredProducts.slice(start, start + itemsPerPage);
+    }, [filteredProducts, currentPage]);
 
     // Fetch variants for selected product (Edit or Manage)
     const { data: productVariants } = useQuery({
@@ -326,14 +469,6 @@ const Inventory = () => {
         }
     }, [productVariants, editingProduct, selectedProductForVariants]);
 
-
-    // --- Helper Functions ---
-    const getTotalStock = (product: ProductWithStock) => {
-        return product.product_variants?.reduce((sum, variant) => {
-            if (variant.is_archived) return sum;
-            return sum + Number(variant.stock || 0);
-        }, 0) || 0;
-    };
 
 
     // --- Mutation Logic (Product CRUD) ---
@@ -720,6 +855,19 @@ const Inventory = () => {
     });
 
 
+    // Handlers for Row
+    const handleManageProduct = useCallback((product: ProductWithStock) => {
+        handleOpenEdit(product);
+        setManageVariantsOpen(false);
+    }, []);
+
+    const handleDeleteProduct = useCallback((id: string) => {
+        if (confirm("Delete product?")) {
+            deleteProduct.mutate(id);
+        }
+    }, [deleteProduct]);
+
+
     // --- UI Actions ---
     const resetForm = () => {
         setProductForm({
@@ -799,51 +947,41 @@ const Inventory = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {products?.map((product) => {
-                                    const totalStock = getTotalStock(product);
-                                    return (
-                                        <TableRow key={product.id}>
-                                            <TableCell>
-                                                {product.images?.[0] && (
-                                                    <img src={product.images[0]} alt={product.name} className="w-12 h-12 object-cover rounded bg-muted" />
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="font-medium">{product.name}</div>
-                                                <div className="text-xs text-muted-foreground">{product.sku}</div>
-                                            </TableCell>
-                                            <TableCell>{product.category}</TableCell>
-                                            <TableCell>
-                                                {product.discounted_price ? (
-                                                    <div className="flex flex-col">
-                                                        <span className="text-red-500 font-bold">₹{product.discounted_price}</span>
-                                                        <span className="line-through text-xs text-muted-foreground">₹{product.base_price}</span>
-                                                    </div>
-                                                ) : `₹${product.base_price}`}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline" className={totalStock === 0 ? "text-red-500 border-red-500" : totalStock < 10 ? "text-yellow-500 border-yellow-500" : "text-green-500 border-green-500"}>
-                                                    {totalStock}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => {
-                                                        handleOpenEdit(product);
-                                                        setManageVariantsOpen(false);
-                                                    }}>
-                                                        <Edit className="h-4 w-4 mr-1" /> Manage Product
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => { if (confirm("Delete product?")) deleteProduct.mutate(product.id) }}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
+                                {paginatedProducts.map((product) => (
+                                    <ProductRow
+                                        key={product.id}
+                                        product={product}
+                                        onManage={handleManageProduct}
+                                        onDelete={handleDeleteProduct}
+                                    />
+                                ))}
                             </TableBody>
                         </Table>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-end space-x-2 py-4">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <span className="text-sm text-muted-foreground">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}
@@ -1014,12 +1152,12 @@ const Inventory = () => {
                                         </Button>
                                     </div>
 
-                                    {/* Right Panel: Existing Variants Table */}
+                                    {/* Right Panel: Existing Variants Table with Pagination */}
                                     <div className="md:col-span-3 border rounded-lg overflow-hidden flex flex-col">
-                                        <div className="bg-muted px-4 py-2 border-b">
-                                            <h3 className="font-semibold text-sm">Existing Variants</h3>
+                                        <div className="bg-muted px-4 py-2 border-b flex items-center justify-between">
+                                            <h3 className="font-semibold text-sm">Existing Variants ({variants.length})</h3>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto min-h-[300px] max-h-[500px]">
+                                        <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[350px]">
                                             <Table>
                                                 <TableHeader><TableRow><TableHead>Image</TableHead><TableHead>Size</TableHead><TableHead>Color</TableHead><TableHead>Stock</TableHead><TableHead className="text-right">Price</TableHead><TableHead></TableHead></TableRow></TableHeader>
                                                 <TableBody>
@@ -1034,12 +1172,12 @@ const Inventory = () => {
                                                             <TableCell>
                                                                 {v.images && v.images.length > 0 ? (
                                                                     <div className="flex -space-x-2">
-                                                                        {v.images.slice(0, 3).map((url, i) => (
-                                                                            <img key={i} src={url} className="w-8 h-8 object-cover rounded-full border-2 border-white bg-white" />
+                                                                        {v.images.slice(0, 2).map((url, i) => (
+                                                                            <img key={i} src={url} loading="lazy" className="w-8 h-8 object-cover rounded-full border-2 border-white bg-white" />
                                                                         ))}
-                                                                        {v.images.length > 3 && (
+                                                                        {v.images.length > 2 && (
                                                                             <div className="w-8 h-8 rounded-full border-2 border-white bg-muted flex items-center justify-center text-[10px] font-medium z-10">
-                                                                                +{v.images.length - 3}
+                                                                                +{v.images.length - 2}
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -1060,11 +1198,11 @@ const Inventory = () => {
                                                             <TableCell className="text-right">{v.actual_price}</TableCell>
                                                             <TableCell className="text-right">
                                                                 <div className="flex justify-end gap-1">
-                                                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleEditVariantClick(v)}>
-                                                                        <Edit className="h-4 w-4" />
+                                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-blue-500" onClick={() => handleEditVariantClick(v)}>
+                                                                        <Edit className="h-3 w-3" />
                                                                     </Button>
-                                                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleRemoveVariant(v.id)}>
-                                                                        <X className="h-4 w-4" />
+                                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleRemoveVariant(v.id)}>
+                                                                        <X className="h-3 w-3" />
                                                                     </Button>
                                                                 </div>
                                                             </TableCell>
