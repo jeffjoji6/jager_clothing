@@ -688,7 +688,7 @@ const Checkout = () => {
                 <div className="space-y-4">
                   {items.map((item) => (
                     <div key={`${item.id}-${item.size}`} className="flex gap-4 border-b border-foreground pb-4">
-                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover bg-grey-bg" />
+                      <img src={item.image} alt={item.name} className="w-20 h-20 object-contain bg-white" />
                       <div className="flex-1">
                         <h3 className="font-heading font-bold uppercase text-sm">{item.name}</h3>
                         <p className="text-xs text-grey-text">Size: {item.size}</p>

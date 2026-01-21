@@ -36,6 +36,15 @@ interface OrderItem {
   color: string;
   quantity: number;
   price: number;
+  product_variant_id?: string;
+  product_variants?: {
+    image_url: string | null;
+    images: string[] | null;
+    products?: {
+      description: string | null;
+      images: string[] | string | null;
+    };
+  };
 }
 
 interface OrderHistory {
@@ -79,7 +88,17 @@ const OrderDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('order_items')
-        .select('*')
+        .select(`
+          *,
+          product_variants (
+            image_url,
+            images,
+            products (
+              description,
+              images
+            )
+          )
+        `)
         .eq('order_id', id)
         .order('created_at', { ascending: true });
 
@@ -470,17 +489,42 @@ const OrderDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {orderItems?.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between border-b border-foreground pb-4">
-                    <div>
-                      <p className="font-heading font-bold uppercase">{item.product_name}</p>
-                      <p className="text-sm text-grey-text">
-                        Size: {item.size} | Color: {item.color} | Quantity: {item.quantity}
-                      </p>
+                {orderItems?.map((item) => {
+                  const productImages = item.product_variants?.products?.images;
+                  const parentImage = Array.isArray(productImages) ? productImages[0] : (typeof productImages === 'string' ? productImages : null);
+
+                  const image = item.product_variants?.image_url ||
+                    (item.product_variants?.images && item.product_variants.images[0]) ||
+                    parentImage ||
+                    "/placeholder.svg";
+                  const description = item.product_variants?.products?.description;
+
+                  return (
+                    <div key={item.id} className="flex items-start justify-between border-b border-foreground pb-4 last:border-0 last:pb-0">
+                      <div className="flex gap-4">
+                        <img
+                          src={image}
+                          alt={item.product_name}
+                          className="w-16 h-16 object-cover bg-muted rounded-md border border-border"
+                        />
+                        <div>
+                          <p className="font-heading font-bold uppercase">{item.product_name}</p>
+                          <p className="text-sm text-grey-text mt-1">
+                            Size: <span className="font-medium text-foreground">{item.size}</span> |
+                            Color: <span className="font-medium text-foreground">{item.color}</span> |
+                            Qty: <span className="font-medium text-foreground">{item.quantity}</span>
+                          </p>
+                          {description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-md">
+                              {description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="font-heading font-bold">₹{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
-                    <p className="font-heading font-bold">₹{(item.price * item.quantity).toLocaleString()}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="mt-6 pt-4 border-t border-foreground space-y-2">
                 <div className="flex justify-between">

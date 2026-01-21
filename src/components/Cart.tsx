@@ -66,7 +66,7 @@ export const Cart = () => {
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-20 h-24 sm:w-24 sm:h-24 object-cover bg-grey-bg"
+                    className="w-20 h-24 sm:w-24 sm:h-24 object-contain bg-white"
                   />
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">

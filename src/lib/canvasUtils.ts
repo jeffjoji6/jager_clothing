@@ -58,13 +58,10 @@ export async function getCroppedImg(
     canvas.height = bBoxHeight
 
     // translate canvas context to a central location to allow rotating and flipping around the center
+    // Draw image
     ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
     ctx.rotate(rotRad)
     ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
-
-    // Fill white background (avoids black bars when rotating/zooming out)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(-bBoxWidth, -bBoxHeight, bBoxWidth * 2, bBoxHeight * 2)
 
     // Translate to center of image position
     ctx.translate(-image.width / 2, -image.height / 2)
@@ -95,6 +92,6 @@ export async function getCroppedImg(
     return new Promise((resolve, reject) => {
         canvas.toBlob((file) => {
             resolve(file)
-        }, 'image/jpeg', quality)
+        }, 'image/png', quality)
     })
 }

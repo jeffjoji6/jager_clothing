@@ -176,12 +176,12 @@ export const ImageEditorDialog = ({
                                             <Label className="text-xs uppercase text-muted-foreground font-bold flex items-center gap-2">
                                                 <ZoomIn className="w-3 h-3" /> Scale
                                             </Label>
-                                            <span className="text-xs text-muted-foreground">{zoom.toFixed(1)}x</span>
+                                            <span className="text-xs text-muted-foreground">{zoom.toFixed(2)}x</span>
                                         </div>
                                         <Slider
                                             min={0.2}
                                             max={3}
-                                            step={0.1}
+                                            step={0.01}
                                             value={[zoom]}
                                             onValueChange={(v) => setZoom(v[0])}
                                         />

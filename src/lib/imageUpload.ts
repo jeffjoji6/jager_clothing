@@ -47,6 +47,31 @@ export const uploadImage = async (file: File, folder: string = 'jager-uploads', 
   }
 };
 
+export const uploadToSupabase = async (file: File, bucket: string = 'product-images'): Promise<string | null> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading image to Supabase:', error);
+    return null;
+  }
+};
+
 export const deleteImage = async (path: string) => {
   // Cloudinary deletion via Client-Side (Unsigned) is generally NOT allowed for security.
   // We log a warning. If deletion is critical, it requires a Backend function with API Secret.

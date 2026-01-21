@@ -305,7 +305,7 @@ export const generateInvoice = async (
     // Explicit Columns: Item, Size, Quantity, Price, Total
     head: [['Item', 'Size', 'Quantity', 'Price (Rs)', 'Total (Rs)']],
     body: orderData.items.map(item => [
-      item.name + (item.color ? `\n(${item.color})` : ''), // Put Color with Name
+      item.name + (item.color && !item.name.toLowerCase().includes(item.color.toLowerCase()) ? `\n(${item.color})` : ''), // Put Color with Name if not present
       item.size,
       item.quantity,
       formatINR(item.price),

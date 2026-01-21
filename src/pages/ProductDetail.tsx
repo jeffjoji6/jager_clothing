@@ -298,12 +298,12 @@ const ProductDetail = () => {
             )}
 
             {/* Main Image */}
-            <div className="flex-1 bg-grey-bg aspect-[3/4] md:aspect-[4/5] md:h-[700px] relative group overflow-hidden">
+            <div className="flex-1 bg-white aspect-[3/4] md:aspect-[4/5] md:h-[700px] relative group overflow-hidden flex items-center justify-center">
               <img
                 src={optimizeCloudinaryUrl(mainImage, 1200)}
                 alt={product.name}
                 fetchPriority="high"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
               />
             </div>
           </div>

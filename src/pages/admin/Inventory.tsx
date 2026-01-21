@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { uploadImage, deleteImage } from "@/lib/imageUpload";
+import { uploadImage, uploadToSupabase, deleteImage } from "@/lib/imageUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Table,
@@ -93,6 +93,104 @@ const STOCK_REASONS = [
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Grey', 'Navy', 'Olive', 'Brown', 'Beige', 'Cream', 'Charcoal'];
 const CATEGORIES = ['TEES', 'HOODIES', 'BOTTOMS', 'Custom'];
+
+
+
+// --- Optimized Sub-components ---
+// Memoized Row to prevent re-rendering entire list when one changes
+const VariantRow = React.memo(({ v, idx, onEdit, onRemove, onAdjust, onHistory }: any) => {
+    return (
+        <tr className="border-b">
+            <TableCell className="font-bold">{v.size}</TableCell>
+            <TableCell>{v.color}</TableCell>
+            <TableCell className="text-right text-muted-foreground">{v.actual_price ? `₹${v.actual_price}` : 'Inherited'}</TableCell>
+            <TableCell className="text-right text-muted-foreground">{v.discounted_price ? `₹${v.discounted_price}` : '-'}</TableCell>
+            <TableCell>
+                {v.image_url ? (
+                    <img src={v.image_url} alt="Variant" loading="lazy" className="w-8 h-8 object-cover rounded border" />
+                ) : <span className="text-muted-foreground text-xs">-</span>}
+            </TableCell>
+            <TableCell className="text-center">
+                <Input
+                    type="number"
+                    className="w-24 text-right inline-block h-8"
+                    defaultValue={v.actual_price || ''}
+                    onBlur={e => onAdjust(v.id, 'actual_price', e.target.value)}
+                />
+            </TableCell>
+            <TableCell className="text-right">
+                <Input
+                    type="number"
+                    className="w-24 text-right inline-block h-8"
+                    defaultValue={v.discounted_price || ''}
+                    onBlur={e => onAdjust(v.id, 'discounted_price', e.target.value)}
+                />
+            </TableCell>
+            <TableCell className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                    <span className={`font-mono font-bold ${v.stock < 5 ? 'text-red-500' : 'text-green-600'}`}>{v.stock}</span>
+                    {!v.id.startsWith('temp-') && (
+                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => onAdjust(v, 'stock_dialog')}>Adjust</Button>
+                    )}
+                </div>
+            </TableCell>
+            <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                    {!v.id.startsWith('temp-') && (
+                        <Button variant="ghost" size="sm" onClick={() => onHistory(v)}>
+                            <History className="h-4 w-4" />
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (confirm("Remove variant?")) onRemove(v.id); }}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            </TableCell>
+        </tr>
+    );
+}, (prev, next) => {
+    // Custom comparison to really avoid renders unless critical data changes
+    return prev.v === next.v && prev.idx === next.idx;
+});
+
+// Memoized List Wrapper
+const VariantList = React.memo(({ variants, onEdit, onRemove, onUpdate, onHistory, onAdjustStock }: any) => {
+    return (
+        <div className="border rounded-md">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Color</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="text-right">Discount</TableHead>
+                        <TableHead>Image (Opt)</TableHead>
+                        <TableHead className="text-center">Stock Level</TableHead>
+                        <TableHead className="text-right">Discount (Edit)</TableHead>
+                        <TableHead className="text-center shrink-0">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {variants.map((v: any, idx: number) => (
+                        <VariantRow
+                            key={v.id || idx}
+                            v={v}
+                            idx={idx}
+                            onEdit={onEdit}
+                            onRemove={onRemove}
+                            onAdjust={(id: string, field: string, val: any) => {
+                                if (field === 'stock_dialog') onAdjustStock(id);
+                                else onUpdate(id, field, val);
+                            }}
+                            onHistory={onHistory}
+                        />
+                    ))}
+                    {variants.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No variants found.</TableCell></TableRow>}
+                </TableBody>
+            </Table>
+        </div>
+    );
+});
 
 
 const Inventory = () => {
@@ -214,14 +312,17 @@ const Inventory = () => {
             const product = editingProduct || selectedProductForVariants;
             const basePrice = Number(product?.base_price || 0);
 
-            const mappedVariants = productVariants.map(v => ({
-                ...v,
-                // If actual_price comes from DB, use it. Otherwise calculate from modifier.
-                actual_price: v.actual_price || (v.price_modifier ? basePrice + Number(v.price_modifier) : basePrice),
-                // Ensure stock is number
-                stock: Number(v.stock || 0)
-            }));
-            setVariants(mappedVariants);
+            // Use functional update to prevent unnecessary re-renders if data hasn't changed
+            setVariants(prev => {
+                const mappedVariants = productVariants.map(v => ({
+                    ...v,
+                    actual_price: v.actual_price || (v.price_modifier ? basePrice + Number(v.price_modifier) : basePrice),
+                    stock: Number(v.stock || 0)
+                }));
+                // Simple deep equality check or JSON stringify check to avoid loop if coming from same data
+                if (JSON.stringify(prev) === JSON.stringify(mappedVariants)) return prev;
+                return mappedVariants;
+            });
         }
     }, [productVariants, editingProduct, selectedProductForVariants]);
 
@@ -251,11 +352,12 @@ const Inventory = () => {
 
         // Convert Blob to File (needed for uploadImage util if it expects File, or update util)
         // uploadImage expects File.
-        const file = new File([processedBlob], "processed_image.jpg", { type: "image/jpeg" });
+        const file = new File([processedBlob], "processed_image.png", { type: "image/png" });
 
         setUploadingImages(true);
         try {
-            const url = await uploadImage(file);
+            // Use uploadToSupabase for product images as requested for performance
+            const url = await uploadToSupabase(file);
 
             if (url) {
                 if (editorContext.type === 'product') {
@@ -269,10 +371,8 @@ const Inventory = () => {
                         setProductForm(prev => ({ ...prev, images: [...prev.images, url] }));
                     }
                 } else {
-                    console.log('Adding variant image. Current count:', newVariant.images.length);
                     setNewVariant(prev => {
                         const updated = { ...prev, images: [...prev.images, url] };
-                        console.log('New count:', updated.images.length);
                         return updated;
                     });
                 }
@@ -311,6 +411,8 @@ const Inventory = () => {
     };
 
     // Auto-fill images when selecting a color that already exists in variants
+    // Auto-fill images when selecting a color that already exists in variants
+    // Optimization: Only run when 'color' changes, not on every newVariant change
     useEffect(() => {
         if (newVariant.color && !editingVariantId && newVariant.images.length === 0) {
             const existingVariant = variants.find(v => v.color === newVariant.color && v.images && v.images.length > 0);
@@ -319,7 +421,7 @@ const Inventory = () => {
                 toast.info(`Auto-filled images from existing ${newVariant.color} variant`);
             }
         }
-    }, [newVariant.color, editingVariantId, variants]);
+    }, [newVariant.color]); // Removed unnecessary dependencies: editingVariantId, variants (variants is stable enough or rarely changes during single input session)
 
     // Variant Logic (Frontend)
     const handleAddVariant = () => {
@@ -370,16 +472,16 @@ const Inventory = () => {
         });
     };
 
-    const handleRemoveVariant = (variantId: string) => {
+    const handleRemoveVariant = useCallback((variantId: string) => {
         if (!variantId.startsWith('temp-')) {
-            setVariantsToDelete([...variantsToDelete, variantId]);
+            setVariantsToDelete(prev => [...prev, variantId]);
         }
-        setVariants(variants.filter(v => v.id !== variantId));
-    };
+        setVariants(prev => prev.filter(v => v.id !== variantId));
+    }, []);
 
-    const handleUpdateVariant = (variantId: string, field: string, value: any) => {
-        setVariants(variants.map(v => v.id === variantId ? { ...v, [field]: value } : v));
-    };
+    const handleUpdateVariant = useCallback((variantId: string, field: string, value: any) => {
+        setVariants(prev => prev.map(v => v.id === variantId ? { ...v, [field]: value } : v));
+    }, []);
 
 
     // Create/Update Product
@@ -790,15 +892,15 @@ const Inventory = () => {
                                         {productForm.images.map((url, i) => (
                                             <div key={i} className="relative w-20 h-20 flex-shrink-0 group">
                                                 <img src={url} className="w-full h-full object-cover rounded border" />
-                                                <button type="button" onClick={() => handleRemoveImage(i, url)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
+                                                <button type="button" onClick={() => handleRemoveImage(i, url)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><X className="w-3 h-3" /></button>
                                                 {i === 0 && <Badge className="absolute bottom-0 left-0 text-[8px] px-1">Main</Badge>}
-                                                {i > 0 && <button type="button" onClick={() => setAsPrimary(i)} className="absolute bottom-0 left-0 bg-black/50 text-white text-[8px] px-1 opacity-0 group-hover:opacity-100">Set Main</button>}
+                                                {i > 0 && <button type="button" onClick={() => setAsPrimary(i)} className="absolute bottom-0 left-0 bg-black/50 text-white text-[8px] px-1 group-hover:opacity-100">Set Main</button>}
                                             </div>
                                         ))}
                                         <label className="w-20 h-20 border-2 border-dashed flex items-center justify-center cursor-pointer hover:bg-muted group/add relative overflow-hidden">
-                                            {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-5 h-5 text-muted-foreground group-hover/add:scale-110 transition-transform" />}
+                                            {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-5 h-5 text-muted-foreground" />}
                                             <input type="file" className="hidden" accept="image/*" onChange={e => handleFileSelect(e, 'product')} disabled={uploadingImages} />
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white opacity-0 group-hover/add:opacity-100 transition-opacity text-[10px] uppercase font-bold text-center p-1">
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover/add:opacity-100 text-[10px] uppercase font-bold text-center p-1">
                                                 Add & Edit
                                             </div>
                                         </label>
@@ -884,14 +986,14 @@ const Inventory = () => {
                                                                 const newImages = newVariant.images.filter((_, i) => i !== idx);
                                                                 setNewVariant({ ...newVariant, images: newImages });
                                                             }}
-                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
+                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
                                                         >
                                                             <X className="w-3 h-3" />
                                                         </button>
                                                     </div>
                                                 ))}
                                                 <label className="w-14 h-14 border-2 border-dashed flex items-center justify-center cursor-pointer hover:bg-muted rounded transition-colors group/add relative overflow-hidden">
-                                                    {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 text-muted-foreground group-hover/add:scale-110 transition-transform" />}
+                                                    {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 text-muted-foreground" />}
                                                     <input
                                                         type="file"
                                                         className="hidden"
@@ -899,7 +1001,7 @@ const Inventory = () => {
                                                         onChange={(e) => handleFileSelect(e, 'variant')}
                                                         disabled={uploadingImages}
                                                     />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white opacity-0 group-hover/add:opacity-100 transition-opacity text-[8px] uppercase font-bold text-center">
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white opacity-0 group-hover/add:opacity-100 text-[8px] uppercase font-bold text-center">
                                                         Edit
                                                     </div>
                                                 </label>
@@ -931,7 +1033,7 @@ const Inventory = () => {
                                                         <TableRow key={v.id || idx}>
                                                             <TableCell>
                                                                 {v.images && v.images.length > 0 ? (
-                                                                    <div className="flex -space-x-2 hover:space-x-1 transition-all">
+                                                                    <div className="flex -space-x-2">
                                                                         {v.images.slice(0, 3).map((url, i) => (
                                                                             <img key={i} src={url} className="w-8 h-8 object-cover rounded-full border-2 border-white bg-white" />
                                                                         ))}
@@ -1021,73 +1123,14 @@ const Inventory = () => {
                         </div>
 
                         {/* Variants List with Actions */}
-                        <div className="border rounded-md">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Size</TableHead>
-                                        <TableHead>Color</TableHead>
-                                        <TableHead className="text-right">Price</TableHead>
-                                        <TableHead className="text-right">Discount</TableHead>
-                                        <TableHead>Image (Opt)</TableHead>
-                                        <TableHead className="text-center">Stock Level</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {variants.map((v, idx) => (
-                                        <TableRow key={v.id || idx}>
-                                            <TableCell className="font-bold">{v.size}</TableCell>
-                                            <TableCell>{v.color}</TableCell>
-                                            <TableCell className="text-right text-muted-foreground">{v.actual_price ? `₹${v.actual_price}` : 'Inherited'}</TableCell>
-                                            <TableCell className="text-right text-muted-foreground">{v.discounted_price ? `₹${v.discounted_price}` : '-'}</TableCell>
-                                            <TableCell>
-                                                {v.image_url ? (
-                                                    <img src={v.image_url} alt="Variant" className="w-8 h-8 object-cover rounded border" />
-                                                ) : <span className="text-muted-foreground text-xs">-</span>}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Input
-                                                    type="number"
-                                                    className="w-24 text-right inline-block h-8"
-                                                    value={v.actual_price || ''}
-                                                    onChange={e => handleUpdateVariant(v.id, 'actual_price', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Input
-                                                    type="number"
-                                                    className="w-24 text-right inline-block h-8"
-                                                    value={v.discounted_price || ''}
-                                                    onChange={e => handleUpdateVariant(v.id, 'discounted_price', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className={`font-mono font-bold ${v.stock < 5 ? 'text-red-500' : 'text-green-600'}`}>{v.stock}</span>
-                                                    {!v.id.startsWith('temp-') && (
-                                                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => handleOpenAdjustStock(v)}>Adjust</Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    {!v.id.startsWith('temp-') && (
-                                                        <Button variant="ghost" size="sm" onClick={() => { setSelectedVariantForHistory(v); setHistoryDialogOpen(true); }}>
-                                                            <History className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (confirm("Remove variant?")) handleRemoveVariant(v.id); }}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {variants.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No variants found.</TableCell></TableRow>}
-                                </TableBody>
-                            </Table>
-                        </div>
+                        <VariantList
+                            variants={variants}
+                            onEdit={handleEditVariantClick}
+                            onRemove={handleRemoveVariant}
+                            onUpdate={handleUpdateVariant}
+                            onHistory={(v: any) => { setSelectedVariantForHistory(v); setHistoryDialogOpen(true); }}
+                            onAdjustStock={(v: any) => handleOpenAdjustStock(v)}
+                        />
 
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" onClick={() => { setManageVariantsOpen(false); setVariants([]); setSelectedProductForVariants(null); setVariantsToDelete([]); }}>Close</Button>

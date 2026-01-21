@@ -5,6 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Loader2, Package } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { generateInvoice } from "@/lib/pdfGenerator";
+import { Download } from "lucide-react";
 
 interface Order {
   id: string;
@@ -43,6 +46,95 @@ const Orders = () => {
       return data as Order[];
     },
   });
+
+  // Fetch company settings for invoice
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') return null;
+
+      // Map to CompanyInfo
+      if (data) {
+        return {
+          name: data.company_name,
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          zip: data.zip || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          website: "www.jagerclothing.com",
+          gstin: data.gstin,
+          bank_name: data.bank_name,
+          account_number: data.account_number,
+          ifsc_code: data.ifsc_code,
+          account_holder_name: data.account_holder_name,
+          upi_id: data.upi_id
+        };
+      }
+      return null;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  const handleDownloadInvoice = async (order: Order) => {
+    try {
+      toast.info("Generating invoice...");
+
+      // Fetch order items
+      const { data: orderItems, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+
+      if (error) throw error;
+      if (!orderItems || orderItems.length === 0) {
+        toast.error("No items found for this order");
+        return;
+      }
+
+      const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}-${format(new Date(), 'yyyyMMdd')}`;
+
+      await generateInvoice(
+        {
+          orderId: order.id,
+          orderDate: format(new Date(order.created_at), 'dd MMM yyyy'),
+          customerName: order.shipping_address?.full_name || "Customer",
+          customerAddress: {
+            street: order.shipping_address?.street || "",
+            city: order.shipping_address?.city || "",
+            state: order.shipping_address?.state || "",
+            zip: order.shipping_address?.zip || "",
+            phone: order.shipping_address?.phone || "",
+          },
+          items: orderItems.map((item: any) => ({
+            name: item.product_name,
+            size: item.size,
+            color: item.color,
+            quantity: item.quantity,
+            price: Number(item.price),
+          })),
+          subtotal: Number(order.subtotal),
+          shipping: Number(order.shipping),
+          tax: Number(order.tax),
+          total: Number(order.total),
+        },
+        invoiceNumber,
+        companySettings || undefined,
+        18
+      );
+
+      toast.success("Invoice downloaded!");
+    } catch (error: any) {
+      console.error("Invoice generation error:", error);
+      toast.error("Failed to generate invoice: " + error.message);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -112,6 +204,15 @@ const Orders = () => {
                           View Details
                         </Button>
                       </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 ml-2 text-xs"
+                        onClick={() => handleDownloadInvoice(order)}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Invoice
+                      </Button>
                     </div>
                   </div>
                   {order.shipping_address && (
