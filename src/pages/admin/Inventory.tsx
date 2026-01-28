@@ -525,6 +525,32 @@ const Inventory = () => {
     };
 
 
+    // Direct upload WITHOUT image editor (for debugging artifacts)
+    const handleDirectUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'product' | 'variant') => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        e.target.value = '';
+
+        setUploadingImages(true);
+        try {
+            const url = await uploadImage(file);
+            if (url) {
+                if (type === 'product') {
+                    setProductForm(prev => ({ ...prev, images: [...prev.images, url] }));
+                } else {
+                    setNewVariant(prev => ({ ...prev, images: [...prev.images, url] }));
+                }
+                toast.success("Direct upload complete (no editor)!");
+            } else {
+                toast.error("Upload failed");
+            }
+        } catch (error: any) {
+            toast.error(`Upload failed: ${error.message}`);
+        } finally {
+            setUploadingImages(false);
+        }
+    };
+
     const handleRemoveImage = async (index: number, imageUrl: string) => {
         try {
             await deleteImage(imageUrl);
@@ -562,6 +588,12 @@ const Inventory = () => {
     const handleAddVariant = () => {
         if (!newVariant.size || !newVariant.color) {
             toast.error("Please select size and color");
+            return;
+        }
+
+        // Check for duplicates
+        if (variants.some(v => v.size === newVariant.size && v.color === newVariant.color && v.id !== editingVariantId)) {
+            toast.error(`Variant ${newVariant.size} - ${newVariant.color} already exists!`);
             return;
         }
 
@@ -1040,6 +1072,13 @@ const Inventory = () => {
                                             <input type="file" className="hidden" accept="image/*" onChange={e => handleFileSelect(e, 'product')} disabled={uploadingImages} />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover/add:opacity-100 text-[10px] uppercase font-bold text-center p-1">
                                                 Add & Edit
+                                            </div>
+                                        </label>
+                                        <label className="w-20 h-20 border-2 border-dashed border-green-500 flex items-center justify-center cursor-pointer hover:bg-green-50 group/direct relative overflow-hidden">
+                                            {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-5 h-5 text-green-600" />}
+                                            <input type="file" className="hidden" accept="image/*" onChange={e => handleDirectUpload(e, 'product')} disabled={uploadingImages} />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-green-600/90 text-white group-hover/direct:opacity-100 text-[10px] uppercase font-bold text-center p-1">
+                                                Direct (No Edit)
                                             </div>
                                         </label>
                                     </div>

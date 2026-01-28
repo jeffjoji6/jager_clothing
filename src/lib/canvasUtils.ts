@@ -3,7 +3,7 @@ export const createImage = (url: string): Promise<HTMLImageElement> =>
         const image = new Image()
         image.addEventListener('load', () => resolve(image))
         image.addEventListener('error', (error) => reject(error))
-        image.setAttribute('crossOrigin', 'anonymous') // needed to avoid cross-origin issues on CodeSandbox
+        image.setAttribute('crossOrigin', 'anonymous')
         image.src = url
     })
 
@@ -26,7 +26,8 @@ export function rotateSize(width: number, height: number, rotation: number) {
 }
 
 /**
- * This function was adapted from the one in the Readme of https://github.com/DominicTobias/react-image-crop
+ * Crop and process image using canvas.
+ * Uses a two-canvas approach to avoid getImageData artifacts.
  */
 export async function getCroppedImg(
     imageSrc: string,
@@ -37,61 +38,76 @@ export async function getCroppedImg(
     filters = { brightness: 100, contrast: 100, saturation: 100 }
 ): Promise<Blob | null> {
     const image = await createImage(imageSrc)
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
 
-    if (!ctx) {
-        return null
-    }
+    // Round all crop values to integers to avoid sub-pixel issues
+    const cropX = Math.round(pixelCrop.x)
+    const cropY = Math.round(pixelCrop.y)
+    const cropWidth = Math.round(pixelCrop.width)
+    const cropHeight = Math.round(pixelCrop.height)
 
     const rotRad = getRadianAngle(rotation)
 
-    // calculate bounding box of the rotated image
+    // Calculate bounding box of the rotated image
     const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
         image.width,
         image.height,
         rotation
     )
 
-    // set canvas size to match the bounding box
-    canvas.width = Math.ceil(bBoxWidth)
-    canvas.height = Math.ceil(bBoxHeight)
+    // Canvas 1: Draw the rotated/flipped/filtered full image
+    const tempCanvas = document.createElement('canvas')
+    const tempCtx = tempCanvas.getContext('2d')
 
-    // translate canvas context to a central location to allow rotating and flipping around the center
-    ctx.translate(canvas.width / 2, canvas.height / 2)
-    ctx.rotate(rotRad)
-    ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
-
-    // Translate to center of image position
-    ctx.translate(-image.width / 2, -image.height / 2)
-
-    // Apply filters only if needed
-    if (filters.brightness !== 100 || filters.contrast !== 100 || filters.saturation !== 100) {
-        ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
+    if (!tempCtx) {
+        return null
     }
 
-    // draw rotated image
-    ctx.drawImage(image, 0, 0)
+    // Use integer dimensions
+    tempCanvas.width = Math.ceil(bBoxWidth)
+    tempCanvas.height = Math.ceil(bBoxHeight)
 
-    // croppedAreaPixels values are bounding box relative
-    const data = ctx.getImageData(
-        Math.round(pixelCrop.x),
-        Math.round(pixelCrop.y),
-        Math.round(pixelCrop.width),
-        Math.round(pixelCrop.height)
+    // Translate to center, apply transformations
+    tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2)
+    tempCtx.rotate(rotRad)
+    tempCtx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
+    tempCtx.translate(-image.width / 2, -image.height / 2)
+
+    // Apply filters only if not default
+    if (filters.brightness !== 100 || filters.contrast !== 100 || filters.saturation !== 100) {
+        tempCtx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
+    }
+
+    // Draw the full image
+    tempCtx.drawImage(image, 0, 0)
+
+    // Canvas 2: Create final cropped canvas with exact dimensions
+    const finalCanvas = document.createElement('canvas')
+    const finalCtx = finalCanvas.getContext('2d')
+
+    if (!finalCtx) {
+        return null
+    }
+
+    // Clamp source coordinates to valid range
+    const sourceX = Math.max(0, Math.min(cropX, tempCanvas.width - 1))
+    const sourceY = Math.max(0, Math.min(cropY, tempCanvas.height - 1))
+    const sourceWidth = Math.min(cropWidth, tempCanvas.width - sourceX)
+    const sourceHeight = Math.min(cropHeight, tempCanvas.height - sourceY)
+
+    finalCanvas.width = sourceWidth
+    finalCanvas.height = sourceHeight
+
+    // Use drawImage to copy the cropped region (much more reliable than getImageData)
+    finalCtx.drawImage(
+        tempCanvas,
+        sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle
+        0, 0, sourceWidth, sourceHeight               // Destination rectangle
     )
 
-    // set canvas width to final desired crop size - this will clear existing context
-    canvas.width = Math.round(pixelCrop.width)
-    canvas.height = Math.round(pixelCrop.height)
-
-    // paste generated rotate image at the top left corner
-    ctx.putImageData(data, 0, 0)
-
-    // As a blob
-    return new Promise((resolve, reject) => {
-        canvas.toBlob((file) => {
-            resolve(file)
+    // Return as blob
+    return new Promise((resolve) => {
+        finalCanvas.toBlob((blob) => {
+            resolve(blob)
         }, 'image/png', quality)
     })
 }
