@@ -28,7 +28,7 @@ const ProductDetail = () => {
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -75,20 +75,44 @@ const ProductDetail = () => {
 
   // Auto-select variant, color and reset quantity
   useEffect(() => {
-    // Auto-select color if only one available
-    if (availableColors.length === 1 && !selectedColor) {
-      setSelectedColor(availableColors[0].name);
+    // Smart Auto-select on load: Prioritize In-Stock variants
+    if (availableColors.length > 0 && !selectedColor) {
+      let targetColor = availableColors[0].name;
+      let targetSize = "";
+
+      // 1. Try to find a color that has stock
+      const colorWithStock = availableColors.find(c =>
+        product?.variants.some(v => v.color === c.name && v.stock > 0)
+      );
+
+      if (colorWithStock) {
+        targetColor = colorWithStock.name;
+      }
+
+      // 2. Find best size for this color (Smallest available)
+      // Iterate through sorted availableSizes to find first match
+      if (availableSizes.length > 0) {
+        const sizeWithStock = availableSizes.find(size =>
+          product?.variants.some(v => v.color === targetColor && v.size === size && v.stock > 0)
+        );
+        if (sizeWithStock) targetSize = sizeWithStock;
+      }
+
+      setSelectedColor(targetColor);
+      if (targetSize) setSelectedSize(targetSize);
     }
 
-    if (availableVariants.length > 0) {
-      const isCurrentVariantAvailable = selectedVariant && availableVariants.find(v => v.id === selectedVariant);
-      if (!isCurrentVariantAvailable) {
-        setSelectedVariant(availableVariants[0].id);
-      }
+    // Ensure a size is selected if color is chosen (e.g. manual switch or fallback)
+    if (selectedColor && !selectedSize && availableSizes.length > 0) {
+      const validSize = availableSizes.find(size =>
+        product?.variants.some(v => v.color === selectedColor && v.size === size && v.stock > 0)
+      );
+      if (validSize) setSelectedSize(validSize);
     }
+
     // Reset quantity to 1 when variant changes
     setQuantity(1);
-  }, [availableVariants, selectedVariant, availableColors]);
+  }, [selectedSize, selectedColor, availableColors, availableSizes, product]);
 
 
   // Intersection Observer for Sticky Bar
@@ -112,7 +136,11 @@ const ProductDetail = () => {
     };
   }, [product]);
 
-  const activeVariant = product?.variants.find(v => v.id === selectedVariant);
+  const activeVariant = useMemo(() => {
+    if (!product || !selectedSize || !selectedColor) return undefined;
+    return product.variants.find(v => v.size === selectedSize && v.color === selectedColor);
+  }, [product, selectedSize, selectedColor]);
+
   const currentVariant = activeVariant; // Alias for existing code compatibility
 
   // Price Logic:
