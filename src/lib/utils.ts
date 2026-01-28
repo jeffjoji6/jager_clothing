@@ -13,10 +13,8 @@ export function optimizeCloudinaryUrl(url: string, width: number = 800) {
   const parts = url.split('/upload/');
   if (parts.length !== 2) return url;
 
-  // e_trim: automatically removes solid border (black/white) from the image source (fixing existing bad uploads)
   // f_auto: auto format, q_auto: auto quality
-  // w_${width}: resize to width
-  // c_fill: resize to fill dimensions
-  // g_auto: center on subject
-  return `${parts[0]}/upload/e_trim,f_auto,q_auto,w_${width},c_fill,g_auto/${parts[1]}`;
+  // w_${width}: resize to width (max)
+  // c_limit: resize to fit within limits without upscaling or cropping
+  return `${parts[0]}/upload/f_auto,q_auto,w_${width},c_limit/${parts[1]}`;
 }
