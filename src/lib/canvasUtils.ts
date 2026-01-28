@@ -54,36 +54,36 @@ export async function getCroppedImg(
     )
 
     // set canvas size to match the bounding box
-    canvas.width = bBoxWidth
-    canvas.height = bBoxHeight
+    canvas.width = Math.ceil(bBoxWidth)
+    canvas.height = Math.ceil(bBoxHeight)
 
     // translate canvas context to a central location to allow rotating and flipping around the center
-    // Draw image
-    ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
+    ctx.translate(canvas.width / 2, canvas.height / 2)
     ctx.rotate(rotRad)
     ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
 
     // Translate to center of image position
     ctx.translate(-image.width / 2, -image.height / 2)
 
-    // Apply filters
-    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
+    // Apply filters only if needed
+    if (filters.brightness !== 100 || filters.contrast !== 100 || filters.saturation !== 100) {
+        ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
+    }
 
     // draw rotated image
     ctx.drawImage(image, 0, 0)
 
     // croppedAreaPixels values are bounding box relative
-    // extract the cropped image using these values
     const data = ctx.getImageData(
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height
+        Math.round(pixelCrop.x),
+        Math.round(pixelCrop.y),
+        Math.round(pixelCrop.width),
+        Math.round(pixelCrop.height)
     )
 
     // set canvas width to final desired crop size - this will clear existing context
-    canvas.width = pixelCrop.width
-    canvas.height = pixelCrop.height
+    canvas.width = Math.round(pixelCrop.width)
+    canvas.height = Math.round(pixelCrop.height)
 
     // paste generated rotate image at the top left corner
     ctx.putImageData(data, 0, 0)
