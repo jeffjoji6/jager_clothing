@@ -96,7 +96,7 @@ export const generatePackingSlip = async (
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
+  const margin = 10; // Reduced from 15
   const contentWidth = pageWidth - (margin * 2);
 
   // Load Logo
@@ -109,113 +109,148 @@ export const generatePackingSlip = async (
 
   // Outer Border (Rounded rect styling)
   doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(margin, margin, contentWidth, pageHeight - (margin * 2), 3, 3, 'S');
+  doc.setLineWidth(0.3); // Thinner border
+  doc.roundedRect(margin, margin, contentWidth, pageHeight - (margin * 2), 2, 2, 'S');
 
   // Header Section
-  let yPos = margin + 15;
+  let yPos = margin + 8; // Reduced from 15
 
   // Header Layout: Address on LEFT, Logo on RIGHT
 
   // 1. Company Address (Left Aligned)
-  doc.setFontSize(20);
+  doc.setFontSize(16); // Reduced from 20
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  doc.text((companyInfo.name || "Jager Clothing").toUpperCase(), margin + 10, yPos);
+  doc.text((companyInfo.name || "Jager Clothing").toUpperCase(), margin + 5, yPos); // Reduced inner margin
 
-  doc.setFontSize(10);
+  doc.setFontSize(8); // Reduced from 10
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...COLORS.lightText);
-  doc.text(companyInfo.address, margin + 10, yPos + 6);
-  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, margin + 10, yPos + 11);
+  doc.text(companyInfo.address, margin + 5, yPos + 5); // Tighter spacing
+  doc.text(`${companyInfo.city}, ${companyInfo.state} ${companyInfo.zip}`, margin + 5, yPos + 9);
+  if (companyInfo.phone) {
+    doc.text(companyInfo.phone, margin + 5, yPos + 13);
+  }
 
   // 2. Logo (Right Aligned)
   if (logo) {
-    const logoWidth = 35;
+    const logoWidth = 28; // Reduced from 35
     const logoHeight = (logo.height / logo.width) * logoWidth;
-    doc.addImage(logo, 'PNG', pageWidth - margin - logoWidth - 10, yPos - 5, logoWidth, logoHeight);
+    doc.addImage(logo, 'PNG', pageWidth - margin - logoWidth - 5, yPos - 3, logoWidth, logoHeight);
   }
 
-  yPos += 35;
+  yPos += 22; // Reduced from 35
 
   // Shipping Address Only (Below Header)
   // Removed Billing Address as requested
 
-  doc.setFontSize(12);
+  doc.setFontSize(10); // Reduced from 12
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.text);
-  doc.text("Shipping Address:", margin + 10, yPos);
+  doc.text("Shipping Address:", margin + 5, yPos);
 
-  doc.setFontSize(11);
+  doc.setFontSize(9); // Reduced from 11
   doc.setFont("helvetica", "normal");
-  let addrY = yPos + 7;
+  let addrY = yPos + 5; // Reduced from 7
 
-  doc.text(orderData.customerName, margin + 10, addrY); addrY += 6;
-  doc.text(orderData.customerAddress.street, margin + 10, addrY); addrY += 6;
-  doc.text(`${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`, margin + 10, addrY); addrY += 6;
-  doc.text(orderData.customerAddress.phone, margin + 10, addrY);
+  doc.text(orderData.customerName, margin + 5, addrY); addrY += 4.5; // Tighter line spacing
+  doc.text(orderData.customerAddress.street, margin + 5, addrY); addrY += 4.5;
+  doc.text(`${orderData.customerAddress.city}, ${orderData.customerAddress.state} ${orderData.customerAddress.zip}`, margin + 5, addrY); addrY += 4.5;
+  doc.text(orderData.customerAddress.phone, margin + 5, addrY);
 
-  yPos = addrY + 25;
+  yPos = addrY + 8; // Reduced from 12
 
   // "Your Order of..." Banner
-  doc.setFontSize(14);
+  doc.setFontSize(11); // Reduced from 14
   doc.setFont("helvetica", "bold");
   const displayOrderId = orderData.orderId ? orderData.orderId.slice(0, 8).toUpperCase() : "UNKNOWN";
-  doc.text(`Your Order of ${new Date(orderData.orderDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })} (#${displayOrderId})`, margin + 10, yPos);
+  doc.text(`Your Order of ${new Date(orderData.orderDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })} (#${displayOrderId})`, margin + 5, yPos);
 
   doc.setDrawColor(...COLORS.border);
-  doc.setLineWidth(0.5);
-  doc.line(margin + 5, yPos + 3, pageWidth - margin - 5, yPos + 3);
+  doc.setLineWidth(0.3);
+  doc.line(margin + 3, yPos + 2, pageWidth - margin - 3, yPos + 2); // Tighter line spacing
 
-  yPos += 15;
+  yPos += 10; // Reduced from 15
 
   // Items Table - NO PRICE, NO RATE as requested
   // Columns: Qty | Item Description
   autoTable(doc, {
     startY: yPos,
     margin: { left: margin + 5, right: margin + 5 },
-    head: [['QTY', 'ITEM DESCRIPTION']],
-    body: orderData.items.map(item => [
-      item.quantity,
-      `${item.name}\nColor: ${item.color} | Size: ${item.size}`
-    ]),
+    head: [['QTY', 'PRODUCT', 'COLOR', 'SIZE']],
+    body: orderData.items.map(item => {
+      // Clean up redundant variant info from name if present
+      // Expected format in DB: "ProductName - Size - Color"
+      // We want to extract just "ProductName" since we have separate columns for size/color
+      let cleanName = item.name;
+
+      // Try to extract base product name by splitting on ' - '
+      const parts = cleanName.split(' - ');
+      if (parts.length >= 3) {
+        // If we have at least 3 parts, assume format is "Name - Size - Color"
+        // Take everything except the last 2 parts (size and color)
+        cleanName = parts.slice(0, -2).join(' - ');
+      } else if (parts.length === 2) {
+        // If only 2 parts, might be "Name - Size" or just a name with dash
+        // Check if the last part matches the size
+        if (parts[1] === item.size) {
+          cleanName = parts[0];
+        }
+      }
+
+      return [
+        item.quantity,
+        cleanName,
+        item.color,
+        item.size
+      ];
+    }),
     theme: 'plain',
     headStyles: {
-      fillColor: [240, 240, 240], // Slightly darker gray for better visibility
+      fillColor: [240, 240, 240],
       textColor: COLORS.text,
       fontStyle: 'bold',
-      fontSize: 11, // Bigger
+      fontSize: 9, // Reduced from 11
       halign: 'left',
-      cellPadding: 6,
+      cellPadding: 3, // Reduced from 6
     },
     styles: {
-      fontSize: 11, // Bigger body
+      fontSize: 9, // Reduced from 11
       textColor: COLORS.text,
-      cellPadding: 8, // More padding
-      valign: 'top',
+      cellPadding: 4, // Reduced from 8
+      valign: 'middle',
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: 'center' }, // Qty
-      1: { cellWidth: 'auto' }, // Description
+      0: { cellWidth: 18, halign: 'center' }, // Qty - slightly smaller
+      1: { cellWidth: 'auto', halign: 'left' }, // Product
+      2: { cellWidth: 30, halign: 'center' }, // Color - reduced from 35
+      3: { cellWidth: 22, halign: 'center' }, // Size - reduced from 25
     },
+    didParseCell: (data) => {
+      if (data.section === 'head') {
+        if (data.column.index !== 1) { // Center everything except Product (index 1)
+          data.cell.styles.halign = 'center';
+        }
+      }
+    }
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = (doc as any).lastAutoTable.finalY + 6; // Reduced from 10
 
   // Footer
   // Notes
-  doc.setFontSize(10);
+  doc.setFontSize(8); // Reduced from 10
   doc.setFont("helvetica", "bold");
-  doc.text("NOTES", margin + 10, finalY + 10);
+  doc.text("NOTES", margin + 5, finalY + 6); // Reduced spacing
   doc.setFont("helvetica", "normal");
-  doc.text("Thank you for buying from Jager Clothing!", margin + 10, finalY + 16);
+  doc.text("Thank you for buying from Jager Clothing!", margin + 5, finalY + 10);
 
   // Big Thank You (right bottom)
-  const footerY = pageHeight - margin - 20;
-  doc.setFontSize(14);
+  const footerY = pageHeight - margin - 12; // Reduced from 20
+  doc.setFontSize(11); // Reduced from 14
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.primary); // Jager Red "Thank You"
-  doc.text("THANK YOU", pageWidth - margin - 10, footerY + 12, { align: "right" });
+  doc.text("THANK YOU", pageWidth - margin - 5, footerY + 8, { align: "right" }); // Adjusted positioning
 
   doc.save(`packing-slip-${orderData.orderId.slice(0, 8)}.pdf`);
 };
