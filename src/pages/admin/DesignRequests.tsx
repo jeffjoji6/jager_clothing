@@ -115,6 +115,7 @@ const DesignRequests = () => {
                             <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
                                 <tr>
                                     <th className="h-12 px-4 align-middle">Date</th>
+                                    <th className="h-12 px-4 align-middle">Ref ID</th>
                                     <th className="h-12 px-4 align-middle">Customer</th>
                                     <th className="h-12 px-4 align-middle">Brief</th>
                                     <th className="h-12 px-4 align-middle">Status</th>
@@ -134,6 +135,11 @@ const DesignRequests = () => {
                                             <td className="p-4">
                                                 <div className="font-medium">{format(new Date(request.created_at), 'MMM dd')}</div>
                                                 <div className="text-xs text-grey-text">{format(new Date(request.created_at), 'yyyy')}</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="font-medium text-sm font-mono tracking-wider bg-muted px-2 py-1 rounded w-fit">
+                                                    {request.request_ref || `#${request.id.slice(0, 8)}`}
+                                                </div>
                                             </td>
                                             <td className="p-4">
                                                 <div className="font-bold">{request.name}</div>
