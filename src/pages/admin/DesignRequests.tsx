@@ -143,8 +143,19 @@ const DesignRequests = () => {
                                             <td className="p-4 max-w-xs">
                                                 <div className="line-clamp-1 text-foreground/80">{request.brief}</div>
                                                 {(request.image_url) && (
-                                                    <div className="flex items-center gap-1 text-xs text-jager-red mt-1">
-                                                        <FileText className="w-3 h-3" /> Image Attached
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <div className="relative w-8 h-8 rounded overflow-hidden border border-border bg-muted">
+                                                            <img
+                                                                src={request.image_url.split(',')[0]}
+                                                                alt="Thumbnail"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {request.image_url.split(',').length > 1
+                                                                ? `+${request.image_url.split(',').length - 1} more`
+                                                                : 'Attached'}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </td>
@@ -184,28 +195,40 @@ const DesignRequests = () => {
                 }}>
                     <DialogContent className="max-w-4xl p-0 overflow-hidden gap-0">
                         <div className="grid md:grid-cols-5 h-[600px]">
-                            {/* Left Side - Image & Status */}
-                            <div className="md:col-span-2 bg-muted/30 border-r border-border p-6 flex flex-col">
-                                <h3 className="font-heading font-bold uppercase text-lg mb-6">Reference</h3>
-                                <div className="flex-1 bg-background border border-border rounded-lg flex items-center justify-center overflow-hidden relative group">
+                            {/* Left Side - Image Gallery & Status */}
+                            <div className="md:col-span-2 bg-muted/30 border-r border-border p-6 flex flex-col overflow-y-auto">
+                                <h3 className="font-heading font-bold uppercase text-lg mb-4">References</h3>
+
+                                <div className="space-y-4">
                                     {selectedRequest.image_url ? (
-                                        <a href={selectedRequest.image_url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center">
-                                            <img
-                                                src={selectedRequest.image_url}
-                                                alt="Reference"
-                                                className="w-full h-full object-contain p-2 hover:scale-105 transition-transform duration-300"
-                                            />
-                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                <span className="text-white text-xs font-bold uppercase tracking-wider border border-white/50 px-3 py-1 rounded-full">Open Full Size</span>
-                                            </div>
-                                        </a>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {selectedRequest.image_url.split(',').map((url, index) => (
+                                                <a
+                                                    key={index}
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`relative aspect-square rounded-lg overflow-hidden border border-border bg-white group ${selectedRequest.image_url && selectedRequest.image_url.split(',').length === 1 ? 'col-span-2 aspect-video' : ''}`}
+                                                >
+                                                    <img
+                                                        src={url}
+                                                        alt={`Ref ${index + 1}`}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                        <span className="text-white text-[10px] uppercase font-bold border border-white/50 px-2 py-1 rounded-full">View</span>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
                                     ) : (
-                                        <div className="text-center p-6 opacity-50">
-                                            <Palette className="w-12 h-12 mx-auto mb-2" />
-                                            <p className="text-sm">No image provided</p>
+                                        <div className="aspect-video bg-muted border border-dashed border-border rounded-xl flex flex-col items-center justify-center text-muted-foreground p-6">
+                                            <Palette className="w-8 h-8 mb-2 opacity-50" />
+                                            <p className="text-xs">No reference images</p>
                                         </div>
                                     )}
                                 </div>
+
                                 <div className="mt-6 space-y-4">
                                     <div>
                                         <Label className="text-xs text-grey-text uppercase">Current Status</Label>

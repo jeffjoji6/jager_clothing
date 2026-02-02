@@ -119,37 +119,43 @@ export default function CustomDesign() {
                 } catch (emailError) {
                     console.error("Error sending email notification:", emailError);
                 }
+
+                // 2. Format WhatsApp Message (Only on success)
+                let imageLinks = "";
+                if (imageUrls.length > 0) {
+                    imageLinks = "\n*Reference Images:*\n" + imageUrls.map((url, i) => `${i + 1}. ${url}`).join('\n') + "\n";
+                }
+
+                const message = encodeURIComponent(
+                    `*New Custom Design Request*\n\n` +
+                    `*Name:* ${formData.name}\n` +
+                    `*Brief:* ${formData.brief}\n` +
+                    `*Qty:* ${formData.quantity}\n` +
+                    `*Budget:* ${formData.budget}\n` +
+                    `*Email:* ${formData.email}\n` +
+                    imageLinks +
+                    `----------------\n` +
+                    `ID: ${new Date().getTime().toString().slice(-6)}`
+                );
+
+                // 3. Redirect to WhatsApp (New Tab to preserve logs)
+                const whatsappUrl = `https://wa.me/${adminPhone}?text=${message}`;
+
+                toast.success("Opening WhatsApp...", {
+                    duration: 3000,
+                });
+
+                setTimeout(() => {
+                    window.open(whatsappUrl, '_blank');
+                    // Only stop loading after redirect initiated
+                    setLoading(false);
+                }, 1000);
             }
 
-            // 2. Format WhatsApp Message
-            let imageLinks = "";
-            if (imageUrls.length > 0) {
-                imageLinks = "\n*Reference Images:*\n" + imageUrls.map((url, i) => `${i + 1}. ${url}`).join('\n') + "\n";
-            }
-
-            const message = encodeURIComponent(
-                `*New Custom Design Request*\n\n` +
-                `*Name:* ${formData.name}\n` +
-                `*Brief:* ${formData.brief}\n` +
-                `*Qty:* ${formData.quantity}\n` +
-                `*Budget:* ${formData.budget}\n` +
-                `*Email:* ${formData.email}\n` +
-                imageLinks +
-                `----------------\n` +
-                `ID: ${new Date().getTime().toString().slice(-6)}`
-            );
-
-            // 3. Redirect to WhatsApp (New Tab to preserve logs)
-            const whatsappUrl = `https://wa.me/${adminPhone}?text=${message}`;
-
-            toast.success("Opening WhatsApp...", {
-                duration: 3000,
-            });
-
-            setTimeout(() => {
-                window.open(whatsappUrl, '_blank');
+            // If error, stop loading immediately
+            if (error) {
                 setLoading(false);
-            }, 1000);
+            }
 
         } catch (err: any) {
             console.error(err);
@@ -158,6 +164,8 @@ export default function CustomDesign() {
             setLoading(false);
         }
     };
+
+
 
     // Animation Variants
     const containerVariants = {
