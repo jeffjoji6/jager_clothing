@@ -8,6 +8,7 @@ const Home = lazy(() => import("@/pages/Home"));
 const Collection = lazy(() => import("@/pages/Collection"));
 const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
 const CustomDesign = lazy(() => import("@/pages/CustomDesign"));
+const TrackRequest = lazy(() => import("@/pages/TrackRequest"));
 const Login = lazy(() => import("@/pages/Login"));
 const Signup = lazy(() => import("@/pages/Signup"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -86,6 +87,7 @@ export const AnimatedRoutes = () => {
                         <Route path="/collection" element={<PageTransition><Collection /></PageTransition>} />
                         <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
                         <Route path="/custom-design" element={<PageTransition><CustomDesign /></PageTransition>} />
+                        <Route path="/track-request" element={<PageTransition><TrackRequest /></PageTransition>} />
 
                         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
                         <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />

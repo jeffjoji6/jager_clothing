@@ -79,11 +79,19 @@ export default function CustomDesign() {
         const combinedImageUrls = imageUrls.join(',');
 
         try {
+            // Generate IDs client-side to ensure consistency and avoid DB read 401s
+            const requestId = crypto.randomUUID();
+            // Simple Ref for User (e.g., CD-849201)
+            const requestRef = `CD-${Math.floor(100000 + Math.random() * 900000)}`;
+            const trackingToken = Math.random().toString(36).substring(2, 8).toUpperCase();
+
             // 1. Save Request to Database
             console.log("Attempting to save to custom_design_requests...");
-            const { data: insertedData, error } = await supabase
+            const { error } = await supabase
                 .from('custom_design_requests')
                 .insert({
+                    id: requestId, // Explicitly set ID
+                    request_ref: requestRef,
                     name: formData.name,
                     email: formData.email,
                     phone: formData.phone,
@@ -91,18 +99,39 @@ export default function CustomDesign() {
                     brief: formData.brief,
                     quantity: parseInt(formData.quantity) || 0,
                     budget_range: formData.budget,
-                    image_url: combinedImageUrls, // Store as comma-separated string
-                })
-                .select();
+                    image_url: combinedImageUrls,
+                    tracking_token: trackingToken,
+                });
 
             if (error) {
                 console.error("DB INSERT ERROR:", error);
-                setSubmitStatus({ type: 'error', message: `Database Error: ${error.message}. Please screenshot this and send to support.` });
+                // Check specifically for RLS policy error to give better feedback
+                if (error.code === '42501') {
+                    setSubmitStatus({ type: 'error', message: `Database Error: Permission denied (RLS). Please contact support.` });
+                } else {
+                    setSubmitStatus({ type: 'error', message: `Database Error: ${error.message}` });
+                }
                 toast.error(`Database error: ${error.message}`);
             } else {
-                console.log("DB INSERT SUCCESS:", insertedData);
-                setSubmitStatus({ type: 'success', message: "Request saved securely to database!" });
-                toast.success("Request saved to database!");
+                console.log("DB INSERT SUCCESS");
+                setSubmitStatus({ type: 'success', message: `Request Saved!` });
+
+                // Show Tracking Info to user
+                // Show Tracking Info to user
+                // Show Tracking Info to user
+                toast.success("Request Submitted Successfully", {
+                    description: (
+                        <div className="flex flex-col gap-1 mt-2">
+                            <p><strong>Ref:</strong> <span className="font-mono text-xs font-bold bg-muted px-1 rounded">{requestRef}</span></p>
+                            <p className="text-xs opacity-70">Save this Reference ID to track your status!</p>
+                        </div>
+                    ),
+                    duration: null,
+                    action: {
+                        label: "Copy Ref",
+                        onClick: () => navigator.clipboard.writeText(requestRef)
+                    }
+                });
 
                 // Send email notification to admin
                 try {
@@ -113,29 +142,33 @@ export default function CustomDesign() {
                         brief: formData.brief,
                         quantity: formData.quantity,
                         budget: formData.budget || '',
-                        imageUrls: imageUrls, // Pass ARRAY to email service
+                        imageUrls: imageUrls,
                     });
                     console.log("Email notification sent successfully");
                 } catch (emailError) {
                     console.error("Error sending email notification:", emailError);
                 }
 
-                // 2. Format WhatsApp Message (Only on success)
+                // 2. Format WhatsApp Message (Unify ID)
                 let imageLinks = "";
                 if (imageUrls.length > 0) {
                     imageLinks = "\n*Reference Images:*\n" + imageUrls.map((url, i) => `${i + 1}. ${url}`).join('\n') + "\n";
                 }
 
                 const message = encodeURIComponent(
-                    `*New Custom Design Request*\n\n` +
+                    `*NEW CUSTOM DESIGN REQUEST*\n\n` +
+                    `*Ref:* ${requestRef}\n` +
                     `*Name:* ${formData.name}\n` +
+                    `*Email:* ${formData.email}\n` +
+                    `*Phone:* ${formData.phone}\n\n` +
+                    `*Project Details*\n` +
+                    `------------------\n` +
                     `*Brief:* ${formData.brief}\n` +
                     `*Qty:* ${formData.quantity}\n` +
                     `*Budget:* ${formData.budget}\n` +
-                    `*Email:* ${formData.email}\n` +
                     imageLinks +
-                    `----------------\n` +
-                    `ID: ${new Date().getTime().toString().slice(-6)}`
+                    `\n*Track Status:*\n` +
+                    `https://www.jagerclothing.in/track-request`
                 );
 
                 // 3. Redirect to WhatsApp (New Tab to preserve logs)

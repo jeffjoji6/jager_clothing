@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 
 interface DesignRequest {
     id: string;
+    request_ref?: string | null;
     name: string;
     email: string | null;
     phone: string | null;
@@ -257,7 +258,7 @@ const DesignRequests = () => {
                             <div className="md:col-span-3 p-6 flex flex-col h-full overflow-y-auto">
                                 <DialogHeader className="mb-6">
                                     <DialogTitle className="font-heading font-bold uppercase text-2xl">
-                                        Request #{selectedRequest.id.slice(0, 8)}
+                                        Request {selectedRequest.request_ref ? `${selectedRequest.request_ref}` : `#${selectedRequest.id.slice(0, 8)}`}
                                     </DialogTitle>
                                     <p className="text-sm text-grey-text">
                                         Received on {format(new Date(selectedRequest.created_at), 'PPP')} at {format(new Date(selectedRequest.created_at), 'p')}
