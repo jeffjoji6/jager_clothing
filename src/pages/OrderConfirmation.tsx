@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Loader2, CheckCircle2, Package, Truck, Home, X } from "lucide-react";
+import { Loader2, CheckCircle2, Package, Truck, Home, X, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -15,6 +15,9 @@ interface Order {
   shipping: number;
   tax: number;
   shipping_address: any;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  shipped_on: string | null;
   created_at: string;
 }
 
@@ -265,6 +268,44 @@ const OrderConfirmation = () => {
                   <p>{order.shipping_address.street}</p>
                   <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</p>
                   <p className="mt-2 text-grey-text text-sm">Phone: {order.shipping_address.phone}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Tracking Info */}
+            {order.tracking_number && (
+              <div className="bg-grey-bg p-6 md:p-8 text-left border border-foreground/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Truck className="w-5 h-5 text-jager-red" />
+                  <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Shipment Tracking</h2>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-grey-text uppercase tracking-wider mb-1">AWB Number</p>
+                    <p className="font-mono font-bold text-xl">{order.tracking_number}</p>
+                  </div>
+                  {order.shipped_on && (
+                    <div>
+                      <p className="text-xs text-grey-text uppercase tracking-wider mb-1">Shipped On</p>
+                      <p className="font-medium text-lg">
+                        {new Date(order.shipped_on).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  )}
+                  <Button
+                    onClick={() => {
+                      const trackingUrl = order.tracking_url || `https://shiprocket.co/tracking/${order.tracking_number}`;
+                      window.open(trackingUrl, '_blank');
+                    }}
+                    className="w-full bg-jager-red hover:bg-jager-red/90 text-white h-12 text-base tracking-widest"
+                  >
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    TRACK SHIPMENT
+                  </Button>
                 </div>
               </div>
             )}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Palette, User, Phone, Mail, FileText, MessageCircle } from "lucide-react";
+import { Loader2, Palette, User, Phone, Mail, FileText, MessageCircle, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -29,6 +29,9 @@ interface DesignRequest {
     image_url?: string | null;
     status: string;
     created_at: string;
+    tracking_number?: string | null;
+    tracking_url?: string | null;
+    shipped_on?: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -41,6 +44,8 @@ const statusColors: Record<string, string> = {
 
 const DesignRequests = () => {
     const [selectedRequest, setSelectedRequest] = useState<DesignRequest | null>(null);
+    const [trackingNumber, setTrackingNumber] = useState("");
+    const [trackingUrl, setTrackingUrl] = useState("");
     const queryClient = useQueryClient();
 
     // Fetch requests
@@ -251,11 +256,80 @@ const DesignRequests = () => {
                                                     <SelectItem value="new">New</SelectItem>
                                                     <SelectItem value="contacted">Contacted</SelectItem>
                                                     <SelectItem value="in_progress">In Progress</SelectItem>
+                                                    <SelectItem value="shipped">Shipped</SelectItem>
                                                     <SelectItem value="completed">Completed</SelectItem>
                                                     <SelectItem value="cancelled">Cancelled</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                    </div>
+
+                                    {/* Shipment Tracking Section */}
+                                    <div className="pt-4 border-t border-border space-y-3">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Truck className="w-4 h-4 text-grey-text" />
+                                            <Label className="text-xs text-grey-text uppercase">Shipment Tracking</Label>
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-xs text-grey-text">AWB / Tracking Number</Label>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter tracking number"
+                                                value={trackingNumber || selectedRequest.tracking_number || ""}
+                                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                                className="w-full mt-1 px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-jager-red"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-xs text-grey-text">Tracking URL (Optional)</Label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://shiprocket.co/tracking/..."
+                                                value={trackingUrl || selectedRequest.tracking_url || ""}
+                                                onChange={(e) => setTrackingUrl(e.target.value)}
+                                                className="w-full mt-1 px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-jager-red"
+                                            />
+                                        </div>
+
+                                        <Button
+                                            onClick={async () => {
+                                                try {
+                                                    const updateData: any = {};
+                                                    if (trackingNumber) updateData.tracking_number = trackingNumber;
+                                                    if (trackingUrl) updateData.tracking_url = trackingUrl;
+                                                    if (selectedRequest.status === 'shipped' && !selectedRequest.shipped_on) {
+                                                        updateData.shipped_on = new Date().toISOString();
+                                                    }
+
+                                                    const { error } = await supabase
+                                                        .from('custom_design_requests')
+                                                        .update(updateData)
+                                                        .eq('id', selectedRequest.id);
+
+                                                    if (error) throw error;
+
+                                                    queryClient.invalidateQueries({ queryKey: ['admin', 'design-requests'] });
+                                                    toast.success("Tracking information updated");
+                                                    setTrackingNumber("");
+                                                    setTrackingUrl("");
+                                                } catch (error: any) {
+                                                    toast.error("Failed to update tracking: " + error.message);
+                                                }
+                                            }}
+                                            className="w-full"
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            Save Tracking Info
+                                        </Button>
+
+                                        {selectedRequest.shipped_on && (
+                                            <div className="text-xs text-grey-text mt-2">
+                                                Shipped on {format(new Date(selectedRequest.shipped_on), 'PPP')}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

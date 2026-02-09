@@ -9,13 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Search, Package, Clock, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { Loader2, Search, Package, Clock, CheckCircle2, XCircle, HelpCircle, Truck, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
     new: { label: "Request Received", color: "bg-blue-500", icon: Clock },
     contacted: { label: "Consultation Started", color: "bg-yellow-500", icon: HelpCircle },
     in_progress: { label: "In Production", color: "bg-orange-500", icon: Package },
+    shipped: { label: "Shipped", color: "bg-indigo-500", icon: Truck },
     completed: { label: "Completed", color: "bg-green-500", icon: CheckCircle2 },
     cancelled: { label: "Cancelled", color: "bg-red-500", icon: XCircle },
 };
@@ -131,6 +132,40 @@ export default function TrackRequest() {
                                                     <span className="text-muted-foreground">Email</span>
                                                     <span className="font-medium">{result.user_email || 'N/A'}</span>
                                                 </div>
+
+                                                {/* Shipment Tracking Section */}
+                                                {result.tracking_number && (
+                                                    <div className="pt-3 border-t border-border/50">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Truck className="w-4 h-4 text-grey-text" />
+                                                            <span className="text-muted-foreground font-medium">Shipment Tracking</span>
+                                                        </div>
+                                                        <div className="bg-muted/30 p-3 rounded-lg space-y-2">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-xs text-muted-foreground">AWB Number</span>
+                                                                <span className="font-mono font-bold text-sm">{result.tracking_number}</span>
+                                                            </div>
+                                                            {result.shipped_on && (
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-xs text-muted-foreground">Shipped On</span>
+                                                                    <span className="text-xs font-medium">{format(new Date(result.shipped_on), 'PPP')}</span>
+                                                                </div>
+                                                            )}
+                                                            <Button
+                                                                onClick={() => {
+                                                                    const trackingUrl = result.tracking_url || `https://shiprocket.co/tracking/${result.tracking_number}`;
+                                                                    window.open(trackingUrl, '_blank');
+                                                                }}
+                                                                className="w-full mt-2 bg-jager-red hover:bg-jager-red/90 text-white"
+                                                                size="sm"
+                                                            >
+                                                                <ExternalLink className="w-4 h-4 mr-2" />
+                                                                Track Shipment
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 <div className="pt-2">
                                                     <span className="text-muted-foreground block mb-1">Brief</span>
                                                     <p className="line-clamp-2 italic opacity-80">{result.brief}</p>

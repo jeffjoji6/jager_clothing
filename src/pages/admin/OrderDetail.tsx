@@ -26,6 +26,8 @@ interface Order {
   tax: number;
   shipping_address: any;
   tracking_number: string | null;
+  tracking_url: string | null;
+  shipped_on: string | null;
   notes: string | null;
   created_at: string;
 }
@@ -60,6 +62,7 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingUrl, setTrackingUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [showTrackingDialog, setShowTrackingDialog] = useState(false);
 
@@ -76,6 +79,7 @@ const OrderDetail = () => {
       if (error) throw error;
       if (data) {
         setTrackingNumber(data.tracking_number || "");
+        setTrackingUrl(data.tracking_url || "");
         setNotes(data.notes || "");
       }
       return data as Order;
@@ -169,12 +173,17 @@ const OrderDetail = () => {
   // Update tracking mutation
   const updateTracking = useMutation({
     mutationFn: async () => {
+      const updateData: any = {
+        tracking_number: trackingNumber,
+        status: 'shipped'
+      };
+
+      if (trackingUrl) updateData.tracking_url = trackingUrl;
+      if (!order?.shipped_on) updateData.shipped_on = new Date().toISOString();
+
       const { error } = await supabase
         .from('orders')
-        .update({
-          tracking_number: trackingNumber,
-          status: 'shipped'
-        })
+        .update(updateData)
         .eq('id', id!);
 
       if (error) throw error;
@@ -185,28 +194,25 @@ const OrderDetail = () => {
       setShowTrackingDialog(false);
 
       // Send tracking notification email to customer
-      if (order && trackingNumber) {
-        const customerEmail = order.shipping_address?.email;
+      if (order && trackingNumber && customerEmail) {
         const customerName = order.shipping_address?.full_name || 'Customer';
 
-        if (customerEmail) {
-          const emailResult = await sendTrackingNotificationEmail({
-            orderId: order.id,
-            customerEmail,
-            customerName,
-            trackingId: trackingNumber,
-            // trackingUrl: optional - add if you have it
-          });
+        const emailResult = await sendTrackingNotificationEmail({
+          orderId: order.id,
+          customerEmail,
+          customerName,
+          trackingId: trackingNumber,
+          trackingUrl: trackingUrl || `https://shiprocket.co/tracking/${trackingNumber}`,
+        });
 
-          if (emailResult.success) {
-            toast.success("Shipping notification sent to customer");
-          } else {
-            console.error("Failed to send tracking email:", emailResult.error);
-            toast.error("Tracking saved, but failed to send email: " + emailResult.error);
-          }
+        if (emailResult.success) {
+          toast.success("Shipping notification sent to customer");
         } else {
-          toast.warning("Tracking saved, but no customer email found.");
+          console.error("Failed to send tracking email:", emailResult.error);
+          toast.error("Tracking saved, but failed to send email: " + emailResult.error);
         }
+      } else if (!customerEmail) {
+        toast.warning("Tracking saved, but no customer email found.");
       }
     },
   });
@@ -625,26 +631,44 @@ const OrderDetail = () => {
               </div>
 
               {/* Tracking Number */}
-              <div>
-                <Label className="text-sm font-heading font-bold uppercase mb-2 block">Tracking Number</Label>
-                <div className="flex gap-2">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-heading font-bold uppercase mb-2 block">Tracking Number</Label>
                   <Input
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
-                    placeholder="Enter tracking number"
+                    placeholder="Enter AWB number"
                   />
-                  <Button
-                    onClick={() => updateTracking.mutate()}
-                    disabled={updateTracking.isPending || !trackingNumber}
-                    size="sm"
-                  >
-                    {updateTracking.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Add"
-                    )}
-                  </Button>
                 </div>
+
+                <div>
+                  <Label className="text-sm text-grey-text mb-2 block">Tracking URL (Optional)</Label>
+                  <Input
+                    value={trackingUrl}
+                    onChange={(e) => setTrackingUrl(e.target.value)}
+                    placeholder="https://shiprocket.co/tracking/..."
+                    type="url"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => updateTracking.mutate()}
+                  disabled={updateTracking.isPending || !trackingNumber}
+                  size="sm"
+                  className="w-full"
+                >
+                  {updateTracking.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Add"
+                  )}
+                </Button>
+
+                {order?.shipped_on && (
+                  <div className="text-xs text-grey-text">
+                    Shipped on {format(new Date(order.shipped_on), 'PPP')}
+                  </div>
+                )}
               </div>
 
               {/* Generate PDFs */}

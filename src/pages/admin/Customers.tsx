@@ -72,15 +72,42 @@ const Customers = () => {
   const { data: customers, isLoading: isLoadingCustomers } = useQuery({
     queryKey: ['admin', 'customers', searchQuery],
     queryFn: async () => {
-      // Get all orders grouped by user
+      // 1. Get ALL registered users
+      const { data: allUsers, error: userError } = await supabase.rpc('get_all_users');
+
+      if (userError) {
+        console.error("Failed to fetch all users:", userError);
+      }
+
+      // 2. Get all orders grouped by user
       const { data: orders } = await supabase
         .from('orders')
-        .select('user_id, total, created_at')
+        .select('user_id, total, created_at, shipping_address')
         .not('user_id', 'is', null);
 
       // Aggregate customer data
-      const customerMap = new Map<string, CustomerStats & { customer: Customer }>();
+      const customerMap = new Map<string, CustomerStats & { customer: Customer; latestOrderName?: string }>();
 
+      // Initialize map with ALL registered users
+      if (allUsers) {
+        allUsers.forEach((u: any) => {
+          customerMap.set(u.id, {
+            total_orders: 0,
+            total_spent: 0,
+            last_order_date: null,
+            customer: {
+              id: u.id,
+              email: u.email,
+              created_at: u.created_at,
+              // @ts-ignore
+              raw_user_meta_data: u.raw_user_meta_data
+            },
+            latestOrderName: undefined
+          });
+        });
+      }
+
+      // Update with Order Data
       orders?.forEach((order) => {
         if (!order.user_id) return;
 
@@ -89,15 +116,28 @@ const Customers = () => {
           total_spent: 0,
           last_order_date: null,
           customer: { id: order.user_id, email: '', created_at: '' },
+          latestOrderName: undefined
         };
+
+        const isNewer = order.created_at > (existing.last_order_date || '');
+
+        // Extract name from shipping address if available
+        let orderName = existing.latestOrderName;
+        if (isNewer && order.shipping_address && (order.shipping_address as any).full_name) {
+          orderName = (order.shipping_address as any).full_name;
+        }
+
+        // Use email from order lookup if original user was missing (edge case)
+        if (!existing.customer.email && (order as any).user_email) {
+          existing.customer.email = (order as any).user_email;
+        }
 
         customerMap.set(order.user_id, {
           total_orders: existing.total_orders + 1,
           total_spent: existing.total_spent + Number(order.total || 0),
-          last_order_date: order.created_at > (existing.last_order_date || '')
-            ? order.created_at
-            : existing.last_order_date,
+          last_order_date: isNewer ? order.created_at : existing.last_order_date,
           customer: existing.customer,
+          latestOrderName: orderName
         });
       });
 
@@ -108,23 +148,11 @@ const Customers = () => {
 
       const customerArray = Array.from(customerMap.values());
 
-      // Collect IDs to fetch emails
-      const userIds = customerArray.map(c => c.customer.id);
-
-      let emailMap: Record<string, string> = {};
-      try {
-        const { data: emailData, error } = await supabase.rpc('get_user_emails', {
-          user_ids: userIds
-        });
-
-        if (!error && emailData) {
-          emailData.forEach((u: { id: string, email: string }) => {
-            emailMap[u.id] = u.email;
-          });
-        }
-      } catch (e) {
-        console.error("Failed to call get_user_emails RPC", e);
-      }
+      // Note: We already have emails from get_all_users, so get_user_emails is largely redundant
+      // EXCEPT for users who might be in orders but not auth (unlikely).
+      // Let's keep the email fetch just in case, or optimize it.
+      // Actually, get_all_users returns emails. So we only need to fetch emails for IDs that were NOT in allUsers.
+      // But for simplicity and robustness, let's just stick to the map we built.
 
       // Get all subscriptions
       const { data: subscriptions } = await supabase
@@ -135,12 +163,45 @@ const Customers = () => {
       const subscriptionMap = new Set(subscriptions?.map(s => s.email.toLowerCase()));
 
       for (const item of customerArray) {
+        // 1. Try Address Book Name (Highest Priority - Explicit Profile)
         const userAddress = addresses?.find(a => a.user_id === item.customer.id);
-        if (userAddress) {
+        if (userAddress && userAddress.full_name) {
           item.customer.full_name = userAddress.full_name;
         }
-        item.customer.email = emailMap[item.customer.id] || "Email not available";
-        item.customer.is_subscribed = subscriptionMap.has(item.customer.email.toLowerCase());
+        // 2. Try Auth Metadata Name (Signup Name)
+        // @ts-ignore
+        else if (item.customer.raw_user_meta_data) {
+          // @ts-ignore
+          const meta = item.customer.raw_user_meta_data;
+          if (meta.full_name) item.customer.full_name = meta.full_name;
+          else if (meta.name) item.customer.full_name = meta.name;
+          else if (meta.first_name) item.customer.full_name = `${meta.first_name} ${meta.last_name || ''}`.trim();
+        }
+
+        // 3. Try Order Shipping Name (Implicit Profile)
+        // Only if still no name found
+        if (!item.customer.full_name && item.latestOrderName) {
+          item.customer.full_name = item.latestOrderName;
+        }
+
+        // Email logic compatibility
+        // If email is empty (from orders only case), we might need to fetch it.
+        // But get_all_users provides it.
+        // If item came from orders only (not in auth), email might be empty.
+
+        item.customer.is_subscribed = item.customer.email ? subscriptionMap.has(item.customer.email.toLowerCase()) : false;
+
+        // 4. Fallback to Email User Part
+        if (!item.customer.full_name && item.customer.email && item.customer.email !== "Email not available") {
+          const namePart = item.customer.email.split('@')[0];
+          // Capitalize first letter
+          item.customer.full_name = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        }
+
+        // 5. Ultimate Fallback
+        if (!item.customer.full_name) {
+          item.customer.full_name = "Customer";
+        }
       }
 
       // Filter by search query
