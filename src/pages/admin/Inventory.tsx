@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Edit, Trash2, Package, Upload, X, Link as LinkIcon, History, AlertTriangle, Minus, ChevronDown, ChevronUp, RefreshCw, Wand2 } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Package, Upload, X, Link as LinkIcon, History, AlertTriangle, Minus, ChevronDown, ChevronUp, RefreshCw, Wand2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -43,6 +43,7 @@ interface Product {
     images: string[] | null;
     featured: boolean;
     is_new: boolean;
+    is_hidden: boolean;
     amazon_url: string | null;
     amazon_asin: string | null;
     sku: string | null;
@@ -65,6 +66,7 @@ interface ProductVariant {
     image_url?: string;
     images?: string[];
     color_code?: string;
+    is_default?: boolean;
 }
 
 interface ProductWithStock extends Product {
@@ -271,7 +273,7 @@ const getTotalStock = (product: ProductWithStock) => {
 };
 
 // Memoized ProductRow to prevent re-renders
-const ProductRow = React.memo(({ product, onManage, onDelete }: { product: ProductWithStock, onManage: (p: ProductWithStock) => void, onDelete: (id: string) => void }) => {
+const ProductRow = React.memo(({ product, onManage, onDelete, onToggleVisibility }: { product: ProductWithStock, onManage: (p: ProductWithStock) => void, onDelete: (id: string) => void, onToggleVisibility: (id: string, isHidden: boolean) => void }) => {
     const totalStock = getTotalStock(product);
 
     return (
@@ -301,6 +303,14 @@ const ProductRow = React.memo(({ product, onManage, onDelete }: { product: Produ
             </TableCell>
             <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onToggleVisibility(product.id, !product.is_hidden)}
+                        title={product.is_hidden ? "Show product" : "Hide product"}
+                    >
+                        {product.is_hidden ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => onManage(product)}>
                         <Edit className="h-4 w-4 mr-1" /> Manage Product
                     </Button>
@@ -309,7 +319,7 @@ const ProductRow = React.memo(({ product, onManage, onDelete }: { product: Produ
                     </Button>
                 </div>
             </TableCell>
-        </TableRow>
+        </TableRow >
     );
 }, (prev, next) => prev.product === next.product);
 
@@ -370,7 +380,16 @@ const Inventory = () => {
         price_modifier: "0",
         images: [] as string[], // Changed from image_url to images array
         color_code: "",
+        is_default: false,
     });
+
+    // Helper to ensure only one default
+    const handleSetDefaultVariant = (variantId: string) => {
+        setVariants(prev => prev.map(v => ({
+            ...v,
+            is_default: v.id === variantId
+        })));
+    };
 
 
 
@@ -597,7 +616,7 @@ const Inventory = () => {
             return;
         }
 
-        const variant: ProductVariant = {
+        const variantData: ProductVariant = {
             id: editingVariantId || `temp-${Date.now()}`,
             product_id: editingProduct?.id || selectedProductForVariants?.id || '',
             size: newVariant.size,
@@ -610,19 +629,32 @@ const Inventory = () => {
             color_code: newVariant.color_code || undefined,
             barcode: null,
             // Preserve is_archived if editing existing variant
-            is_archived: editingVariantId ? variants.find(v => v.id === editingVariantId)?.is_archived : undefined
+            is_archived: editingVariantId ? variants.find(v => v.id === editingVariantId)?.is_archived : undefined,
+            is_default: newVariant.is_default || (variants.length === 0)
         };
 
         if (editingVariantId) {
-            setVariants(variants.map(v => v.id === editingVariantId ? variant : v));
+            setVariants(prev => {
+                let next = prev.map(v => v.id === editingVariantId ? variantData : v);
+                if (variantData.is_default) {
+                    next = next.map(v => ({ ...v, is_default: v.id === variantData.id }));
+                }
+                return next;
+            });
             setEditingVariantId(null);
             toast.success("Variant updated");
         } else {
-            setVariants([...variants, variant]);
+            setVariants(prev => {
+                let next = [...prev, variantData];
+                if (variantData.is_default) {
+                    next = next.map(v => ({ ...v, is_default: v.id === variantData.id }));
+                }
+                return next;
+            });
             toast.success("Variant added");
         }
 
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "" });
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "", is_default: false });
     };
 
     const handleEditVariantClick = (variant: ProductVariant) => {
@@ -635,7 +667,8 @@ const Inventory = () => {
             discounted_price: variant.discounted_price?.toString() || "",
             price_modifier: variant.price_modifier.toString(),
             images: (variant.images && variant.images.length > 0) ? variant.images : (variant.image_url ? [variant.image_url] : []),
-            color_code: variant.color_code || ""
+            color_code: variant.color_code || "",
+            is_default: variant.is_default || false
         });
     };
 
@@ -759,7 +792,8 @@ const Inventory = () => {
                     image_url: (v.images && v.images.length > 0) ? v.images[0] : (v.image_url || null),
                     images: v.images,
                     color_code: v.color_code,
-                    is_archived: false
+                    is_archived: false,
+                    is_default: v.is_default || false
                 };
 
                 // Only include ID for existing variants (not temp ones)
@@ -899,6 +933,28 @@ const Inventory = () => {
         }
     }, [deleteProduct]);
 
+    // Toggle product visibility
+    const toggleVisibility = useMutation({
+        mutationFn: async ({ id, isHidden }: { id: string; isHidden: boolean }) => {
+            const { error } = await supabase
+                .from('products')
+                .update({ is_hidden: isHidden })
+                .eq('id', id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+            toast.success("Product visibility updated");
+        },
+        onError: (error) => toast.error(error.message)
+    });
+
+    const handleToggleVisibility = useCallback((id: string, isHidden: boolean) => {
+        toggleVisibility.mutate({ id, isHidden });
+    }, [toggleVisibility]);
+
+
 
     // --- UI Actions ---
     const resetForm = () => {
@@ -909,7 +965,7 @@ const Inventory = () => {
         });
         setVariants([]);
         setVariantsToDelete([]);
-        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "" });
+        setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "", is_default: false });
         setActiveTab("basic");
     };
 
@@ -985,6 +1041,7 @@ const Inventory = () => {
                                         product={product}
                                         onManage={handleManageProduct}
                                         onDelete={handleDeleteProduct}
+                                        onToggleVisibility={handleToggleVisibility}
                                     />
                                 ))}
                             </TableBody>
@@ -1090,15 +1147,13 @@ const Inventory = () => {
                             </TabsContent>
 
                             <TabsContent value="variants" className="space-y-4">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                                    <span className="text-sm text-muted-foreground">Manage variants and images.</span>
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                                    {/* Left Panel: Add/Edit Form */}
-                                    <div className="md:col-span-2 space-y-4 border p-4 rounded-lg bg-muted/20">
-                                        <h3 className="font-semibold text-sm mb-2">{editingVariantId ? "Edit Variant" : "Add New Variant"}</h3>
+                                    {/* Left Panel: Add/Edit Variant Form */}
+                                    <div className="md:col-span-2 space-y-4 p-4 border rounded-lg bg-muted/20">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="font-semibold text-sm">{editingVariantId ? "Edit Variant" : "Add Variant"}</h3>
+                                            {editingVariantId && <Button variant="ghost" size="sm" onClick={() => { setEditingVariantId(null); setNewVariant({ size: "", color: "", stock: "", actual_price: "", discounted_price: "", price_modifier: "0", images: [], color_code: "", is_default: false }); }}>Cancel Edit</Button>}
+                                        </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
@@ -1149,6 +1204,15 @@ const Inventory = () => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div><Label className="text-xs mb-1 block">Stock</Label><Input type="number" value={newVariant.stock} onChange={e => setNewVariant({ ...newVariant, stock: e.target.value })} /></div>
                                             <div><Label className="text-xs mb-1 block">Price</Label><Input type="number" value={newVariant.actual_price} onChange={e => setNewVariant({ ...newVariant, actual_price: e.target.value })} placeholder={productForm.base_price?.toString()} /></div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 pt-2">
+                                            <Checkbox
+                                                id="is_default"
+                                                checked={newVariant.is_default}
+                                                onCheckedChange={(checked) => setNewVariant({ ...newVariant, is_default: checked as boolean })}
+                                            />
+                                            <Label htmlFor="is_default" className="text-xs cursor-pointer">Set as Default Variant (First shown)</Label>
                                         </div>
 
                                         <div className="border-t pt-4">
@@ -1206,8 +1270,8 @@ const Inventory = () => {
                                                                 No variants added yet.
                                                             </TableCell>
                                                         </TableRow>
-                                                    ) : [...variants].sort((a, b) => a.color.localeCompare(b.color) || a.size.localeCompare(b.size)).map((v, idx) => (
-                                                        <TableRow key={v.id || idx}>
+                                                    ) : [...variants].sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0) || a.color.localeCompare(b.color) || a.size.localeCompare(b.size)).map((v, idx) => (
+                                                        <TableRow key={v.id || idx} className={v.is_default ? "bg-muted/30" : ""}>
                                                             <TableCell>
                                                                 <Badge variant={v.images && v.images.length > 0 ? "default" : "secondary"} className="text-xs font-mono">
                                                                     {v.images?.length || 0}
@@ -1218,6 +1282,7 @@ const Inventory = () => {
                                                                 <div className="flex items-center gap-2">
                                                                     <span className="w-3 h-3 rounded-full border shadow-sm" style={{ backgroundColor: v.color_code || v.color.toLowerCase() }}></span>
                                                                     {v.color}
+                                                                    {v.is_default && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded border border-yellow-200">Default</span>}
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell>{v.stock}</TableCell>
@@ -1226,6 +1291,16 @@ const Inventory = () => {
                                                                 <div className="flex justify-end gap-1">
                                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-blue-500" onClick={() => handleEditVariantClick(v)}>
                                                                         <Edit className="h-3 w-3" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className={`h-7 w-7 ${v.is_default ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 hover:text-yellow-500'}`}
+                                                                        onClick={() => handleSetDefaultVariant(v.id)}
+                                                                        title={v.is_default ? "Default Variant" : "Set as Default"}
+                                                                    >
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={v.is_default ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                                                     </Button>
                                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleRemoveVariant(v.id)}>
                                                                         <X className="h-3 w-3" />
@@ -1240,6 +1315,8 @@ const Inventory = () => {
                                     </div>
                                 </div>
                             </TabsContent>
+
+
                         </Tabs>
 
                         <div className="flex gap-2">
@@ -1247,11 +1324,11 @@ const Inventory = () => {
                             <Button type="submit" className="flex-1">Save Product</Button>
                         </div>
                     </form>
-                </DialogContent>
-            </Dialog>
+                </DialogContent >
+            </Dialog >
 
             {/* Dialog: Manage Variants (Unified Stock & Price Management) */}
-            <Dialog open={manageVariantsOpen} onOpenChange={setManageVariantsOpen}>
+            < Dialog open={manageVariantsOpen} onOpenChange={setManageVariantsOpen} >
                 <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="font-heading font-bold uppercase">Manage Variants: {selectedProductForVariants?.name}</DialogTitle>
@@ -1302,10 +1379,10 @@ const Inventory = () => {
                         </div>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Dialog: Adjust Stock (History Logged) */}
-            <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
+            < Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen} >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="font-heading uppercase">Adjust Stock</DialogTitle>
@@ -1336,10 +1413,10 @@ const Inventory = () => {
                         </Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Dialog: Stock History */}
-            <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
+            < Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen} >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader><DialogTitle className="font-heading uppercase">Stock History</DialogTitle></DialogHeader>
                     <div className="max-h-[60vh] overflow-y-auto space-y-2">
@@ -1359,16 +1436,16 @@ const Inventory = () => {
                         {stockHistory?.length === 0 && <div className="text-center text-muted-foreground py-4">No history found.</div>}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Image Editor Dialog */}
-            <ImageEditorDialog
+            < ImageEditorDialog
                 open={editorOpen}
                 onOpenChange={setEditorOpen}
                 file={editorFile}
                 onSave={handleEditorSave}
             />
-        </div>
+        </div >
     );
 };
 

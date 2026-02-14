@@ -44,6 +44,7 @@ export interface ProductVariant {
   images?: string[]; // New: Multiple images per color
   barcode?: string | null;
   is_archived?: boolean;
+  is_default?: boolean;
   created_at: string;
 }
 

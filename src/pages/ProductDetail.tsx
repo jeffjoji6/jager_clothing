@@ -57,6 +57,7 @@ const ProductDetail = () => {
         colorMap.set(v.color, v.color_code);
       }
     });
+    // Sort alphabetically (Ascending)
     return Array.from(colorMap.keys()).sort().map(name => ({
       name,
       code: colorMap.get(name)
@@ -75,22 +76,39 @@ const ProductDetail = () => {
 
   // Auto-select variant, color and reset quantity
   useEffect(() => {
-    // Smart Auto-select on load: Prioritize In-Stock variants
+    // Smart Auto-select on load: Use DEFAULT color (matches collection page image)
+    // Only switch to another color if default color is COMPLETELY out of stock
     if (availableColors.length > 0 && !selectedColor) {
+      // 1. Determine target color: Priority -> Default Variant > First Available
       let targetColor = availableColors[0].name;
+
+      const defaultVariant = product?.variants.find(v => v.is_default === true);
+      if (defaultVariant) {
+        // Verify default variant color is in availableColors list (safety check)
+        const isDefaultAvailable = availableColors.some(c => c.name === defaultVariant.color);
+        if (isDefaultAvailable) {
+          targetColor = defaultVariant.color;
+        }
+      }
+
       let targetSize = "";
 
-      // 1. Try to find a color that has stock
-      const colorWithStock = availableColors.find(c =>
-        product?.variants.some(v => v.color === c.name && v.stock > 0)
+      // Check if target/default color has ANY stock at all
+      const targetColorHasStock = product?.variants.some(
+        v => v.color === targetColor && v.stock > 0
       );
 
-      if (colorWithStock) {
-        targetColor = colorWithStock.name;
+      // Only switch to another color if target color is completely sold out
+      if (!targetColorHasStock) {
+        const colorWithStock = availableColors.find(c =>
+          product?.variants.some(v => v.color === c.name && v.stock > 0)
+        );
+        if (colorWithStock) {
+          targetColor = colorWithStock.name;
+        }
       }
 
       // 2. Find best size for this color (Smallest available)
-      // Iterate through sorted availableSizes to find first match
       if (availableSizes.length > 0) {
         const sizeWithStock = availableSizes.find(size =>
           product?.variants.some(v => v.color === targetColor && v.size === size && v.stock > 0)

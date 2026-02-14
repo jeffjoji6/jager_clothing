@@ -222,7 +222,8 @@ const Collection = () => {
                       <ProductCard
                         id={product.id}
                         name={product.name}
-                        price={Number(product.base_price)}
+                        basePrice={Number(product.base_price || 0)}
+                        variants={product.variants}
                         image={product.images}
                         isNew={product.is_new}
                         isOutOfStock={isOutOfStock}
