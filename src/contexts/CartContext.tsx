@@ -85,7 +85,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             variant_id: cart.product_variant_id,
             name: `${product?.name || ''} - ${variant?.size || ''} - ${variant?.color || ''}`,
             price: finalPrice,
-            image: Array.isArray(product?.images) ? product.images[0] : product?.images || '/placeholder.svg',
+            image: (Array.isArray(variant?.images) && variant.images.length > 0)
+              ? variant.images[0]
+              : (variant?.image_url
+                ? variant.image_url
+                : (Array.isArray(product?.images) ? product.images[0] : product?.images || '/placeholder.svg')),
             size: variant?.size || '',
             quantity: cart.quantity,
             max_stock: variant?.stock || 0
