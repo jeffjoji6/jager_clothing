@@ -185,7 +185,7 @@ export const Footer = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-border">
                     <p className="text-xs font-body text-muted-foreground uppercase tracking-wider text-center md:text-left">
-                        © 2025 Jager Clothing. All rights reserved.
+                        © 2026 Jager Clothing. All rights reserved.
                     </p>
                     <div className="flex gap-6 mt-4 md:mt-0">
                         <img src="/jager_logo_v2.png" alt="Jager" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
