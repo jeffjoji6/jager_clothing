@@ -38,6 +38,7 @@ export const LiquidGlassSlider = ({ className }: { className?: string }) => {
                                 className="absolute inset-0 bg-white rounded-full shadow-sm border border-black/5"
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 initial={false}
+                                layout
                             />
                         )}
                         <span className="relative z-10">{tab.label}</span>
