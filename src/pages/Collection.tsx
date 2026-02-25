@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -110,6 +111,11 @@ const Collection = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Shop Collection | Jager Clothing - Premium Streetwear</title>
+        <meta name="description" content="Browse the full Jager Clothing collection. Premium streetwear tees, hoodies, and custom apparel. Filter by category, size, and color." />
+        <link rel="canonical" href="https://www.jagerclothing.in/collection" />
+      </Helmet>
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <ScrollReveal>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,6 +161,11 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Create Account | Jager Clothing</title>
+        <meta name="description" content="Join Jager Clothing. Create an account to shop premium streetwear and custom apparel." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <ScrollReveal variant="fade-up" className="max-w-md mx-auto">

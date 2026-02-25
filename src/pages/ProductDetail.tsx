@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { optimizeCloudinaryUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -321,6 +322,16 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <Helmet>
+        <title>{product.name} | Jager Clothing</title>
+        <meta name="description" content={product.description ? product.description.slice(0, 160) : `Shop ${product.name} from Jager Clothing. Premium streetwear, limited edition.`} />
+        <meta property="og:title" content={`${product.name} | Jager Clothing`} />
+        <meta property="og:description" content={product.description ? product.description.slice(0, 160) : `Shop ${product.name} from Jager Clothing.`} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`https://www.jagerclothing.in/product/${id}`} />
+        {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
+        <link rel="canonical" href={`https://www.jagerclothing.in/product/${id}`} />
+      </Helmet>
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16">

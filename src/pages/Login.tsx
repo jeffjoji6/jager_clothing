@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -131,6 +132,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Login | Jager Clothing</title>
+        <meta name="description" content="Sign in to your Jager Clothing account to manage orders and shop exclusive streetwear." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
 
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="max-w-md mx-auto">

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Ticker } from "@/components/Ticker";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,15 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <Helmet>
+        <title>Jager Clothing | Premium Streetwear & Custom Apparel</title>
+        <meta name="description" content="Jager - Chase, Conquer, Create. Premium streetwear and custom apparel. Shop exclusive drops or design your own. Worldwide shipping." />
+        <meta property="og:title" content="Jager Clothing | Premium Streetwear & Custom Apparel" />
+        <meta property="og:description" content="Chase, Conquer, Create. Premium streetwear and custom apparel. Shop exclusive drops or design your own." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.jagerclothing.in/" />
+        <link rel="canonical" href="https://www.jagerclothing.in/" />
+      </Helmet>
       <Ticker />
 
       {/* Hero Section - Mobile Optimized */}
