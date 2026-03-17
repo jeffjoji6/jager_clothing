@@ -228,11 +228,12 @@ export default function CustomDesign() {
         <div className="min-h-screen text-foreground relative overflow-hidden bg-background">
 
             <Helmet>
-                <title>Custom Design | Jager Clothing - Premium Streetwear</title>
-                <meta name="description" content="Bring your vision to life with Jager Custom Lab. From bulk orders to unique one-offs. Direct design consultation and premium manufacturing." />
+                <title>Custom Design | Jager Clothing - Custom Jerseys & Apparel</title>
+                <meta name="description" content="Design your own custom apparel with Jager Clothing. Bulk orders, team jerseys, hoodies & more. Direct WhatsApp consultation and premium manufacturing." />
                 <meta property="og:title" content="Create Your Masterpiece | Jager Custom Lab" />
-                <meta property="og:description" content="Premium custom apparel service. No limits. Direct consultation. Start your design today." />
-                <link rel="canonical" href="https://jagerclothing.com/custom-design" />
+                <meta property="og:description" content="Premium custom apparel service. Bulk orders, team jerseys, hoodies. Direct consultation on WhatsApp. Start your design today." />
+                <meta property="og:url" content="https://www.jagerclothing.in/custom-design" />
+                <link rel="canonical" href="https://www.jagerclothing.in/custom-design" />
             </Helmet>
 
             {/* Hero Section - Mobile Optimized */}
