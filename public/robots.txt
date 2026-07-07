@@ -16,6 +16,7 @@ Disallow: /admin/
 Disallow: /auth/
 Disallow: /checkout
 Disallow: /orders
+Disallow: /order-confirmation/
 Disallow: /profile
 Disallow: /login
 Disallow: /signup

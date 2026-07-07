@@ -71,18 +71,18 @@ export const Header = () => {
                     <div className="space-y-4">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">Menu</p>
                       <Link
+                        to="/bulk-orders"
+                        className="block text-2xl font-heading font-black uppercase tracking-tight text-jager-red hover:opacity-80 transition-opacity"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Bulk & Team Orders
+                      </Link>
+                      <Link
                         to="/collection"
                         className="block text-2xl font-heading font-black uppercase tracking-tight hover:text-jager-red transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Collection
-                      </Link>
-                      <Link
-                        to="/custom-design"
-                        className="block text-2xl font-heading font-black uppercase tracking-tight hover:text-jager-red transition-colors"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Custom Design
                       </Link>
                     </div>
 

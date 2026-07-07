@@ -59,8 +59,8 @@ export const Footer = () => {
                             <AccordionTrigger className="font-heading font-bold uppercase tracking-widest text-base py-4">SHOP</AccordionTrigger>
                             <AccordionContent>
                                 <ul className="space-y-4 text-base font-body text-muted-foreground pb-4">
+                                    <li><Link to="/bulk-orders" className="block hover:text-foreground transition-colors py-1">Bulk & Team Orders</Link></li>
                                     <li><Link to="/collection" className="block hover:text-foreground transition-colors py-1">Collection</Link></li>
-                                    <li><Link to="/custom-design" className="block hover:text-foreground transition-colors py-1">Custom Design</Link></li>
                                 </ul>
                             </AccordionContent>
                         </AccordionItem>
@@ -128,8 +128,8 @@ export const Footer = () => {
                     <div>
                         <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">SHOP</h3>
                         <ul className="space-y-4 text-sm font-body text-muted-foreground">
+                            <li><Link to="/bulk-orders" className="hover:text-foreground transition-colors">Bulk & Team Orders</Link></li>
                             <li><Link to="/collection" className="hover:text-foreground transition-colors">Collection</Link></li>
-                            <li><Link to="/custom-design" className="hover:text-foreground transition-colors">Custom Design</Link></li>
                         </ul>
                     </div>
                     <div>

@@ -6,13 +6,13 @@ export const LiquidGlassSlider = ({ className }: { className?: string }) => {
     const location = useLocation();
 
     // Determine active state - expanded logic to keep "Collection" active for product pages too
-    const isCustom = location.pathname.includes('/custom-design');
+    const isCustom = location.pathname.includes('/custom-design') || location.pathname.includes('/bulk-orders');
     // Default to collection active unless specifically in custom section
     const activeTab = isCustom ? "custom" : "collection";
 
     const tabs = [
+        { id: "custom", label: "BULK & TEAM ORDERS", path: "/bulk-orders" },
         { id: "collection", label: "COLLECTION", path: "/collection" },
-        { id: "custom", label: "CUSTOM LAB", path: "/custom-design" },
     ];
 
     return (

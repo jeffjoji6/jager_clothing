@@ -66,6 +66,7 @@ const PageLoader = () => (
 );
 
 import { Header } from "@/components/Header";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
 export const AnimatedRoutes = () => {
     const location = useLocation();
@@ -74,6 +75,7 @@ export const AnimatedRoutes = () => {
     return (
         <>
             {!isAdminRoute && <Header />}
+            {!isAdminRoute && <FloatingWhatsApp />}
             <AnimatePresence mode="wait">
                 <Suspense fallback={<PageLoader />}>
                     <Routes location={location} key={location.pathname}>
@@ -87,6 +89,7 @@ export const AnimatedRoutes = () => {
                         <Route path="/collection" element={<PageTransition><Collection /></PageTransition>} />
                         <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
                         <Route path="/custom-design" element={<PageTransition><CustomDesign /></PageTransition>} />
+                        <Route path="/bulk-orders" element={<PageTransition><CustomDesign /></PageTransition>} />
                         <Route path="/track-request" element={<PageTransition><TrackRequest /></PageTransition>} />
 
                         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />

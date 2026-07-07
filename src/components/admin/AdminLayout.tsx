@@ -78,7 +78,7 @@ const menuGroups = [
         roles: ["admin", "staff"],
       },
       {
-        title: "Jager Custom Design",
+        title: "Bulk & Custom Orders",
         icon: Palette,
         url: "/admin/design-requests",
         roles: ["admin", "staff", "designer"],

@@ -331,6 +331,25 @@ const ProductDetail = () => {
         <meta property="og:url" content={`https://www.jagerclothing.in/product/${id}`} />
         {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
         <link rel="canonical" href={`https://www.jagerclothing.in/product/${id}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "description": product.description?.slice(0, 300) || `${product.name} from Jager Clothing`,
+            "image": product.images || [],
+            "brand": { "@type": "Brand", "name": "Jager Clothing" },
+            "url": `https://www.jagerclothing.in/product/${id}`,
+            "offers": {
+              "@type": "Offer",
+              "url": `https://www.jagerclothing.in/product/${id}`,
+              "priceCurrency": "INR",
+              "price": sellingPrice,
+              "availability": "https://schema.org/InStock",
+              "seller": { "@type": "Organization", "name": "Jager Clothing" },
+            },
+          })}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-8 md:py-12">

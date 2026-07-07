@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Footer } from "@/components/Footer";
@@ -6,12 +6,93 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Loader2, MessageCircle, Sparkles, PencilRuler, Shirt, Image as ImageIcon, UploadCloud, X } from "lucide-react";
+import {
+    Loader2,
+    MessageCircle,
+    Trophy,
+    GraduationCap,
+    Building2,
+    Flag,
+    PencilRuler,
+    Shirt,
+    Truck,
+    UploadCloud,
+    X,
+    Users,
+    BadgeCheck,
+    Layers,
+    MapPin,
+} from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { ThreeDTiltCard } from "@/components/ThreeDTiltCard";
 import { uploadImage } from "@/lib/imageUpload";
+
+const GARMENT_TYPES = [
+    { value: "Sports Jersey (Sublimation)", label: "Sports Jersey (Sublimation)" },
+    { value: "Full Team Kit (Jersey + Shorts)", label: "Full Team Kit (Jersey + Shorts)" },
+    { value: "T-Shirts", label: "T-Shirts" },
+    { value: "Hoodies", label: "Hoodies" },
+    { value: "Corporate / Event Wear", label: "Corporate / Event Wear" },
+    { value: "Other", label: "Other" },
+];
+
+const SEGMENTS = [
+    {
+        icon: Trophy,
+        title: "Sports Teams",
+        desc: "Cricket, football, esports & more. Sublimation jerseys with player names & numbers.",
+    },
+    {
+        icon: GraduationCap,
+        title: "Colleges & Fests",
+        desc: "Department tees, fest merch, farewell & batch jerseys that your batch will keep forever.",
+    },
+    {
+        icon: Building2,
+        title: "Corporate",
+        desc: "Branded uniforms, event tees and onboarding kits for your whole team.",
+    },
+    {
+        icon: Flag,
+        title: "Events & Tournaments",
+        desc: "Match-day kits, volunteer tees and merch for tournaments of any size.",
+    },
+];
+
+const FAQS = [
+    {
+        q: "What is the minimum order quantity?",
+        a: "Bulk orders start at just 10 pieces. The bigger the order, the better the per-piece rate — share your quantity on WhatsApp and we'll quote instantly.",
+    },
+    {
+        q: "How long does delivery take?",
+        a: "Standard production and delivery is 10–15 days after design approval and advance payment. Need it faster? Ask about rush options on WhatsApp.",
+    },
+    {
+        q: "Can we add player names and numbers?",
+        a: "Yes. Individual names, numbers and sizes for every player are included — just share your roster after we finalize the design.",
+    },
+    {
+        q: "How does pricing work?",
+        a: "Pricing depends on quantity, fabric and print type, so we quote per project on WhatsApp. Tiered rates apply — 25+, 50+ and 100+ pieces unlock better prices.",
+    },
+    {
+        q: "Do you make the design for us?",
+        a: "Yes. Send us your logo, colours and any references — our designers create a free digital mockup and revise it until your team approves.",
+    },
+    {
+        q: "How do payments work?",
+        a: "50% advance to start production, balance before dispatch. We share live production updates on WhatsApp throughout.",
+    },
+];
 
 export default function CustomDesign() {
     const [loading, setLoading] = useState(false);
@@ -25,8 +106,9 @@ export default function CustomDesign() {
         name: "",
         email: "",
         phone: "",
+        organization: "",
+        garmentType: "",
         quantity: "",
-        budget: "",
         brief: "",
     });
 
@@ -35,7 +117,6 @@ export default function CustomDesign() {
             return;
         }
 
-        /* REMOVED LIMIT CHECK */
         setUploading(true);
         const files = Array.from(e.target.files);
 
@@ -67,7 +148,6 @@ export default function CustomDesign() {
         setImageUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-
     const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -78,15 +158,20 @@ export default function CustomDesign() {
         // Join URLs for DB storage (comma separated)
         const combinedImageUrls = imageUrls.join(',');
 
+        // Compose structured brief so garment/org survive in the existing schema
+        const composedBrief =
+            `Garment: ${formData.garmentType}\n` +
+            (formData.organization ? `Team/Organization: ${formData.organization}\n` : '') +
+            `\n${formData.brief}`;
+
         try {
             // Generate IDs client-side to ensure consistency and avoid DB read 401s
             const requestId = crypto.randomUUID();
-            // Simple Ref for User (e.g., CD-849201)
-            const requestRef = `CD-${Math.floor(100000 + Math.random() * 900000)}`;
+            // Simple Ref for User (e.g., BLK-849201)
+            const requestRef = `BLK-${Math.floor(100000 + Math.random() * 900000)}`;
             const trackingToken = Math.random().toString(36).substring(2, 8).toUpperCase();
 
             // 1. Save Request to Database
-            console.log("Attempting to save to custom_design_requests...");
             const { error } = await supabase
                 .from('custom_design_requests')
                 .insert({
@@ -96,9 +181,9 @@ export default function CustomDesign() {
                     email: formData.email,
                     phone: formData.phone,
                     whatsapp_number: formData.phone,
-                    brief: formData.brief,
+                    brief: composedBrief,
                     quantity: parseInt(formData.quantity) || 0,
-                    budget_range: formData.budget,
+                    budget_range: formData.organization,
                     image_url: combinedImageUrls,
                     tracking_token: trackingToken,
                 });
@@ -113,13 +198,9 @@ export default function CustomDesign() {
                 }
                 toast.error(`Database error: ${error.message}`);
             } else {
-                console.log("DB INSERT SUCCESS");
                 setSubmitStatus({ type: 'success', message: `Request Saved!` });
 
-                // Show Tracking Info to user
-                // Show Tracking Info to user
-                // Show Tracking Info to user
-                toast.success("Request Submitted Successfully", {
+                toast.success("Inquiry Submitted Successfully", {
                     description: (
                         <div className="flex flex-col gap-1 mt-2">
                             <p><strong>Ref:</strong> <span className="font-mono text-xs font-bold bg-muted px-1 rounded">{requestRef}</span></p>
@@ -139,12 +220,11 @@ export default function CustomDesign() {
                     await sendCustomDesignNotificationEmail({
                         customerName: formData.name,
                         customerEmail: formData.email,
-                        brief: formData.brief,
+                        brief: composedBrief,
                         quantity: formData.quantity,
-                        budget: formData.budget || '',
+                        budget: formData.organization || '',
                         imageUrls: imageUrls,
                     });
-                    console.log("Email notification sent successfully");
                 } catch (emailError) {
                     console.error("Error sending email notification:", emailError);
                 }
@@ -156,16 +236,17 @@ export default function CustomDesign() {
                 }
 
                 const message = encodeURIComponent(
-                    `*NEW CUSTOM DESIGN REQUEST*\n\n` +
+                    `*NEW BULK ORDER INQUIRY*\n\n` +
                     `*Ref:* ${requestRef}\n` +
                     `*Name:* ${formData.name}\n` +
-                    `*Email:* ${formData.email}\n` +
-                    `*Phone:* ${formData.phone}\n\n` +
-                    `*Project Details*\n` +
+                    (formData.organization ? `*Team/Org:* ${formData.organization}\n` : '') +
+                    `*Phone:* ${formData.phone}\n` +
+                    (formData.email ? `*Email:* ${formData.email}\n` : '') +
+                    `\n*Order Details*\n` +
                     `------------------\n` +
-                    `*Brief:* ${formData.brief}\n` +
-                    `*Qty:* ${formData.quantity}\n` +
-                    `*Budget:* ${formData.budget}\n` +
+                    `*Garment:* ${formData.garmentType}\n` +
+                    `*Qty:* ${formData.quantity} pcs\n` +
+                    `*Notes:* ${formData.brief}\n` +
                     imageLinks +
                     `\n*Track Status:*\n` +
                     `https://www.jagerclothing.in/track-request`
@@ -198,42 +279,28 @@ export default function CustomDesign() {
         }
     };
 
-
-
-    // Animation Variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring" as const,
-                stiffness: 100
-            }
-        }
-    };
-
     return (
         <div className="min-h-screen text-foreground relative overflow-hidden bg-background">
 
             <Helmet>
-                <title>Custom Design | Jager Clothing - Custom Jerseys & Apparel</title>
-                <meta name="description" content="Design your own custom apparel with Jager Clothing. Bulk orders, team jerseys, hoodies & more. Direct WhatsApp consultation and premium manufacturing." />
-                <meta property="og:title" content="Create Your Masterpiece | Jager Custom Lab" />
-                <meta property="og:description" content="Premium custom apparel service. Bulk orders, team jerseys, hoodies. Direct consultation on WhatsApp. Start your design today." />
-                <meta property="og:url" content="https://www.jagerclothing.in/custom-design" />
-                <link rel="canonical" href="https://www.jagerclothing.in/custom-design" />
+                <title>Custom Team Jerseys & Bulk Uniform Orders India | Jager Clothing</title>
+                <meta name="description" content="Order custom team jerseys, sports uniforms & bulk apparel from 10 pieces. Sublimation printing, player names & numbers, free design mockup, 10-15 day delivery across India. Instant WhatsApp quote." />
+                <meta name="keywords" content="custom team jersey India, bulk jersey order, sports uniform manufacturer, sublimation jersey, custom cricket jersey, custom football jersey, college fest t-shirts bulk, corporate uniform order, jersey with name and number" />
+                <meta property="og:title" content="Custom Team Jerseys & Bulk Uniform Orders India | Jager Clothing" />
+                <meta property="og:description" content="Custom jerseys and uniforms for sports teams, colleges, corporates & events. Bulk orders from 10 pieces. Free mockup, instant quote on WhatsApp." />
+                <meta property="og:url" content="https://www.jagerclothing.in/bulk-orders" />
+                <link rel="canonical" href="https://www.jagerclothing.in/bulk-orders" />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        "mainEntity": FAQS.map(faq => ({
+                            "@type": "Question",
+                            "name": faq.q,
+                            "acceptedAnswer": { "@type": "Answer", "text": faq.a },
+                        })),
+                    })}
+                </script>
             </Helmet>
 
             {/* Hero Section - Mobile Optimized */}
@@ -250,79 +317,138 @@ export default function CustomDesign() {
 
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-background border border-border shadow-sm text-jager-red mb-8 md:mb-10">
-                        <Sparkles className="w-4 h-4 animate-pulse" />
-                        <span className="text-xs md:text-sm font-bold uppercase tracking-[0.2em]">Premium Custom Lab</span>
+                        <Users className="w-4 h-4" />
+                        <span className="text-xs md:text-sm font-bold uppercase tracking-[0.2em]">Bulk & Team Orders</span>
                     </div>
 
                     {/* Heading - Larger on mobile */}
                     <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
-                        <span className="text-foreground">Create Your</span><br />
-                        <span className="text-jager-red">Masterpiece</span>
+                        <span className="text-foreground">Gear Up</span><br />
+                        <span className="text-jager-red">Your Team</span>
                     </h1>
 
                     <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 md:mb-12 font-medium leading-relaxed px-4">
-                        From bulk orders to unique one-offs. Direct consultation. <br className="hidden md:block" />
-                        Using the finest fabrics and premium prints.
+                        Custom jerseys, uniforms & merch for teams, colleges, corporates and events. <br className="hidden md:block" />
+                        Bulk orders from 10 pieces. Free design mockup. Quote in minutes on WhatsApp.
                     </p>
 
-                    <div className="pb-8">
+                    <div className="pb-4">
                         <Button
-                            className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-jager-red hover:bg-red-700 text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-red-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
+                            className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-green-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
                         >
-                            Start Your Design
+                            <MessageCircle className="w-5 h-5 mr-2" />
+                            Get a Quote
                         </Button>
+                    </div>
+
+                    {/* Trust Bar */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-3xl mx-auto pt-8">
+                        <div className="flex flex-col items-center gap-1.5">
+                            <Layers className="w-5 h-5 text-jager-red" />
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">MOQ 10 pcs</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5">
+                            <BadgeCheck className="w-5 h-5 text-jager-red" />
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Free Mockup</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5">
+                            <Shirt className="w-5 h-5 text-jager-red" />
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Names & Numbers</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5">
+                            <MapPin className="w-5 h-5 text-jager-red" />
+                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Pan-India Delivery</span>
+                        </div>
                     </div>
                 </div>
             </ScrollReveal>
 
-            {/* Process Steps - Footer-Style Cards */}
-            <section className="py-8 md:py-20 relative z-10 px-4">
+            {/* Who It's For - Segments */}
+            <section className="py-10 md:py-20 relative z-10 px-4">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="text-center mb-8 md:mb-12">
+                        <h2 className="text-2xl md:text-4xl font-heading font-bold uppercase tracking-tight">Who We Gear Up</h2>
+                        <p className="text-sm md:text-base text-muted-foreground mt-2">One supplier for every squad</p>
+                    </div>
+
+                    <ScrollReveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+                        {SEGMENTS.map((segment) => {
+                            const Icon = segment.icon;
+                            return (
+                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                                    <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center border border-white/10 mb-4">
+                                        <Icon className="w-6 h-6 text-jager-red" />
+                                    </div>
+                                    <h3 className="font-heading text-base md:text-lg font-bold uppercase mb-2">{segment.title}</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{segment.desc}</p>
+                                </div>
+                            );
+                        })}
+                    </ScrollReveal>
+                </div>
+            </section>
+
+            {/* Process Steps */}
+            <section className="py-8 md:py-20 relative z-10 px-4 bg-secondary/5">
                 <div className="container mx-auto max-w-6xl">
 
-                    {/* Section Header for Mobile */}
-                    <div className="text-center mb-8 md:hidden">
-                        <h2 className="text-lg font-heading font-bold uppercase tracking-widest">How It Works</h2>
+                    <div className="text-center mb-8 md:mb-12">
+                        <h2 className="text-2xl md:text-4xl font-heading font-bold uppercase tracking-tight">How It Works</h2>
+                        <p className="text-sm md:text-base text-muted-foreground mt-2">From inquiry to delivery in 4 steps</p>
                     </div>
 
                     <ScrollReveal
-                        className="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-12"
+                        className="flex flex-col md:grid md:grid-cols-4 gap-3 md:gap-8"
                     >
-                        {/* Step 1 - Brief */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
-                            <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-                                    <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">1. Brief</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Share your idea, quantity, and budget.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Step 2 - Consult */}
+                        {/* Step 1 - Inquire */}
                         <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
                                 <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
                                     <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">2. Consult</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Chat directly on WhatsApp to finalize details.</p>
+                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">1. Inquire</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Send your requirement — we reply on WhatsApp within hours.</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Step 3 - Create */}
+                        {/* Step 2 - Design */}
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                            <div className="flex items-center gap-4 md:flex-col md:text-center">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                    <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">2. Design</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Free digital mockup with your logo, colours and sponsors.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Step 3 - Produce */}
                         <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
                                 <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
                                     <Shirt className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-2xl font-bold uppercase mb-1">3. Create</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">We produce and ship your custom gear.</p>
+                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">3. Produce</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Approve the design, pay 50% advance and production starts.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Step 4 - Deliver */}
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                            <div className="flex items-center gap-4 md:flex-col md:text-center">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                    <Truck className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">4. Deliver</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground">Full kit delivered in 10–15 days, anywhere in India.</p>
                                 </div>
                             </div>
                         </div>
@@ -340,8 +466,8 @@ export default function CustomDesign() {
                         className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
                     >
                         <div className="text-center mb-8 md:mb-10 relative z-10">
-                            <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Project Brief</h2>
-                            <p className="text-muted-foreground text-sm md:text-base">Tell us about your project to start the conversation.</p>
+                            <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Get Your Quote</h2>
+                            <p className="text-muted-foreground text-sm md:text-base">Tell us about your team's order — we quote on WhatsApp within hours.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-5 md:space-y-8 relative z-10">
@@ -382,7 +508,16 @@ export default function CustomDesign() {
 
                             <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                                 <div className="space-y-2">
-                                    <Label>Email</Label>
+                                    <Label>Team / Organization</Label>
+                                    <Input
+                                        value={formData.organization}
+                                        onChange={e => setFormData({ ...formData, organization: e.target.value })}
+                                        className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
+                                        placeholder="e.g. Thunder FC, ABC College"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Email (Optional)</Label>
                                     <Input
                                         type="email"
                                         value={formData.email}
@@ -391,10 +526,32 @@ export default function CustomDesign() {
                                         placeholder="Enter email address"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                                 <div className="space-y-2">
-                                    <Label>Est. Quantity</Label>
+                                    <Label>What do you need?</Label>
+                                    <Select
+                                        required
+                                        value={formData.garmentType}
+                                        onValueChange={value => setFormData({ ...formData, garmentType: value })}
+                                    >
+                                        <SelectTrigger className="h-12 bg-background/50 border-input focus:border-jager-red/50 text-base">
+                                            <SelectValue placeholder="Select garment type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {GARMENT_TYPES.map(type => (
+                                                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Quantity (Min. 10)</Label>
                                     <Input
+                                        required
                                         type="number"
+                                        min={1}
                                         value={formData.quantity}
                                         onChange={e => setFormData({ ...formData, quantity: e.target.value })}
                                         className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
@@ -403,18 +560,8 @@ export default function CustomDesign() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Budget Range (Optional)</Label>
-                                <Input
-                                    value={formData.budget}
-                                    onChange={e => setFormData({ ...formData, budget: e.target.value })}
-                                    className="h-12 bg-background/50 border-input focus:border-jager-red/50 transition-all text-base"
-                                    placeholder="e.g. ₹5,000 - ₹10,000"
-                                />
-                            </div>
-
                             <div className="space-y-3">
-                                <Label>Reference Images</Label>
+                                <Label>Logo / Design References</Label>
                                 <div className="space-y-4">
                                     <div className="relative">
                                         <Input
@@ -450,8 +597,8 @@ export default function CustomDesign() {
                                                             <UploadCloud className="w-6 h-6 text-green-600 relative z-10" />
                                                         </div>
                                                         <div className="text-center">
-                                                            <p className="text-sm font-bold text-foreground">Upload Reference Photos</p>
-                                                            <p className="text-xs text-muted-foreground mt-1">Select multiple images</p>
+                                                            <p className="text-sm font-bold text-foreground">Upload Logo or References</p>
+                                                            <p className="text-xs text-muted-foreground mt-1">Team logo, old jersey, design ideas</p>
                                                         </div>
                                                     </>
                                                 )}
@@ -483,10 +630,10 @@ export default function CustomDesign() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Project Details</Label>
+                                <Label>Order Details</Label>
                                 <Textarea
                                     required
-                                    placeholder="Describe your vision. What kind of apparel? Any specific colors, prints, or fabric requirements?"
+                                    placeholder="Tell us about your order — colours, design style, deadline, names & numbers, sizes..."
                                     rows={5}
                                     value={formData.brief}
                                     onChange={e => setFormData({ ...formData, brief: e.target.value })}
@@ -504,16 +651,53 @@ export default function CustomDesign() {
                                 ) : (
                                     <MessageCircle className="w-5 h-5 mr-2" />
                                 )}
-                                {loading ? "Saving..." : "Start Chat on WhatsApp"}
+                                {loading ? "Saving..." : "Get Quote on WhatsApp"}
                             </Button>
 
                             <p className="text-center text-[10px] md:text-xs text-muted-foreground px-4">
-                                By clicking "Start Chat", you agree to be contacted via WhatsApp regarding your request.
+                                By clicking "Get Quote", you agree to be contacted via WhatsApp regarding your inquiry.
                             </p>
                         </form>
                     </ScrollReveal>
                 </div>
-            </section >
+            </section>
+
+            {/* FAQ Section */}
+            <section className="py-10 md:py-20 px-4 relative z-10 bg-secondary/5">
+                <div className="container mx-auto max-w-3xl">
+                    <div className="text-center mb-8 md:mb-12">
+                        <h2 className="text-2xl md:text-4xl font-heading font-bold uppercase tracking-tight">Bulk Order FAQs</h2>
+                        <p className="text-sm md:text-base text-muted-foreground mt-2">Everything teams usually ask us</p>
+                    </div>
+
+                    <Accordion type="single" collapsible className="w-full space-y-2">
+                        {FAQS.map((faq, index) => (
+                            <AccordionItem
+                                key={index}
+                                value={`faq-${index}`}
+                                className="border-b-0 bg-secondary/30 rounded-xl px-4 md:px-6"
+                            >
+                                <AccordionTrigger className="font-heading font-bold uppercase tracking-wide text-sm md:text-base py-4 text-left hover:no-underline">
+                                    {faq.q}
+                                </AccordionTrigger>
+                                <AccordionContent className="text-sm md:text-base text-muted-foreground leading-relaxed pb-4">
+                                    {faq.a}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+
+                    <div className="text-center mt-8">
+                        <Button
+                            className="rounded-xl md:rounded-full h-12 px-8 bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                            onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
+                        >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Start Your Order
+                        </Button>
+                    </div>
+                </div>
+            </section>
 
             <Footer />
         </div >

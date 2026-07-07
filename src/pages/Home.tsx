@@ -17,10 +17,10 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Helmet>
-        <title>Jager Clothing | Premium Streetwear & Custom Apparel</title>
-        <meta name="description" content="Jager - Chase, Conquer, Create. Premium streetwear and custom apparel. Shop exclusive drops or design your own. Worldwide shipping." />
-        <meta property="og:title" content="Jager Clothing | Premium Streetwear & Custom Apparel" />
-        <meta property="og:description" content="Chase, Conquer, Create. Premium streetwear and custom apparel. Shop exclusive drops or design your own." />
+        <title>Jager Clothing | Custom Team Jerseys, Uniforms & Streetwear</title>
+        <meta name="description" content="Jager - Chase, Conquer, Create. Custom team jerseys, uniforms & bulk apparel from 10 pieces. Free design mockup, quote on WhatsApp. Plus exclusive streetwear drops." />
+        <meta property="og:title" content="Jager Clothing | Custom Team Jerseys, Uniforms & Streetwear" />
+        <meta property="og:description" content="Chase, Conquer, Create. Custom team jerseys and bulk uniforms from 10 pieces. Free mockup, instant WhatsApp quote." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.jagerclothing.in/" />
         <link rel="canonical" href="https://www.jagerclothing.in/" />
@@ -45,17 +45,17 @@ const Home = () => {
               CHASE.<br />CONQUER.<br />CREATE.
             </h1>
             <p className="text-white/90 text-base md:text-xl font-body max-w-md mx-auto tracking-wide leading-relaxed">
-              Premium streetwear for the relentless.
+              Custom jerseys & uniforms for your whole squad. Bulk orders from 10 pieces.
             </p>
             <div className="flex flex-col gap-3 w-full justify-center items-center pt-4 md:pt-8 px-4 max-w-md mx-auto">
               <Button asChild variant="hero" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest group rounded-xl md:rounded-full">
-                <Link to="/collection">
-                  SHOP THE DROP
+                <Link to="/bulk-orders">
+                  BULK & TEAM ORDERS
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button asChild variant="heroOutline" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest bg-black/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-black rounded-xl md:rounded-full">
-                <Link to="/custom-design">ENTER CUSTOM DESIGN</Link>
+                <Link to="/collection">SHOP THE DROP</Link>
               </Button>
             </div>
           </div>
@@ -132,15 +132,15 @@ const Home = () => {
               />
             </ScrollReveal>
             <ScrollReveal className="text-center md:text-left space-y-4 md:space-y-8 order-1 md:order-2">
-              <span className="text-sm font-bold text-jager-red uppercase tracking-widest">Jäger Custom Design</span>
+              <span className="text-sm font-bold text-jager-red uppercase tracking-widest">Jäger Bulk & Team Orders</span>
               <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold uppercase tracking-tighter leading-[0.95]">
-                YOUR VISION.<br />OUR QUALITY.
+                YOUR TEAM.<br />OUR QUALITY.
               </h2>
               <p className="text-base md:text-xl font-body text-background/80 max-w-md mx-auto md:mx-0 leading-relaxed">
-                Create custom designs or let our pros handle it. From single pieces to team orders.
+                Custom jerseys, uniforms & merch for teams, colleges, corporates and events. Free design mockup, names & numbers included, delivered in 10–15 days.
               </p>
               <Button asChild variant="jagerRed" size="xl" className="w-full md:w-auto min-w-[200px] h-12 md:h-14 text-base tracking-widest rounded-xl md:rounded-full">
-                <Link to="/custom-design">START CREATING</Link>
+                <Link to="/bulk-orders">GET A QUOTE</Link>
               </Button>
             </ScrollReveal>
           </div>

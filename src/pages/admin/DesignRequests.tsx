@@ -37,7 +37,11 @@ interface DesignRequest {
 const statusColors: Record<string, string> = {
     new: "bg-blue-500",
     contacted: "bg-yellow-500",
+    quoted: "bg-purple-500",
+    sample: "bg-cyan-500",
     in_progress: "bg-orange-500",
+    production: "bg-orange-600",
+    shipped: "bg-teal-500",
     completed: "bg-green-500",
     cancelled: "bg-red-500",
 };
@@ -108,8 +112,8 @@ const DesignRequests = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-heading font-bold uppercase tracking-tight">Jager Custom Design</h1>
-                    <p className="text-grey-text mt-1">Manage incoming custom design leads</p>
+                    <h1 className="text-3xl font-heading font-bold uppercase tracking-tight">Bulk & Custom Orders</h1>
+                    <p className="text-grey-text mt-1">Manage bulk order and custom design leads</p>
                 </div>
             </div>
 
@@ -255,7 +259,9 @@ const DesignRequests = () => {
                                                 <SelectContent>
                                                     <SelectItem value="new">New</SelectItem>
                                                     <SelectItem value="contacted">Contacted</SelectItem>
-                                                    <SelectItem value="in_progress">In Progress</SelectItem>
+                                                    <SelectItem value="quoted">Quoted</SelectItem>
+                                                    <SelectItem value="sample">Sample / Mockup</SelectItem>
+                                                    <SelectItem value="production">In Production</SelectItem>
                                                     <SelectItem value="shipped">Shipped</SelectItem>
                                                     <SelectItem value="completed">Completed</SelectItem>
                                                     <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -378,9 +384,9 @@ const DesignRequests = () => {
                                             <p className="text-xs text-grey-text">Units</p>
                                         </div>
                                         <div className="p-4 rounded-lg border border-border bg-background">
-                                            <Label className="text-xs text-grey-text uppercase mb-1">Budget Range</Label>
+                                            <Label className="text-xs text-grey-text uppercase mb-1">Team / Org</Label>
                                             <p className="text-xl font-bold">{selectedRequest.budget_range || 'N/A'}</p>
-                                            <p className="text-xs text-grey-text">Estimated</p>
+                                            <p className="text-xs text-grey-text">Bulk leads store team name here</p>
                                         </div>
                                     </div>
 
