@@ -61,7 +61,7 @@ export const Header = () => {
                     <SheetDescription className="text-left mt-2 font-medium">
                       {user ?
                         `Welcome back, ${user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ')[0] : user.email?.split('@')[0]}`
-                        : 'Premium Streetwear'}
+                        : 'Custom Jerseys & Streetwear'}
                     </SheetDescription>
                   </SheetHeader>
 

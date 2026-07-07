@@ -50,7 +50,7 @@ export const Footer = () => {
                         <Link to="/" className="inline-flex items-center">
                             <img src="/jager_logo_v2.png" alt="Jager" className="h-9 w-auto" />
                         </Link>
-                        <p className="text-sm text-muted-foreground mt-2">Premium Streetwear</p>
+                        <p className="text-sm text-muted-foreground mt-2">Custom Jerseys & Streetwear</p>
                     </div>
 
                     {/* Accordion Navigation */}

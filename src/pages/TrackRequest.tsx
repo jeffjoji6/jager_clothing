@@ -15,7 +15,10 @@ import { format } from "date-fns";
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
     new: { label: "Request Received", color: "bg-blue-500", icon: Clock },
     contacted: { label: "Consultation Started", color: "bg-yellow-500", icon: HelpCircle },
+    quoted: { label: "Quote Shared", color: "bg-purple-500", icon: HelpCircle },
+    sample: { label: "Design Mockup Ready", color: "bg-cyan-500", icon: Package },
     in_progress: { label: "In Production", color: "bg-orange-500", icon: Package },
+    production: { label: "In Production", color: "bg-orange-500", icon: Package },
     shipped: { label: "Shipped", color: "bg-indigo-500", icon: Truck },
     completed: { label: "Completed", color: "bg-green-500", icon: CheckCircle2 },
     cancelled: { label: "Cancelled", color: "bg-red-500", icon: XCircle },
@@ -70,7 +73,7 @@ export default function TrackRequest() {
                 <div className="container max-w-lg">
                     <div className="text-center mb-10">
                         <h1 className="text-3xl md:text-4xl font-heading font-bold uppercase tracking-tight mb-4">Track Your Request</h1>
-                        <p className="text-muted-foreground">Enter your Reference ID (e.g., CD-123456) to check the status.</p>
+                        <p className="text-muted-foreground">Enter your Reference ID (e.g., BLK-123456) to check the status.</p>
                     </div>
 
                     <Card className="border-border/50 bg-background/50 backdrop-blur-xl shadow-2xl">
