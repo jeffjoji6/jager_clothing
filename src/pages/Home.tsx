@@ -137,7 +137,7 @@ const Home = () => {
                 YOUR TEAM.<br />OUR QUALITY.
               </h2>
               <p className="text-base md:text-xl font-body text-background/80 max-w-md mx-auto md:mx-0 leading-relaxed">
-                Custom jerseys, uniforms & merch for teams, colleges, corporates and events. Free design mockup, names & numbers included, delivered in 10–15 days.
+                Custom jerseys, uniforms & merch for teams, colleges, corporates and events. Free design mockup, names & numbers included, delivered in 5–10 days.
               </p>
               <Button asChild variant="jagerRed" size="xl" className="w-full md:w-auto min-w-[200px] h-12 md:h-14 text-base tracking-widest rounded-xl md:rounded-full">
                 <Link to="/bulk-orders">GET A QUOTE</Link>

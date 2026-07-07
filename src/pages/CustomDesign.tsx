@@ -74,7 +74,7 @@ const FAQS = [
     },
     {
         q: "How long does delivery take?",
-        a: "Standard production and delivery is 10–15 days after design approval and advance payment. Need it faster? Ask about rush options on WhatsApp.",
+        a: "Standard production and delivery is 5–10 days after design approval and advance payment. Need it faster? Ask about rush options on WhatsApp.",
     },
     {
         q: "Can we add player names and numbers?",
@@ -284,7 +284,7 @@ export default function CustomDesign() {
 
             <Helmet>
                 <title>Custom Team Jerseys & Bulk Uniform Orders India | Jager Clothing</title>
-                <meta name="description" content="Order custom team jerseys, sports uniforms & bulk apparel from 10 pieces. Sublimation printing, player names & numbers, free design mockup, 10-15 day delivery across India. Instant WhatsApp quote." />
+                <meta name="description" content="Order custom team jerseys, sports uniforms & bulk apparel from 10 pieces. Sublimation printing, player names & numbers, free design mockup, 5-10 day delivery across India. Instant WhatsApp quote." />
                 <meta name="keywords" content="custom team jersey India, bulk jersey order, sports uniform manufacturer, sublimation jersey, custom cricket jersey, custom football jersey, college fest t-shirts bulk, corporate uniform order, jersey with name and number" />
                 <meta property="og:title" content="Custom Team Jerseys & Bulk Uniform Orders India | Jager Clothing" />
                 <meta property="og:description" content="Custom jerseys and uniforms for sports teams, colleges, corporates & events. Bulk orders from 10 pieces. Free mockup, instant quote on WhatsApp." />
@@ -448,7 +448,7 @@ export default function CustomDesign() {
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">4. Deliver</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Full kit delivered in 10–15 days, anywhere in India.</p>
+                                    <p className="text-sm md:text-base text-muted-foreground">Full kit delivered in 5–10 days, anywhere in India.</p>
                                 </div>
                             </div>
                         </div>
