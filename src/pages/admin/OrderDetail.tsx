@@ -467,7 +467,7 @@ const OrderDetail = () => {
                     >
                       {isCompleted ? "✓" : (index + 1)}
                     </div>
-                    <span className={`text-xs md:text-sm font-heading font-black uppercase mt-3 transition-colors tracking-wide ${isActive ? 'text-jager-red' : isCompleted ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                    <span className={`text-xs md:text-sm font-heading font-bold uppercase mt-3 transition-colors tracking-wide ${isActive ? 'text-jager-red' : isCompleted ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
                       {step.label}
                     </span>
                   </div>

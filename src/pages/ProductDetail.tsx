@@ -7,12 +7,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from 'react-markdown';
 import { useProduct } from "@/hooks/useProducts";
 import { SizeChartModal } from "@/components/SizeChartModal";
-// ... (keep surrounding imports if not removing entire block, but here I'm replacing the Dialog usage)
-
-// In the component body:
-<SizeChartModal>
-  <button className="text-xs underline text-muted-foreground hover:text-foreground uppercase tracking-wide">Size Guide</button>
-</SizeChartModal>
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Loader2, Minus, Plus, Heart, Truck, ShieldCheck, Zap, Eye, ArrowRight } from "lucide-react";
@@ -389,7 +383,7 @@ const ProductDetail = () => {
 
             {/* Title & Price */}
             <div className="space-y-3 md:space-y-4 border-b border-foreground/10 pb-6 md:pb-8">
-              <h1 className="text-2xl md:text-3xl lg:text-5xl font-heading font-black uppercase tracking-tighter leading-tight md:leading-[0.9]">
+              <h1 className="text-2xl md:text-3xl lg:text-5xl font-heading font-bold uppercase tracking-tighter leading-tight md:leading-[0.9]">
                 {product.name}
               </h1>
 
@@ -412,7 +406,7 @@ const ProductDetail = () => {
               {/* Color */}
               {availableColors.length > 0 && (
                 <div className="space-y-4">
-                  <span className="text-sm font-heading font-black uppercase tracking-widest text-muted-foreground">
+                  <span className="text-sm font-heading font-bold uppercase tracking-widest text-muted-foreground">
                     Color: <span className="text-foreground">{selectedColor || 'Select'}</span>
                   </span>
                   <div className="flex flex-wrap gap-3">

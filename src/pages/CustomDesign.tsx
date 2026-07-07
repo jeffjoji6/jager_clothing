@@ -322,45 +322,37 @@ export default function CustomDesign() {
                     </div>
 
                     {/* Heading - Larger on mobile */}
-                    <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
+                    <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-bold uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
                         <span className="text-foreground">Gear Up</span><br />
                         <span className="text-jager-red">Your Team</span>
                     </h1>
 
-                    <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 md:mb-12 font-medium leading-relaxed px-4">
-                        Custom jerseys, uniforms & merch for teams, colleges, corporates and events. <br className="hidden md:block" />
-                        Bulk orders from 10 pieces. Free design mockup. Quote in minutes on WhatsApp.
+                    <p className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto mb-6 md:mb-8 font-medium leading-relaxed px-4 text-balance">
+                        Custom jerseys, uniforms & merch for teams, colleges, corporates and events — quoted in minutes on WhatsApp.
                     </p>
 
-                    <div className="pb-4">
-                        <Button
-                            className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-green-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
-                            onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
-                        >
-                            <MessageCircle className="w-5 h-5 mr-2" />
-                            Get a Quote
-                        </Button>
+                    {/* Trust Pills */}
+                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 max-w-2xl mx-auto mb-8 md:mb-10">
+                        {[
+                            { icon: Layers, label: "Bulk from 10 pcs" },
+                            { icon: BadgeCheck, label: "Free Mockup" },
+                            { icon: Shirt, label: "Names & Numbers" },
+                            { icon: MapPin, label: "Pan-India Delivery" },
+                        ].map(({ icon: Icon, label }) => (
+                            <span key={label} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-background border border-border text-xs md:text-sm font-bold uppercase tracking-wide">
+                                <Icon className="w-3.5 h-3.5 text-jager-red" />
+                                {label}
+                            </span>
+                        ))}
                     </div>
 
-                    {/* Trust Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-3xl mx-auto pt-8">
-                        <div className="flex flex-col items-center gap-1.5">
-                            <Layers className="w-5 h-5 text-jager-red" />
-                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">MOQ 10 pcs</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1.5">
-                            <BadgeCheck className="w-5 h-5 text-jager-red" />
-                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Free Mockup</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1.5">
-                            <Shirt className="w-5 h-5 text-jager-red" />
-                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Names & Numbers</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1.5">
-                            <MapPin className="w-5 h-5 text-jager-red" />
-                            <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Pan-India Delivery</span>
-                        </div>
-                    </div>
+                    <Button
+                        className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-green-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
+                        onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                        <MessageCircle className="w-5 h-5 mr-2" />
+                        Get a Quote
+                    </Button>
                 </div>
             </ScrollReveal>
 
@@ -376,8 +368,8 @@ export default function CustomDesign() {
                         {SEGMENTS.map((segment) => {
                             const Icon = segment.icon;
                             return (
-                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
-                                    <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center border border-white/10 mb-4">
+                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
+                                    <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center border border-border mb-4">
                                         <Icon className="w-6 h-6 text-jager-red" />
                                     </div>
                                     <h3 className="font-heading text-base md:text-lg font-bold uppercase mb-2">{segment.title}</h3>
@@ -390,7 +382,7 @@ export default function CustomDesign() {
             </section>
 
             {/* Process Steps */}
-            <section className="py-8 md:py-20 relative z-10 px-4 bg-secondary/5">
+            <section className="py-10 md:py-20 relative z-10 px-4 bg-secondary/5">
                 <div className="container mx-auto max-w-6xl">
 
                     <div className="text-center mb-8 md:mb-12">
@@ -402,9 +394,9 @@ export default function CustomDesign() {
                         className="flex flex-col md:grid md:grid-cols-4 gap-3 md:gap-8"
                     >
                         {/* Step 1 - Inquire */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
                                     <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -415,9 +407,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 2 - Design */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
                                     <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -428,9 +420,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 3 - Produce */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
                                     <Shirt className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -441,9 +433,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 4 - Deliver */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-white/5 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
                                     <Truck className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -457,13 +449,13 @@ export default function CustomDesign() {
             </section>
 
             {/* Main Form Section - Liquid Glass UI */}
-            <section id="brief-form" className="py-4 md:py-20 px-2 md:px-4 relative z-10 transition-colors duration-500">
+            <section id="brief-form" className="py-10 md:py-20 px-2 md:px-4 relative z-10 transition-colors duration-500">
                 {/* Ambient Background Glow for Glass Effect */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-5xl max-h-[800px] bg-jager-red/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
                 <div className="container mx-auto max-w-4xl p-0 md:p-4">
                     <ScrollReveal
-                        className="bg-background/40 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
+                        className="bg-background/40 backdrop-blur-xl border border-border rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
                     >
                         <div className="text-center mb-8 md:mb-10 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Get Your Quote</h2>

@@ -41,7 +41,7 @@ const Home = () => {
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <div className="space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-4xl">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black uppercase tracking-tighter text-white leading-[0.9] md:leading-[0.85]">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-bold uppercase tracking-tighter text-white leading-[0.9] md:leading-[0.85]">
               CHASE.<br />CONQUER.<br />CREATE.
             </h1>
             <p className="text-white/90 text-base md:text-xl font-body max-w-md mx-auto tracking-wide leading-relaxed">

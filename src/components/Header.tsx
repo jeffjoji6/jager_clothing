@@ -72,14 +72,14 @@ export const Header = () => {
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">Menu</p>
                       <Link
                         to="/bulk-orders"
-                        className="block text-2xl font-heading font-black uppercase tracking-tight text-jager-red hover:opacity-80 transition-opacity"
+                        className="block text-2xl font-heading font-bold uppercase tracking-tight text-jager-red hover:opacity-80 transition-opacity"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Bulk & Team Orders
                       </Link>
                       <Link
                         to="/collection"
-                        className="block text-2xl font-heading font-black uppercase tracking-tight hover:text-jager-red transition-colors"
+                        className="block text-2xl font-heading font-bold uppercase tracking-tight hover:text-jager-red transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Collection

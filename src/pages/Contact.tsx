@@ -16,7 +16,7 @@ export default function Contact() {
                 <div className="max-w-4xl mx-auto">
                     {/* Hero Section */}
                     <div className="text-center mb-20 md:mb-28">
-                        <h1 className="text-5xl md:text-8xl font-heading font-black uppercase tracking-tighter mb-6">
+                        <h1 className="text-5xl md:text-8xl font-heading font-bold uppercase tracking-tighter mb-6">
                             GET IN TOUCH
                         </h1>
                         <p className="text-lg md:text-xl font-light text-gray-500 max-w-xl mx-auto leading-relaxed">
