@@ -1,4 +1,10 @@
 {
+    "crons": [
+        {
+            "path": "/api/keepalive",
+            "schedule": "0 3 */2 * *"
+        }
+    ],
     "rewrites": [
         {
             "source": "/sitemap.xml",
@@ -9,7 +15,7 @@
             "destination": "/robots.txt"
         },
         {
-            "source": "/(.*)",
+            "source": "/((?!api/).*)",
             "destination": "/index.html"
         }
     ]
