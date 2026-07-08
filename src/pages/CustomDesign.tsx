@@ -68,6 +68,13 @@ const SEGMENTS = [
     },
 ];
 
+const PROCESS_STEPS = [
+    { icon: MessageCircle, title: "Inquire", desc: "Send your requirement — we reply on WhatsApp within hours." },
+    { icon: PencilRuler, title: "Design", desc: "Free digital mockup with your logo, colours and sponsors." },
+    { icon: Shirt, title: "Produce", desc: "Approve the design, pay 50% advance and production starts." },
+    { icon: Truck, title: "Deliver", desc: "Full kit delivered in 5–10 days, anywhere in India." },
+];
+
 const FAQS = [
     {
         q: "What is the minimum order quantity?",
@@ -396,12 +403,7 @@ export default function CustomDesign() {
                     {/* Mobile: connected vertical timeline */}
                     <ScrollReveal className="md:hidden relative pl-4">
                         <div className="absolute left-[35px] top-2 bottom-2 w-px bg-gradient-to-b from-jager-red via-jager-red/40 to-transparent" />
-                        {[
-                            { icon: MessageCircle, title: "Inquire", desc: "Send your requirement — we reply on WhatsApp within hours." },
-                            { icon: PencilRuler, title: "Design", desc: "Free digital mockup with your logo, colours and sponsors." },
-                            { icon: Shirt, title: "Produce", desc: "Approve the design, pay 50% advance and production starts." },
-                            { icon: Truck, title: "Deliver", desc: "Full kit delivered in 5–10 days, anywhere in India." },
-                        ].map((step, i) => {
+                        {PROCESS_STEPS.map((step, i) => {
                             const Icon = step.icon;
                             return (
                                 <div key={step.title} className="relative flex gap-4 pb-8 last:pb-0">
@@ -418,60 +420,23 @@ export default function CustomDesign() {
                         })}
                     </ScrollReveal>
 
-                    {/* Desktop: card grid */}
-                    <ScrollReveal
-                        className="hidden md:grid md:grid-cols-4 gap-3 md:gap-8"
-                    >
-                        {/* Step 1 - Inquire */}
-                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
-                            <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-                                    <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">1. Inquire</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Send your requirement — we reply on WhatsApp within hours.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Step 2 - Design */}
-                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
-                            <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-                                    <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">2. Design</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Free digital mockup with your logo, colours and sponsors.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Step 3 - Produce */}
-                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
-                            <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-                                    <Shirt className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">3. Produce</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Approve the design, pay 50% advance and production starts.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Step 4 - Deliver */}
-                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
-                            <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-                                    <Truck className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-heading text-base md:text-xl font-bold uppercase mb-1">4. Deliver</h3>
-                                    <p className="text-sm md:text-base text-muted-foreground">Full kit delivered in 5–10 days, anywhere in India.</p>
-                                </div>
-                            </div>
+                    {/* Desktop: connected horizontal timeline */}
+                    <ScrollReveal className="hidden md:block relative">
+                        <div className="absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-jager-red/10 via-jager-red to-jager-red/10" />
+                        <div className="grid grid-cols-4 gap-8">
+                            {PROCESS_STEPS.map((step, i) => {
+                                const Icon = step.icon;
+                                return (
+                                    <div key={step.title} className="flex flex-col items-center text-center">
+                                        <div className="relative z-10 w-16 h-16 rounded-full bg-jager-red flex items-center justify-center shrink-0 shadow-lg shadow-red-900/20 ring-8 ring-background mb-5">
+                                            <Icon className="w-7 h-7 text-white" />
+                                        </div>
+                                        <span className="text-xs font-bold text-jager-red uppercase tracking-widest mb-1">Step {i + 1}</span>
+                                        <h3 className="font-heading text-xl font-bold uppercase mb-2">{step.title}</h3>
+                                        <p className="text-base text-muted-foreground leading-relaxed max-w-[220px]">{step.desc}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </ScrollReveal>
                 </div>
