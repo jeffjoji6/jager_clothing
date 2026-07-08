@@ -345,7 +345,7 @@ export default function CustomDesign() {
                         {[
                             { icon: Layers, label: "Bulk from 10 pcs" },
                             { icon: BadgeCheck, label: "Free Mockup" },
-                            { icon: Shirt, label: "Names & Numbers" },
+                            { icon: Shirt, label: "Custom Everything" },
                             { icon: MapPin, label: "Pan-India Delivery" },
                         ].map(({ icon: Icon, label }) => (
                             <span key={label} className="inline-flex items-center gap-2 md:gap-1.5 px-3 py-2 md:px-3.5 md:py-1.5 rounded-lg md:rounded-full bg-background border border-border text-[11px] md:text-sm font-bold uppercase tracking-wide text-left">
