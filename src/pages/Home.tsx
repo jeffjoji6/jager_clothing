@@ -5,8 +5,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useFeaturedProducts } from "@/hooks/useProducts";
 import { Loader2, ArrowRight } from "lucide-react";
-import heroImage from "@/assets/hero-jager.jpg";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
+import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { motion } from "framer-motion";
@@ -30,13 +30,8 @@ const Home = () => {
       {/* Hero Section - Mobile Optimized */}
       <section className="relative h-[75vh] md:h-[95vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt="Jager Hero"
-            fetchPriority="high"
-            className="w-full h-full object-cover scale-105 animate-slow-zoom"
-          />
-          <div className="absolute inset-0 bg-black/50" />
+          <HeroBackdrop />
+          <div className="absolute inset-0 bg-black/20" />
         </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
