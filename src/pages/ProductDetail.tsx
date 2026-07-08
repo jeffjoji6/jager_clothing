@@ -10,6 +10,7 @@ import { SizeChartModal } from "@/components/SizeChartModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Loader2, Minus, Plus, Heart, Truck, ShieldCheck, Zap, Eye, ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 
@@ -297,8 +298,34 @@ const ProductDetail = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16">
+            <div className="md:col-span-7">
+              <Skeleton className="w-full aspect-[3/4] md:aspect-square rounded-lg" />
+            </div>
+            <div className="md:col-span-5 space-y-5">
+              <Skeleton className="h-9 w-3/4" />
+              <Skeleton className="h-7 w-1/3" />
+              <div className="space-y-2 pt-4">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex gap-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-12 rounded-md" />
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2 pt-2">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-8 rounded-full" />
+                  ))}
+                </div>
+              </div>
+              <Skeleton className="h-12 w-full rounded-md mt-6" />
+              <Skeleton className="h-12 w-full rounded-md" />
+            </div>
+          </div>
         </div>
       </div>
     );

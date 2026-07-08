@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SlidersHorizontal } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Loader2 } from "lucide-react";
+import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
 
 const Collection = () => {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -200,8 +200,10 @@ const Collection = () => {
             </ScrollReveal>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin" />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
               </div>
             ) : error ? (
               <div className="text-center py-12">

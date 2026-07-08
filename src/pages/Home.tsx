@@ -4,7 +4,8 @@ import { Ticker } from "@/components/Ticker";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useFeaturedProducts } from "@/hooks/useProducts";
-import { Loader2, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import customLabTeaser from "@/assets/custom-lab-teaser.jpg";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { Footer } from "@/components/Footer";
@@ -77,9 +78,7 @@ const Home = () => {
         </ScrollReveal>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+          <ProductGridSkeleton count={4} />
         ) : featuredProducts && featuredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {featuredProducts.slice(0, 4).map((product, index) => (

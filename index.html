@@ -94,7 +94,58 @@
 </head>
 
 <body>
-  <div id="root"></div>
+  <style>
+    /* Boot splash: visible instantly on refresh, replaced when React mounts */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: #ffffff;
+    }
+
+    #boot-splash img {
+      height: 44px;
+      width: auto;
+      animation: boot-pulse 1.6s ease-in-out infinite;
+    }
+
+    #boot-splash .boot-ring {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid rgba(175, 32, 24, 0.15);
+      border-top-color: #af2018;
+      animation: boot-spin 0.8s linear infinite;
+    }
+
+    @keyframes boot-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes boot-pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.55;
+      }
+    }
+  </style>
+  <div id="root">
+    <div id="boot-splash">
+      <img src="/jager_logo_v2.png" alt="Jager Clothing" />
+      <div class="boot-ring"></div>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
