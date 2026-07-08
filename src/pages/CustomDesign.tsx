@@ -369,8 +369,8 @@ export default function CustomDesign() {
                         {SEGMENTS.map((segment) => {
                             const Icon = segment.icon;
                             return (
-                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-4 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors flex items-start gap-3.5 lg:block">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-background rounded-xl flex items-center justify-center border border-border shrink-0 lg:mb-4">
+                                <div key={segment.title} className="bg-background rounded-xl p-4 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all flex items-start gap-3.5 lg:block">
+                                    <div className="w-11 h-11 md:w-12 md:h-12 bg-jager-red/10 rounded-xl flex items-center justify-center shrink-0 lg:mb-4">
                                         <Icon className="w-5 h-5 md:w-6 md:h-6 text-jager-red" />
                                     </div>
                                     <div>
@@ -393,13 +393,39 @@ export default function CustomDesign() {
                         <p className="text-sm md:text-base text-muted-foreground mt-2">From inquiry to delivery in 4 steps</p>
                     </div>
 
+                    {/* Mobile: connected vertical timeline */}
+                    <ScrollReveal className="md:hidden relative pl-4">
+                        <div className="absolute left-[35px] top-2 bottom-2 w-px bg-gradient-to-b from-jager-red via-jager-red/40 to-transparent" />
+                        {[
+                            { icon: MessageCircle, title: "Inquire", desc: "Send your requirement — we reply on WhatsApp within hours." },
+                            { icon: PencilRuler, title: "Design", desc: "Free digital mockup with your logo, colours and sponsors." },
+                            { icon: Shirt, title: "Produce", desc: "Approve the design, pay 50% advance and production starts." },
+                            { icon: Truck, title: "Deliver", desc: "Full kit delivered in 5–10 days, anywhere in India." },
+                        ].map((step, i) => {
+                            const Icon = step.icon;
+                            return (
+                                <div key={step.title} className="relative flex gap-4 pb-8 last:pb-0">
+                                    <div className="relative z-10 w-11 h-11 rounded-full bg-jager-red flex items-center justify-center shrink-0 shadow-md shadow-red-900/20 ring-4 ring-background">
+                                        <Icon className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div className="pt-1.5">
+                                        <span className="text-[10px] font-bold text-jager-red uppercase tracking-widest">Step {i + 1}</span>
+                                        <h3 className="font-heading text-lg font-bold uppercase leading-tight mb-1">{step.title}</h3>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </ScrollReveal>
+
+                    {/* Desktop: card grid */}
                     <ScrollReveal
-                        className="flex flex-col md:grid md:grid-cols-4 gap-3 md:gap-8"
+                        className="hidden md:grid md:grid-cols-4 gap-3 md:gap-8"
                     >
                         {/* Step 1 - Inquire */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
                                     <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -410,9 +436,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 2 - Design */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
                                     <PencilRuler className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -423,9 +449,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 3 - Produce */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
                                     <Shirt className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -436,9 +462,9 @@ export default function CustomDesign() {
                         </div>
 
                         {/* Step 4 - Deliver */}
-                        <div className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
+                        <div className="bg-background rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md border border-border/50 transition-all">
                             <div className="flex items-center gap-4 md:flex-col md:text-center">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-background rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-border">
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-jager-red/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
                                     <Truck className="w-5 h-5 md:w-8 md:h-8 text-jager-red" />
                                 </div>
                                 <div className="flex-1">
@@ -458,7 +484,7 @@ export default function CustomDesign() {
 
                 <div className="container mx-auto max-w-4xl p-0 md:p-4">
                     <ScrollReveal
-                        className="bg-background/40 backdrop-blur-xl border border-border rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
+                        className="bg-background border border-border/60 rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-xl"
                     >
                         <div className="text-center mb-6 md:mb-8 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Get Your Quote</h2>
@@ -467,15 +493,15 @@ export default function CustomDesign() {
 
                         {/* Risk-free reassurance */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 mb-8 md:mb-10 relative z-10">
-                            <div className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5">
+                            <div className="flex items-center gap-2.5 bg-green-500/5 border border-green-500/20 rounded-lg px-3.5 py-2.5">
                                 <BadgeCheck className="w-4 h-4 text-green-600 shrink-0" />
                                 <span className="text-xs md:text-sm font-medium">Pay only after you approve the design</span>
                             </div>
-                            <div className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5">
+                            <div className="flex items-center gap-2.5 bg-green-500/5 border border-green-500/20 rounded-lg px-3.5 py-2.5">
                                 <PencilRuler className="w-4 h-4 text-green-600 shrink-0" />
                                 <span className="text-xs md:text-sm font-medium">Free mockup & revisions included</span>
                             </div>
-                            <Link to="/track-request" className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5 hover:border-jager-red/40 transition-colors">
+                            <Link to="/track-request" className="flex items-center gap-2.5 bg-green-500/5 border border-green-500/20 rounded-lg px-3.5 py-2.5 hover:border-jager-red/40 transition-colors">
                                 <Truck className="w-4 h-4 text-green-600 shrink-0" />
                                 <span className="text-xs md:text-sm font-medium">Track your order anytime with your Ref ID</span>
                             </Link>
@@ -686,7 +712,7 @@ export default function CustomDesign() {
                             <AccordionItem
                                 key={index}
                                 value={`faq-${index}`}
-                                className="border-b-0 bg-secondary/30 rounded-xl px-4 md:px-6"
+                                className="border-b-0 bg-background shadow-sm border border-border/50 rounded-xl px-4 md:px-6"
                             >
                                 <AccordionTrigger className="font-heading font-bold uppercase tracking-wide text-sm md:text-base py-4 text-left hover:no-underline">
                                     {faq.q}
