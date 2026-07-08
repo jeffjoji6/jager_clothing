@@ -119,7 +119,7 @@ const DesignRequests = () => {
 
             <Card>
                 <CardContent className="p-0">
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
                                 <tr>
