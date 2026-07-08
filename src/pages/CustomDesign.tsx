@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Footer } from "@/components/Footer";
@@ -457,9 +458,25 @@ export default function CustomDesign() {
                     <ScrollReveal
                         className="bg-background/40 backdrop-blur-xl border border-border rounded-xl md:rounded-3xl p-5 md:p-12 relative overflow-hidden shadow-2xl"
                     >
-                        <div className="text-center mb-8 md:mb-10 relative z-10">
+                        <div className="text-center mb-6 md:mb-8 relative z-10">
                             <h2 className="text-2xl md:text-3xl font-heading font-bold uppercase mb-2">Get Your Quote</h2>
                             <p className="text-muted-foreground text-sm md:text-base">Tell us about your team's order — we quote on WhatsApp within hours.</p>
+                        </div>
+
+                        {/* Risk-free reassurance */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 mb-8 md:mb-10 relative z-10">
+                            <div className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5">
+                                <BadgeCheck className="w-4 h-4 text-green-600 shrink-0" />
+                                <span className="text-xs md:text-sm font-medium">Pay only after you approve the design</span>
+                            </div>
+                            <div className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5">
+                                <PencilRuler className="w-4 h-4 text-green-600 shrink-0" />
+                                <span className="text-xs md:text-sm font-medium">Free mockup & revisions included</span>
+                            </div>
+                            <Link to="/track-request" className="flex items-center gap-2.5 bg-secondary/30 border border-border/60 rounded-lg px-3.5 py-2.5 hover:border-jager-red/40 transition-colors">
+                                <Truck className="w-4 h-4 text-green-600 shrink-0" />
+                                <span className="text-xs md:text-sm font-medium">Track your order anytime with your Ref ID</span>
+                            </Link>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-5 md:space-y-8 relative z-10">
@@ -679,7 +696,7 @@ export default function CustomDesign() {
                         ))}
                     </Accordion>
 
-                    <div className="text-center mt-8">
+                    <div className="text-center mt-8 space-y-4">
                         <Button
                             className="rounded-xl md:rounded-full h-12 px-8 bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
                             onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
@@ -687,6 +704,17 @@ export default function CustomDesign() {
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Start Your Order
                         </Button>
+                        <p className="text-sm text-muted-foreground">
+                            Want to see our work first?{" "}
+                            <a
+                                href="https://www.instagram.com/jagerclothing.store/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold text-jager-red hover:underline"
+                            >
+                                Check us out on Instagram
+                            </a>
+                        </p>
                     </div>
                 </div>
             </section>

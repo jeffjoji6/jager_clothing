@@ -19,7 +19,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { openRazorpayCheckout, createRazorpayOrder } from "@/lib/razorpay";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Edit, Tag } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Tag, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -810,6 +810,10 @@ const Checkout = () => {
                 </Button>
                 <p className="text-xs text-jager-red text-center font-bold">
                   {shippingCharge === 0 ? "✓ Free shipping applied" : `Add items worth ₹${(freeShippingThreshold - totalPrice).toLocaleString()} more for free shipping`}
+                </p>
+                <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground text-center">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  100% secure payment via Razorpay — UPI, Cards & Net Banking
                 </p>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Instagram, Mail } from "lucide-react";
+import { Instagram, Mail, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import {
     Accordion,
@@ -94,6 +94,18 @@ export const Footer = () => {
                     {/* Stay Connected Section */}
                     <div className="space-y-6 text-center bg-secondary/20 rounded-2xl p-6">
                         <h3 className="text-lg font-heading font-bold uppercase tracking-widest">STAY CONNECTED</h3>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                                <a href="https://wa.me/919633088122" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                    WhatsApp: +91 96330 88122
+                                </a>
+                            </p>
+                            <p>
+                                <a href="mailto:support@jagerclothing.in" className="hover:text-foreground transition-colors">
+                                    support@jagerclothing.in
+                                </a>
+                            </p>
+                        </div>
                         <div className="flex justify-center gap-4">
                             <a href="https://www.instagram.com/jagerclothing.store" target="_blank" rel="noopener noreferrer" className="p-3 rounded-full bg-background border border-border hover:bg-jager-red hover:border-jager-red hover:text-white transition-all">
                                 <Instagram className="h-6 w-6" />
@@ -155,9 +167,18 @@ export const Footer = () => {
                     </div>
                     <div>
                         <h3 className="text-sm font-heading font-bold uppercase tracking-widest mb-6">STAY CONNECTED</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Join the movement. Follow us on social media for the latest drops.
-                        </p>
+                        <ul className="space-y-3 text-sm font-body text-muted-foreground mb-6">
+                            <li>
+                                <a href="https://wa.me/919633088122" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                    WhatsApp: +91 96330 88122
+                                </a>
+                            </li>
+                            <li>
+                                <a href="mailto:support@jagerclothing.in" className="hover:text-foreground transition-colors">
+                                    support@jagerclothing.in
+                                </a>
+                            </li>
+                        </ul>
                         <div className="flex gap-4 mb-6">
                             <a href="https://www.instagram.com/jagerclothing.store" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-jager-red transition-colors">
                                 <Instagram className="h-5 w-5" />
@@ -183,11 +204,15 @@ export const Footer = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-border">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-border">
                     <p className="text-xs font-body text-muted-foreground uppercase tracking-wider text-center md:text-left">
                         © 2026 Jager Clothing. All rights reserved.
                     </p>
-                    <div className="flex gap-6 mt-4 md:mt-0">
+                    <p className="flex items-center gap-2 text-xs font-body text-muted-foreground uppercase tracking-wider">
+                        <ShieldCheck className="h-4 w-4" />
+                        100% Secure Payments · Razorpay · UPI · Cards · Net Banking
+                    </p>
+                    <div className="hidden md:flex gap-6">
                         <img src="/jager_logo_v2.png" alt="Jager" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
                     </div>
                 </div>
