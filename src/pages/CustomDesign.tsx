@@ -317,43 +317,43 @@ export default function CustomDesign() {
                 <div className="container mx-auto max-w-4xl text-center relative z-10">
 
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-background border border-border shadow-sm text-jager-red mb-8 md:mb-10">
-                        <Users className="w-4 h-4" />
-                        <span className="text-xs md:text-sm font-bold uppercase tracking-[0.2em]">Bulk & Team Orders</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-background border border-border shadow-sm text-jager-red mb-5 md:mb-10">
+                        <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                        <span className="text-[10px] md:text-sm font-bold uppercase tracking-[0.2em]">Bulk & Team Orders</span>
                     </div>
 
-                    {/* Heading - Larger on mobile */}
-                    <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-bold uppercase tracking-tighter mb-6 md:mb-8 leading-[0.9]">
+                    {/* Heading */}
+                    <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-bold uppercase tracking-tighter mb-4 md:mb-8 leading-[0.9]">
                         <span className="text-foreground">Gear Up</span><br />
                         <span className="text-jager-red">Your Team</span>
                     </h1>
 
-                    <p className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto mb-6 md:mb-8 font-medium leading-relaxed px-4 text-balance">
+                    <p className="text-sm md:text-xl text-muted-foreground max-w-xs md:max-w-xl mx-auto mb-6 md:mb-8 font-medium leading-relaxed text-balance">
                         Custom jerseys, uniforms & merch for teams, colleges, corporates and events — quoted in minutes on WhatsApp.
                     </p>
 
-                    {/* Trust Pills */}
-                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 max-w-2xl mx-auto mb-8 md:mb-10">
+                    <Button
+                        className="rounded-xl md:rounded-full h-12 md:h-14 px-8 md:px-12 text-base md:text-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-green-900/20 transition-all hover:scale-105 active:scale-95 w-full max-w-sm md:max-w-none md:w-auto mb-7 md:mb-0 md:mt-2"
+                        onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                        <MessageCircle className="w-5 h-5 mr-2" />
+                        Get a Quote
+                    </Button>
+
+                    {/* Trust checklist (2x2 on mobile, pill row on desktop) */}
+                    <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto md:max-w-2xl md:flex md:flex-wrap md:items-center md:justify-center md:gap-3 md:mt-8">
                         {[
                             { icon: Layers, label: "Bulk from 10 pcs" },
                             { icon: BadgeCheck, label: "Free Mockup" },
                             { icon: Shirt, label: "Names & Numbers" },
                             { icon: MapPin, label: "Pan-India Delivery" },
                         ].map(({ icon: Icon, label }) => (
-                            <span key={label} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-background border border-border text-xs md:text-sm font-bold uppercase tracking-wide">
-                                <Icon className="w-3.5 h-3.5 text-jager-red" />
+                            <span key={label} className="inline-flex items-center gap-2 md:gap-1.5 px-3 py-2 md:px-3.5 md:py-1.5 rounded-lg md:rounded-full bg-background border border-border text-[11px] md:text-sm font-bold uppercase tracking-wide text-left">
+                                <Icon className="w-3.5 h-3.5 text-jager-red shrink-0" />
                                 {label}
                             </span>
                         ))}
                     </div>
-
-                    <Button
-                        className="rounded-xl md:rounded-full h-14 px-8 md:px-12 text-base md:text-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-heading font-bold uppercase tracking-widest shadow-xl shadow-green-900/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
-                        onClick={() => document.getElementById('brief-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                        <MessageCircle className="w-5 h-5 mr-2" />
-                        Get a Quote
-                    </Button>
                 </div>
             </ScrollReveal>
 
@@ -369,12 +369,14 @@ export default function CustomDesign() {
                         {SEGMENTS.map((segment) => {
                             const Icon = segment.icon;
                             return (
-                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-5 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors">
-                                    <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center border border-border mb-4">
-                                        <Icon className="w-6 h-6 text-jager-red" />
+                                <div key={segment.title} className="bg-secondary/30 rounded-xl p-4 md:p-6 border border-border/60 hover:bg-secondary/40 transition-colors flex items-start gap-3.5 lg:block">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-background rounded-xl flex items-center justify-center border border-border shrink-0 lg:mb-4">
+                                        <Icon className="w-5 h-5 md:w-6 md:h-6 text-jager-red" />
                                     </div>
-                                    <h3 className="font-heading text-base md:text-lg font-bold uppercase mb-2">{segment.title}</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">{segment.desc}</p>
+                                    <div>
+                                        <h3 className="font-heading text-base md:text-lg font-bold uppercase mb-1 md:mb-2">{segment.title}</h3>
+                                        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{segment.desc}</p>
+                                    </div>
                                 </div>
                             );
                         })}

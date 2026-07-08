@@ -119,7 +119,7 @@ const Collection = () => {
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <ScrollReveal>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 md:mb-8">
             <h1 className="text-2xl md:text-5xl font-heading font-bold uppercase tracking-tight">
               COLLECTION
             </h1>
@@ -133,7 +133,7 @@ const Collection = () => {
                     FILTER
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[85vw] sm:w-[400px] overflow-y-auto bg-background/80 backdrop-blur-xl border-r border-white/10">
+                <SheetContent side="left" className="w-[85vw] sm:w-[400px] overflow-y-auto bg-background/95 backdrop-blur-xl border-r border-border">
                   <div className="py-6">
                     <h3 className="text-xl font-heading font-bold uppercase mb-8">FILTERS</h3>
                     <FilterContent

@@ -36,21 +36,21 @@ const Home = () => {
         </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div className="space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-4xl">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-bold uppercase tracking-tighter text-white leading-[0.9] md:leading-[0.85]">
+          <div className="space-y-5 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-4xl">
+            <h1 className="text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl font-heading font-bold uppercase tracking-tighter text-white leading-[0.9] md:leading-[0.85]">
               CHASE.<br />CONQUER.<br />CREATE.
             </h1>
-            <p className="text-white/90 text-base md:text-xl font-body max-w-md mx-auto tracking-wide leading-relaxed">
+            <p className="text-white/90 text-sm md:text-xl font-body max-w-xs md:max-w-md mx-auto tracking-wide leading-relaxed">
               Custom jerseys & uniforms for your whole squad. Bulk orders from 10 pieces.
             </p>
-            <div className="flex flex-col gap-3 w-full justify-center items-center pt-4 md:pt-8 px-4 max-w-md mx-auto">
-              <Button asChild variant="hero" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest group rounded-xl md:rounded-full">
+            <div className="flex flex-col gap-2.5 md:gap-3 w-full justify-center items-center pt-2 md:pt-8 px-6 max-w-sm md:max-w-md mx-auto">
+              <Button asChild variant="hero" size="xl" className="w-full h-12 md:h-14 text-sm md:text-base tracking-widest group rounded-xl md:rounded-full">
                 <Link to="/bulk-orders">
                   BULK & TEAM ORDERS
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="heroOutline" size="xl" className="w-full h-12 md:h-14 text-base tracking-widest bg-black/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-black rounded-xl md:rounded-full">
+              <Button asChild variant="heroOutline" size="xl" className="w-full h-11 md:h-14 text-sm md:text-base tracking-widest bg-black/20 backdrop-blur-sm border-white/70 text-white hover:bg-white hover:text-black rounded-xl md:rounded-full">
                 <Link to="/collection">SHOP THE DROP</Link>
               </Button>
             </div>
@@ -59,7 +59,7 @@ const Home = () => {
       </section>
 
       {/* Featured Collection Grid - Mobile Optimized */}
-      <section className="container mx-auto px-4 py-16 md:py-32">
+      <section className="container mx-auto px-4 py-12 md:py-32">
         <ScrollReveal>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 text-center md:text-left">
             <div className="w-full text-center md:text-left">
